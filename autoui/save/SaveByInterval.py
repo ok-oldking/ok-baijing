@@ -22,6 +22,7 @@ class SaveByInterval:
         print("Thread completed its execution.")
 
     def wait_until_done(self):
-        thread = threading.Thread(target=self.save)
-        thread.start()
-        thread.join()
+        # thread = threading.Thread(target=self.save)
+        # thread.start()
+        # thread.join()
+        pass

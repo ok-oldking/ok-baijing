@@ -2,7 +2,7 @@
 import asyncio
 from typing import TYPE_CHECKING, cast
 import pygetwindow
-
+import win32api
 import numpy as np
 from cv2.typing import MatLike
 from typing_extensions import override
@@ -70,6 +70,7 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
         self.session = session
         self.size = item.size
         self.frame_pool = frame_pool
+        self.update_window_size()
 
     @override
     def close(self):
@@ -96,7 +97,7 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
         self.height = window_height#client_height - border_width * 2
         
     @override
-    def get_frame(self) -> tuple[MatLike | None, bool]:
+    def get_frame(self) -> MatLike | None:
         self.update_window_size()
         # We still need to check the hwnd because WGC will return a blank black image
         if not (
@@ -104,13 +105,13 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             # Only needed for the type-checker
             and self.frame_pool
         ):
-            return None, False
+            return None
 
         try:
             frame = self.frame_pool.try_get_next_frame()
         # Frame pool is closed
         except OSError:
-            return None, False
+            return None
 
         async def coroutine():
             # We were too fast and the next frame wasn't ready yet
@@ -123,12 +124,12 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
         except SystemError as exception:
             # HACK: can happen when closing the GraphicsCapturePicker
             if str(exception).endswith("returned a result with an error set"):
-                return self.last_captured_frame, True
+                return self.last_captured_frame
             raise
 
         if not software_bitmap:
             # HACK: Can happen when starting the region selector
-            return self.last_captured_frame, True
+            return self.last_captured_frame
             # raise ValueError("Unable to convert Direct3D11CaptureFrame to SoftwareBitmap.")
         bitmap_buffer = software_bitmap.lock_buffer(BitmapBufferAccessMode.READ_WRITE)
         if not bitmap_buffer:
@@ -140,8 +141,9 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             self.y: self.y + self.height,
             self.x: self.x + self.width,
         ]
+        
         self.last_captured_frame = image
-        return image, False
+        return image
 
     @override
     def recover_window(self, captured_window_title: str, autosplit: "AutoSplit"):
@@ -165,6 +167,25 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             and self.frame_pool
             and self.session,
         )
+    
+    def draw_rectangle(self, x, y, w, h):
+        # Get the window's device context
+        print(f"draw_rectangle : {x, y, w, h}")
+        hdc = win32gui.GetWindowDC(self.hwnd)
+        x = x + self.x
+        y = y + self.y
+        # Create a red brush
+        red_brush = win32gui.CreateSolidBrush(win32api.RGB(255, 0, 0))
+
+        # Create a rectangle
+        rect = (x, y, x + w, y + h)
+
+        # Draw the rectangle
+        win32gui.FrameRect(hdc, rect, red_brush)
+
+        # Clean up
+        win32gui.DeleteObject(red_brush)
+        win32gui.ReleaseDC(self.hwnd, hdc)
     
     
 

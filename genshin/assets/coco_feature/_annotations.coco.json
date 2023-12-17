@@ -1,0 +1,88 @@
+{
+  "info": {
+    "year": "2023",
+    "version": "1",
+    "description": "Exported from roboflow.com",
+    "contributor": "",
+    "url": "https://public.roboflow.com/object-detection/undefined",
+    "date_created": "2023-12-17T02:41:34+00:00"
+  },
+  "licenses": [
+    {
+      "id": 1,
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "name": "CC BY 4.0"
+    }
+  ],
+  "categories": [
+    { "id": 0, "name": "ui", "supercategory": "none" },
+    { "id": 1, "name": "button_dialog", "supercategory": "ui" },
+    { "id": 2, "name": "button_f", "supercategory": "ui" },
+    { "id": 3, "name": "button_pause", "supercategory": "ui" },
+    { "id": 4, "name": "button_play", "supercategory": "ui" }
+  ],
+  "images": [
+    {
+      "id": 0,
+      "license": 1,
+      "file_name": "4_jpg.rf.53e6b2228e8f7527a73d65d0e625f3c4.jpg",
+      "height": 1440,
+      "width": 2560,
+      "date_captured": "2023-12-17T02:41:34+00:00"
+    },
+    {
+      "id": 1,
+      "license": 1,
+      "file_name": "2_jpg.rf.f053c3eacc2bb69b437b3692357cb2df.jpg",
+      "height": 1440,
+      "width": 2560,
+      "date_captured": "2023-12-17T02:41:34+00:00"
+    },
+    {
+      "id": 2,
+      "license": 1,
+      "file_name": "1_jpg.rf.9763fa26cd6a2c5f56ca4cb1661ff3fe.jpg",
+      "height": 1440,
+      "width": 2560,
+      "date_captured": "2023-12-17T02:41:34+00:00"
+    }
+  ],
+  "annotations": [
+    {
+      "id": 0,
+      "image_id": 0,
+      "category_id": 3,
+      "bbox": [80, 49, 30.44, 31.72],
+      "area": 965.557,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 4,
+      "bbox": [80, 46, 29.7, 35.29],
+      "area": 1048.113,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 2,
+      "image_id": 2,
+      "category_id": 2,
+      "bbox": [1469, 699, 42.7, 39.41],
+      "area": 1682.807,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 3,
+      "image_id": 2,
+      "category_id": 1,
+      "bbox": [1569, 709, 33.33, 16.63],
+      "area": 554.278,
+      "segmentation": [],
+      "iscrowd": 0
+    }
+  ]
+}

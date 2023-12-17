@@ -20,6 +20,9 @@ class CaptureMethodBase:
         # Some capture methods don't need an initialization process
         pass
 
-    # def get_latest_frame(self) -> :  # noqa: PLR6301
-        
-    #     return None
+    def get_frame(self) -> tuple[MatLike | None, bool]:
+        pass
+
+    def draw_rectangle(self):
+        pass
+   
