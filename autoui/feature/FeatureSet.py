@@ -7,6 +7,7 @@ import os
 from autoui.feature.Feature import Feature
 from autoui.feature.Box import Box
 from typing import List
+import sys
 
 class FeatureSet:
     # Category_name to OpenCV Mat
@@ -94,8 +95,15 @@ class FeatureSet:
             # Save the image
             cv2.imwrite(file_path, image.mat)
             print(f"Saved {file_path}")
+    
+    def find_one(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0) -> Box | None:
+        boxes = self.find_feature(mat,category_name, horizontal_variance, vertical_variance)
+        if len(boxes) > 1:
+            print("find_one:found too many len(boxes)", file=sys.stderr)
+        if len(boxes) == 1:
+            return boxes[0]
 
-    def findFeature(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0) -> List[Box]:
+    def find_feature(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0) -> List[Box]:
         """
         Find a feature within a given variance.
 
@@ -130,7 +138,7 @@ class FeatureSet:
         # result = cv2.matchTemplate(search_area, feature.mat, cv2.TM_CCOEFF_NORMED)
         result = cv2.matchTemplate(search_area, feature.mat, cv2.TM_CCOEFF_NORMED)
         
-        threshold = 0.8  # Define a threshold for acceptable matches
+        threshold = 0.9  # Define a threshold for acceptable matches
         locations = filter_and_sort_matches(result, threshold,feature_width, feature_height)
         boxes = []
 

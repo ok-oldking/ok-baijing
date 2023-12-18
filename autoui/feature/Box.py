@@ -1,3 +1,5 @@
+import random
+
 class Box:
     def __init__(self, x: int, y: int, width: int, height: int) -> None:
         self.x = x
@@ -7,3 +9,15 @@ class Box:
     
     def __str__(self) -> str:
         return f"Box(x={self.x}, y={self.y}, width={self.width}, height={self.height})"
+    
+    def center_with_variance(self):
+        # Calculate the center of the box
+        center_x = self.x + self.width / 2
+        center_y = self.y + self.height / 2
+
+        # Add random variance
+        variance = random.uniform(0, 0.1)
+        center_x_with_variance = center_x + variance
+        center_y_with_variance = center_y + variance
+
+        return round(center_x_with_variance), round(center_y_with_variance)

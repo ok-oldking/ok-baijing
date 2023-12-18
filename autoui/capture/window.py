@@ -34,20 +34,7 @@ def get_window_bounds(hwnd, top_cut = 0,bottom_cut = 0,left_cut = 0,right_cut = 
         title = window_height - client_height - border
         #print(f"{border}, {title}, {client_width}, {client_height}")
         client_height = int(client_height - client_height * bottom_cut)
-        return window_rect[0], window_rect[1], border, title, client_width, client_height
+        return window_rect[0], window_rect[1], border, title, client_width, client_height, scaling
 
-def is_window_behind(hwnd):
-    # Get the first window in the Z-order
-    top_window = win32gui.GetForegroundWindow()
-
-    # Traverse the Z-order to check if our window is behind others
-    while top_window:
-        # If we find our window, it's not behind others
-        if top_window == hwnd:
-            return False
-
-        # Get the next window in the Z-order
-        top_window = win32gui.GetWindow(top_window, win32con.GW_HWNDNEXT)
-
-    # If we didn't find our window, it's behind others or not visible
-    return True
+def is_foreground_window(hwnd):    
+    return win32gui.IsWindowVisible(hwnd) and win32gui.GetForegroundWindow() == hwnd
