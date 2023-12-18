@@ -4,3 +4,6 @@ class Box:
         self.y = y
         self.width = width
         self.height = height
+    
+    def __str__(self) -> str:
+        return f"Box(x={self.x}, y={self.y}, width={self.width}, height={self.height})"

@@ -122,7 +122,7 @@ class FeatureSet:
 
         search_area = mat[search_y1:search_y2, search_x1:search_x2, :3]
         # Crop the search area from the image
-        print(f"search_area: ({search_x1},{search_x2},{search_y1},{search_y2}) ({get_depth(search_area),get_depth(feature.mat)})")
+        print(f"search_area: ({self.width,self.height})({search_x1},{search_x2},{search_y1},{search_y2}) ({get_depth(search_area),get_depth(feature.mat)})")
         
         #cv2.imwrite("images/test.jpg", search_area)
 
@@ -134,10 +134,11 @@ class FeatureSet:
         locations = filter_and_sort_matches(result, threshold,feature_width, feature_height)
         boxes = []
 
-        for loc in locations:  # Iterate through found locations
-            print(f"found loc {loc}")
+        for loc in locations:  # Iterate through found locations            
             x, y = loc[0] + search_x1, loc[1] + search_y1
             boxes.append(Box(x, y, feature_width, feature_height))
+            cv2.rectangle(mat, (x, y), (x + feature_width,y+feature_height),(0, 255, 0), 2)
+            cv2.imwrite("images/test.jpg", mat)
 
         return boxes
 

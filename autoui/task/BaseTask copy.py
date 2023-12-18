@@ -3,9 +3,9 @@ from cv2.typing import MatLike
 from autoui.capture.WindowsGraphicsCaptureMethod import CaptureMethodBase
 from autoui.overlay.BaseOverlay import BaseOverlay
 
-class BaseTask:
+class TaskExecutor:
 
-    paused = False
+    tasks = []
 
     def __init__(self, method : CaptureMethodBase, overlay:BaseOverlay = None, wait_time = 1):
         self.method = method

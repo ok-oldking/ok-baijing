@@ -1,7 +1,7 @@
 #original https://github.com/Toufool/AutoSplit/blob/master/src/capture_method/WindowsGraphicsCaptureMethod.py
 import asyncio
 from typing import TYPE_CHECKING, cast
-import pygetwindow
+import threading
 import win32api
 import numpy as np
 from cv2.typing import MatLike
@@ -14,7 +14,7 @@ from winsdk.windows.graphics.capture.interop import create_for_window
 from winsdk.windows.graphics.directx import DirectXPixelFormat
 from winsdk.windows.graphics.imaging import BitmapBufferAccessMode, SoftwareBitmap
 
-from autoui.capture.window import get_window_bounds
+from autoui.capture.window import is_window_behind, get_window_bounds
 from autoui.capture.CaptureMethodBase import CaptureMethodBase
 from autoui.capture.utils import BGRA_CHANNEL_COUNT, WGC_MIN_BUILD, WINDOWS_BUILD_NUMBER, get_direct3d_device, is_valid_hwnd
 
@@ -34,7 +34,13 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
         + "\nAdds a yellow border on Windows 10 (not on Windows 11)."
         + "\nCaps at around 60 FPS. "
     )
-
+    visible = True
+    x = 0
+    y = 0
+    width = 0
+    height = 0
+    title_height = 0
+    border = 0
     size: SizeInt32
     frame_pool: Direct3D11CaptureFramePool | None = None
     session: GraphicsCaptureSession | None = None
@@ -51,6 +57,8 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             return
 
         item = create_for_window(self.hwnd)
+        self.size = item.size
+        
         frame_pool = Direct3D11CaptureFramePool.create_free_threaded(
             get_direct3d_device(),
             DirectXPixelFormat.B8_G8_R8_A8_UINT_NORMALIZED,
@@ -64,13 +72,14 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             raise OSError("Unable to create a capture session.")
         session.is_cursor_capture_enabled = False
         if WINDOWS_BUILD_NUMBER >= WGC_NO_BORDER_MIN_BUILD:
-            session.is_border_required = False
-        session.start_capture()
-
+            session.is_border_required = False        
         self.session = session
-        self.size = item.size
-        self.frame_pool = frame_pool
-        self.update_window_size()
+        self.frame_pool = frame_pool       
+        self.thread = threading.Thread(target=self.update_window_size)        
+        self.exit_event = threading.Event()   
+        self.do_update_window_size()
+        self.thread.start()
+        session.start_capture()
 
     @override
     def close(self):
@@ -86,19 +95,33 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
                 # "AutoSplit.exe	<process started at 00:05:37.020 has terminated with 0xc0000409 (EXCEPTION_STACK_BUFFER_OVERRUN)>" # noqa: E501
                 pass
             self.session = None
+    
+    def add_window_change_listener(self, listener):
+        self.window_change_listeners.append(listener)
+        listener.window_changed(self.visible, self.x, self.y, self.border,self.title_height,self.width, self.height)
 
     def update_window_size(self):
-        x, y, window_width, window_height = get_window_bounds(self.hwnd, self.top_cut, self.bottom_cut,self.left_cut,self.right_cut)
-        
-        print(f"{x} {y} {window_width} {window_height}")
-        self.x = x#border_width
-        self.y = y#titlebar_with_border_height
-        self.width = window_width#client_width
-        self.height = window_height#client_height - border_width * 2
+        while not self.exit_event.is_set():            
+            self.do_update_window_size()
+            self.exit_event.wait(0.5)
+    
+    def do_update_window_size(self):
+        x, y, border, title_height, window_width, window_height = get_window_bounds(self.hwnd, self.top_cut, self.bottom_cut,self.left_cut,self.right_cut)
+        visible = win32gui.IsWindowVisible(self.hwnd) and win32gui.GetForegroundWindow() == self.hwnd
+        if  self.title_height != title_height or self.border != border or visible != self.visible or self.x != x or self.y != y or self.width != window_width or self.height != window_height:
+            print(f"update_window_size: {x} {y} {title_height} {border} {window_width} {window_height}")
+            self.visible = visible
+            self.x = x #border_width
+            self.y = y #titlebar_with_border_height
+            self.title_height = title_height
+            self.border = border
+            self.width = window_width #client_width
+            self.height = window_height #client_height - border_width * 2
+            for listener in self.window_change_listeners:
+                listener.window_changed(visible, x, y,border, title_height, window_width, window_height)
         
     @override
     def get_frame(self) -> MatLike | None:
-        self.update_window_size()
         # We still need to check the hwnd because WGC will return a blank black image
         if not (
             self.check_selected_region_exists()
@@ -136,10 +159,11 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             raise ValueError("Unable to obtain the BitmapBuffer from SoftwareBitmap.")
         reference = bitmap_buffer.create_reference()
         image = np.frombuffer(cast(bytes, reference), dtype=np.uint8)
+        print(f"image.shape {self.title_height,self.border, self.size.height, self.size.width}")
         image.shape = (self.size.height, self.size.width, BGRA_CHANNEL_COUNT)
         image = image[
-            self.y: self.y + self.height,
-            self.x: self.x + self.width,
+            self.title_height: self.title_height + self.height,
+            self.border: self.border + self.width
         ]
         
         self.last_captured_frame = image
@@ -166,37 +190,5 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             is_valid_hwnd(self.hwnd)
             and self.frame_pool
             and self.session,
-        )
-    
-    def draw_rectangle(self, x, y, w, h):
-        # Get the window's device context
-        print(f"draw_rectangle : {x, y, w, h}")
-        hdc = win32gui.GetWindowDC(self.hwnd)
-        x = x + self.x
-        y = y + self.y
-        # Create a red brush
-        red_brush = win32gui.CreateSolidBrush(win32api.RGB(255, 0, 0))
-
-        # Create a rectangle
-        rect = (x, y, x + w, y + h)
-
-        # Draw the rectangle
-        win32gui.FrameRect(hdc, rect, red_brush)
-
-        # Clean up
-        win32gui.DeleteObject(red_brush)
-        win32gui.ReleaseDC(self.hwnd, hdc)
-    
-    
-
-# def get_window_by_title(title):
-#     try:
-#         window = pygetwindow.getWindowsWithTitle(title)[0]  # Get the first window with the given title
-#         if window is not None:
-#             return window._hWnd
-#         else:
-#             print("Window not found")
-#             return None
-#     except Exception as e:
-#         print(f"Error: {e}")
-#         return None
+        )  
+      
