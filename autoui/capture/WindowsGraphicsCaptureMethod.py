@@ -45,7 +45,7 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
     frame_pool: Direct3D11CaptureFramePool | None = None
     session: GraphicsCaptureSession | None = None
     """This is stored to prevent session from being garbage collected"""
-    last_captured_frame: MatLike | None = None
+
     hwnd = None
 
     def __init__(self, title = ""):
@@ -74,12 +74,13 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
         if WINDOWS_BUILD_NUMBER >= WGC_NO_BORDER_MIN_BUILD:
             session.is_border_required = False        
         self.session = session
-        self.frame_pool = frame_pool       
+        self.frame_pool = frame_pool  
+        session.start_capture()
+
         self.thread = threading.Thread(target=self.update_window_size)        
         self.exit_event = threading.Event()   
         self.do_update_window_size()
         self.thread.start()
-        session.start_capture()
 
     @override
     def close(self):
@@ -138,39 +139,41 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             frame = self.frame_pool.try_get_next_frame()
         # Frame pool is closed
         except OSError:
-            return None
+            return None  
 
+        if not frame:
+            # print("try_get_next_frame none")
+            return None
+            
         async def coroutine():
-            # We were too fast and the next frame wasn't ready yet
-            if not frame:
-                return None
-            return await (SoftwareBitmap.create_copy_from_surface_async(frame.surface) or asyncio.sleep(0, None))
+            return await SoftwareBitmap.create_copy_from_surface_async(frame.surface)
 
         try:
             software_bitmap = asyncio.run(coroutine())
+            frame.close()
         except SystemError as exception:
             # HACK: can happen when closing the GraphicsCapturePicker
             if str(exception).endswith("returned a result with an error set"):
-                return self.last_captured_frame
+                print("return last_captured frame result with an error set")
+                return None
             raise
 
         if not software_bitmap:
+            print("return last_captured frame")
             # HACK: Can happen when starting the region selector
-            return self.last_captured_frame
+            return None
             # raise ValueError("Unable to convert Direct3D11CaptureFrame to SoftwareBitmap.")
         bitmap_buffer = software_bitmap.lock_buffer(BitmapBufferAccessMode.READ_WRITE)
         if not bitmap_buffer:
             raise ValueError("Unable to obtain the BitmapBuffer from SoftwareBitmap.")
         reference = bitmap_buffer.create_reference()
         image = np.frombuffer(cast(bytes, reference), dtype=np.uint8)
-        print(f"image.shape {self.title_height,self.border, self.size.height, self.size.width}")
+        # print(f"image.shape {self.title_height,self.border, self.size.height, self.size.width}")
         image.shape = (self.size.height, self.size.width, BGRA_CHANNEL_COUNT)
         image = image[
             self.title_height: self.title_height + self.height,
             self.border: self.border + self.width
-        ]
-        
-        self.last_captured_frame = image
+        ]        
         return image
 
     @override

@@ -16,7 +16,7 @@ def filter_and_sort_matches(result, width, height, threshold):
                 for m in unique_matches):
             unique_matches.append(pt)
     
-    print(f"result {len(result)} loc {loc} matches {len(matches)} unique_matches {len(unique_matches)}")
+    # print(f"result {len(result)} loc {loc} matches {len(matches)} unique_matches {len(unique_matches)}")
     return unique_matches
 # Load images
 main_image = cv2.imread('images/test.jpg')  # Replace with your main image file
@@ -33,7 +33,7 @@ filter_and_sort_matches(result,template.shape[1],template.shape[0],threshold)
 # Find where the matching result exceeds the threshold
 locations = np.where(result >= threshold)
 locations = list(zip(*locations[::-1]))  # Swap and group x, y locations
-print(f"result {len(result)}, locations {len(locations)}")
+# print(f"result {len(result)}, locations {len(locations)}")
 
 # Draw rectangles and annotate confidence scores
 for loc in locations:

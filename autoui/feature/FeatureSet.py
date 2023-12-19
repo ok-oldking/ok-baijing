@@ -96,14 +96,14 @@ class FeatureSet:
             cv2.imwrite(file_path, image.mat)
             print(f"Saved {file_path}")
     
-    def find_one(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0) -> Box | None:
-        boxes = self.find_feature(mat,category_name, horizontal_variance, vertical_variance)
+    def find_one(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0, threshold=0.8) -> Box | None:
+        boxes = self.find_feature(mat,category_name, horizontal_variance = horizontal_variance, vertical_variance = vertical_variance, threshold = threshold)
         if len(boxes) > 1:
             print("find_one:found too many len(boxes)", file=sys.stderr)
         if len(boxes) == 1:
             return boxes[0]
 
-    def find_feature(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0) -> List[Box]:
+    def find_feature(self, mat: MatLike, category_name: str,horizontal_variance: float = 0, vertical_variance: float = 0,threshold=0.8) -> List[Box]:
         """
         Find a feature within a given variance.
 
@@ -130,7 +130,7 @@ class FeatureSet:
 
         search_area = mat[search_y1:search_y2, search_x1:search_x2, :3]
         # Crop the search area from the image
-        print(f"search_area: ({self.width,self.height})({search_x1},{search_x2},{search_y1},{search_y2}) ({get_depth(search_area),get_depth(feature.mat)})")
+        # print(f"search_area: ({self.width,self.height})({search_x1},{search_x2},{search_y1},{search_y2}) ({get_depth(search_area),get_depth(feature.mat)})")
         
         #cv2.imwrite("images/test.jpg", search_area)
 
@@ -138,29 +138,18 @@ class FeatureSet:
         # result = cv2.matchTemplate(search_area, feature.mat, cv2.TM_CCOEFF_NORMED)
         result = cv2.matchTemplate(search_area, feature.mat, cv2.TM_CCOEFF_NORMED)
         
-        threshold = 0.9  # Define a threshold for acceptable matches
+        # Define a threshold for acceptable matches
         locations = filter_and_sort_matches(result, threshold,feature_width, feature_height)
         boxes = []
 
         for loc in locations:  # Iterate through found locations            
             x, y = loc[0] + search_x1, loc[1] + search_y1
-            boxes.append(Box(x, y, feature_width, feature_height))
-            cv2.rectangle(mat, (x, y), (x + feature_width,y+feature_height),(0, 255, 0), 2)
-            cv2.imwrite("images/test.jpg", mat)
+            confidence = result[loc[1], loc[0]]  # Retrieve the confidence score
+            boxes.append(Box(x, y, feature_width, feature_height, confidence))
+            # cv2.rectangle(mat, (x, y), (x + feature_width,y+feature_height),(0, 255, 0), 2)
+            # cv2.imwrite("images/test.jpg", mat)
 
-        return boxes
-
-def get_depth(mat:MatLike):
-    data_type = mat.dtype
-    if data_type == np.uint8:
-        bit_depth = 8
-    elif data_type == np.uint16:
-        bit_depth = 16
-    elif data_type == np.float32:
-        bit_depth = 32
-    else:
-        bit_depth = "Unknown"
-    return bit_depth
+        return Box.sort_boxes(boxes)
 
 def filter_and_sort_matches(result, threshold, width, height):
     # Filter matches based on the threshold
@@ -177,5 +166,5 @@ def filter_and_sort_matches(result, threshold, width, height):
                 for m in unique_matches):
             unique_matches.append(pt)
     
-    print(f"result {len(result)} loc {len(loc)} matches {len(matches)} unique_matches {unique_matches}")
+    # print(f"result {len(result)} loc {len(loc)} matches {len(matches)} unique_matches {unique_matches}")
     return unique_matches
