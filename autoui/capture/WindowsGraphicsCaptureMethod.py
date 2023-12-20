@@ -107,7 +107,7 @@ class WindowsGraphicsCaptureMethod(CaptureMethodBase):
             self.exit_event.wait(0.01)
 
     def get_abs_cords(self, x, y):
-        return int(self.x + x/self.scaling), int(self.y + y/self.scaling)
+        return int(self.x + (self.border + x)/self.scaling), int(self.y + (y + self.title_height)/self.scaling)
     
     def do_update_window_size(self):
         x, y, border, title_height, window_width, window_height, scaling = get_window_bounds(self.hwnd, self.top_cut, self.bottom_cut,self.left_cut,self.right_cut)

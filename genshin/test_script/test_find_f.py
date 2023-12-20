@@ -15,7 +15,7 @@ feature_set = FeatureSet(coco_folder, capture.width, capture.height)
 overlay = TkOverlay(capture)
 interaction = Win32Interaction(capture,overlay)
 # task_executor = TaskExecutor(capture,target_fps=0.1)
-task_executor = TaskExecutor(capture)
+task_executor = TaskExecutor(capture,target_fps=30)
 auto_dialog = AutoDialogTask(interaction, feature_set)
 task_executor.tasks.append(auto_dialog)
 

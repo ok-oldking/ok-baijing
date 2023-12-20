@@ -2,7 +2,7 @@ from autoui.feature.FeatureSet import FeatureSet
 from autoui.capture.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
 from genshin.task.AutoDialogTask import AutoDialogTask
 from autoui.task.TaskExecutor import TaskExecutor
-from autoui.overlay.TkWindowed import TkWindow
+from autoui.overlay.TkWindow import TkWindow
 from autoui.interaction.Win32Interaction import Win32Interaction
 
 # Example usage
