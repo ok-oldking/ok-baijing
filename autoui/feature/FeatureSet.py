@@ -9,6 +9,7 @@ from autoui.feature.Box import Box
 from typing import List
 import sys
 
+
 class FeatureSet:
     # Category_name to OpenCV Mat
     featureDict: Dict[str, Feature] = {}
@@ -62,20 +63,21 @@ class FeatureSet:
                 continue
             scale_x, scale_y = self.width / image.shape[1], self.height / image.shape[0]
             image = cv2.resize(image, (self.width, self.height))
-            print(f"FeatureSet: self.width / image.shape {self.width} / {image.shape[1]},scale_x:{scale_x} scale_y:{scale_y}")
+            print(
+                f"FeatureSet: self.width / image.shape {self.width} / {image.shape[1]},scale_x:{scale_x} scale_y:{scale_y}")
             # Calculate the scaled bounding box
             x, y, w, h = bbox
             x, y, w, h = round(x * scale_x), round(y * scale_y), round(w * scale_x), round(h * scale_y)
 
             # Crop the image to the bounding box
-            cropped_image = image[y:y+h, x:x+w, :3]
+            cropped_image = image[y:y + h, x:x + w, :3]
 
             # Store in featureDict using the category name
             category_name = category_map[category_id]
             if category_name in self.featureDict:
                 raise ValueError(f"Multiple boxes found for category '{category_name}'")
-            self.featureDict[category_name] = Feature(cropped_image,x,y,w,h)
-    
+            self.featureDict[category_name] = Feature(cropped_image, x, y, w, h)
+
     def save_images(self, target_folder: str) -> None:
         """
         Save all images in the featureDict to the specified folder.
@@ -95,15 +97,18 @@ class FeatureSet:
             # Save the image
             cv2.imwrite(file_path, image.mat)
             print(f"Saved {file_path}")
-    
-    def find_one(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0, threshold=0.8) -> Box | None:
-        boxes = self.find_feature(mat,category_name, horizontal_variance = horizontal_variance, vertical_variance = vertical_variance, threshold = threshold)
+
+    def find_one(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0,
+                 threshold=0.8) -> Box | None:
+        boxes = self.find_feature(mat, category_name, horizontal_variance=horizontal_variance,
+                                  vertical_variance=vertical_variance, threshold=threshold)
         if len(boxes) > 1:
             print("find_one:found too many len(boxes)", file=sys.stderr)
         if len(boxes) == 1:
             return boxes[0]
 
-    def find_feature(self, mat: MatLike, category_name: str,horizontal_variance: float = 0, vertical_variance: float = 0,threshold=0.8) -> List[Box]:
+    def find_feature(self, mat: MatLike, category_name: str, horizontal_variance: float = 0,
+                     vertical_variance: float = 0, threshold=0.8) -> List[Box]:
         """
         Find a feature within a given variance.
 
@@ -131,15 +136,15 @@ class FeatureSet:
         search_area = mat[search_y1:search_y2, search_x1:search_x2, :3]
         # Crop the search area from the image
         # print(f"search_area: ({self.width,self.height})({search_x1},{search_x2},{search_y1},{search_y2}) ({get_depth(search_area),get_depth(feature.mat)})")
-        
-        #cv2.imwrite("images/test.jpg", search_area)
+
+        # cv2.imwrite("images/test.jpg", search_area)
 
         # Template matchingTM_CCORR_NORMED
         # result = cv2.matchTemplate(search_area, feature.mat, cv2.TM_CCOEFF_NORMED)
         result = cv2.matchTemplate(search_area, feature.mat, cv2.TM_CCOEFF_NORMED)
-        
+
         # Define a threshold for acceptable matches
-        locations = filter_and_sort_matches(result, threshold,feature_width, feature_height)
+        locations = filter_and_sort_matches(result, threshold, feature_width, feature_height)
         boxes = []
 
         for loc in locations:  # Iterate through found locations            
@@ -150,6 +155,7 @@ class FeatureSet:
             # cv2.imwrite("images/test.jpg", mat)
 
         return Box.sort_boxes(boxes)
+
 
 def filter_and_sort_matches(result, threshold, width, height):
     # Filter matches based on the threshold
@@ -163,8 +169,8 @@ def filter_and_sort_matches(result, threshold, width, height):
     for pt in matches:
         if all(not (pt[0] >= m[0] - width and pt[0] <= m[0] + width and
                     pt[1] >= m[1] - height and pt[1] <= m[1] + height)
-                for m in unique_matches):
+               for m in unique_matches):
             unique_matches.append(pt)
-    
+
     # print(f"result {len(result)} loc {len(loc)} matches {len(matches)} unique_matches {unique_matches}")
     return unique_matches

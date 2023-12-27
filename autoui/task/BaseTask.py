@@ -1,20 +1,13 @@
-import win32api
-import win32con
-import win32gui
-import time
 from cv2.typing import MatLike
-from autoui.capture.WindowsGraphicsCaptureMethod import CaptureMethodBase
-from autoui.overlay.BaseOverlay import BaseOverlay
-from autoui.feature.Box import Box
-from typing import List
+
+from autoui.scene.Scene import Scene
+from autoui.task.TaskExecutor import TaskExecutor
+
 
 class BaseTask:
 
     def __init__(self, interaction):
         self.interaction = interaction
-    
-    def run_frame(self, frame):
+
+    def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):
         pass
-
-    
-
