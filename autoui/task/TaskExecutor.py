@@ -2,7 +2,7 @@ import threading
 import time
 from typing import List
 
-from autoui.capture.WindowsGraphicsCaptureMethod import CaptureMethodBase
+from autoui.capture.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 from autoui.scene.Scene import Scene
 
 
@@ -10,13 +10,13 @@ class TaskExecutor:
     tasks = []
     scenes: List[Scene] = []
     last_frame = None
-    current_scene: Scene = None
+    current_scene: Scene | None = None
 
-    def __init__(self, method: CaptureMethodBase, target_fps=10):
+    def __init__(self, method: BaseCaptureMethod, target_fps=10, exit_event=threading.Event()):
         self.method = method
         self.target_delay = 1.0 / target_fps
         self.thread = threading.Thread(target=self.execute)
-        self.exit_event = threading.Event()
+        self.exit_event = exit_event
         self.thread.start()
         self.capture_thread = threading.Thread(target=self.capture_frame)
         self.capture_thread.start()
@@ -58,7 +58,7 @@ class TaskExecutor:
                     self.last_frame = None
                     if frame is not None:
                         task.run_frame(self, self.current_scene, frame)
-                print(f"frame time {time.time() - start}")
+                # print(f"frame time {time.time() - start}")
             self.wait_fps(start)
 
     def detect_scene(self, frame):
@@ -70,8 +70,11 @@ class TaskExecutor:
             if scene != self.current_scene:
                 if scene.detect(frame):
                     self.current_scene = scene
-                    print(f"scene changed {scene.__class__.__name__}")
+                    print(f"TaskExecutor: scene changed {scene.__class__.__name__}")
                     return
+        if self.current_scene is not None:
+            print(f"TaskExecutor: scene changed to None")
+            self.current_scene = None
 
     def stop(self):
         self.exit_event.set()

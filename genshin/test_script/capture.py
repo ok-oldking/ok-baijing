@@ -1,8 +1,8 @@
-from autoui.capture.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
+from autoui.capture.WindowsGraphicsCaptureMethod import WindowsCaptureMethodGraphics
 from autoui.save.BlackBarProcessor import BlackBarProcessor
 from autoui.save.SaveByKeyPress import SaveByKeyPress
 
-capture = WindowsGraphicsCaptureMethod("Genshin Impact")
+capture = WindowsCaptureMethodGraphics("Genshin Impact")
 # capture = WindowsGraphicsCaptureMethod("MuMu Player 12")
 # capture.bottom_cut = 0.025
 cover_uid = BlackBarProcessor(0.87, 0.978, 0.12, 0.1)

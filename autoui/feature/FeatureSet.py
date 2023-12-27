@@ -1,13 +1,15 @@
 import json
+import os
+import sys
+from typing import Dict
+from typing import List
+
 import cv2
 import numpy as np
-from typing import Dict
 from cv2.typing import MatLike
-import os
-from autoui.feature.Feature import Feature
+
 from autoui.feature.Box import Box
-from typing import List
-import sys
+from autoui.feature.Feature import Feature
 
 
 class FeatureSet:
@@ -99,7 +101,7 @@ class FeatureSet:
             print(f"Saved {file_path}")
 
     def find_one(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0,
-                 threshold=0.8) -> Box | None:
+                 threshold=0.9) -> Box:
         boxes = self.find_feature(mat, category_name, horizontal_variance=horizontal_variance,
                                   vertical_variance=vertical_variance, threshold=threshold)
         if len(boxes) > 1:

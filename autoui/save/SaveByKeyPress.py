@@ -1,15 +1,14 @@
-import threading
-import time
-import cv2
-from autoui.capture.WindowsGraphicsCaptureMethod import CaptureMethodBase
-from autoui.save.SaveMethodBase import SaveMethodBase
-from pynput import keyboard, mouse
+from pynput import keyboard
+
+from autoui.capture.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 from autoui.save.PostProcessor import PostProcessor
+from autoui.save.SaveMethodBase import SaveMethodBase
+
 
 class SaveByKeyPress(SaveMethodBase):
 
-    def __init__(self, method : CaptureMethodBase, image_processor:PostProcessor = None, capture_key = "c", stop_key = "x"):
-        super().__init__(method, image_processor) 
+    def __init__(self, method: BaseCaptureMethod, image_processor: PostProcessor = None, capture_key="c", stop_key="x"):
+        super().__init__(method, image_processor)
         self.capture_key = capture_key
         self.stop_key = stop_key
         listener = keyboard.Listener(on_release=self.on_key_release)

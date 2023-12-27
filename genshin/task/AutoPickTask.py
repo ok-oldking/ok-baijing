@@ -10,8 +10,6 @@ from genshin.scene.WorldScene import WorldScene
 
 
 class AutoPickTask(FindFeatureTask):
-    last_passed = 0
-
     @override
     def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):
         if isinstance(scene, WorldScene):
@@ -20,18 +18,17 @@ class AutoPickTask(FindFeatureTask):
                 if self.find(frame, "button_dialog", 0.7, 0.7):  # try find dialog choices and click the first
                     return
                 else:
-                    time.sleep(0.01)
-                    frame = executor.next_frame()
-                    if not self.find(frame, "button_dialog", 0.7, 0.7):
-                        print(f"found button_f with no dialog pickup")
-                        self.last_passed = 0
-                        self.interaction.send_key("f")
-                        time.sleep(0.1)
-                        self.interaction.send_key("f")
-                        time.sleep(0.1)
-                        self.interaction.send_key("f")
-                        time.sleep(0.1)
-                        self.interaction.send_key("f")
-                        time.sleep(0.1)
-                        self.interaction.send_key("f")
-                        time.sleep(0.1)
+                    # time.sleep(0.01)
+                    # frame = executor.next_frame()
+                    # if not self.find(frame, "button_dialog", 0.7, 0.7):
+                    #     print(f"found button_f with no dialog pickup")
+                    self.interaction.send_key("f")
+                    time.sleep(0.1)
+                    self.interaction.send_key("f")
+                    time.sleep(0.1)
+                    self.interaction.send_key("f")
+                    time.sleep(0.1)
+                    self.interaction.send_key("f")
+                    time.sleep(0.1)
+                    self.interaction.send_key("f")
+                    time.sleep(0.1)

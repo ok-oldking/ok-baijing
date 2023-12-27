@@ -1,18 +1,18 @@
+from autoui.capture.WindowsGraphicsCaptureMethod import WindowsCaptureMethodGraphics
 from autoui.feature.FeatureSet import FeatureSet
-from autoui.capture.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
-from genshin.task.AutoDialogTask import AutoDialogTask
-from autoui.task.TaskExecutor import TaskExecutor
-from autoui.overlay.TkWindow import TkWindow
 from autoui.interaction.Win32Interaction import Win32Interaction
+from autoui.overlay.TkWindow import TkWindow
+from autoui.task.TaskExecutor import TaskExecutor
+from genshin.task.AutoDialogTask import AutoDialogTask
 
 # Example usage
-capture = WindowsGraphicsCaptureMethod("Genshin Impact")
+capture = WindowsCaptureMethodGraphics("Genshin Impact")
 
 coco_folder = 'genshin/assets/coco_feature'
 feature_set = FeatureSet(coco_folder, capture.width, capture.height)
 
 overlay = TkWindow(capture)
-interaction = Win32Interaction(capture,overlay)
+interaction = Win32Interaction(capture, overlay)
 # task_executor = TaskExecutor(capture,target_fps=0.1)
 task_executor = TaskExecutor(capture)
 auto_dialog = AutoDialogTask(interaction, feature_set)
@@ -22,4 +22,3 @@ task_executor.tasks.append(auto_dialog)
 # task_executor.tasks.append(skip_dialog)
 
 overlay.start()
-

@@ -2,7 +2,7 @@ import threading
 import tkinter as tk
 from typing import List
 
-from autoui.capture.WindowsGraphicsCaptureMethod import CaptureMethodBase
+from autoui.capture.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 from autoui.feature.Box import Box
 from autoui.overlay.BaseOverlay import BaseOverlay
 
@@ -11,7 +11,7 @@ class TkOverlay(BaseOverlay):
     dpi_scaling = 1
     lock = threading.Lock()
 
-    def __init__(self, method: CaptureMethodBase, close_event: threading.Event):
+    def __init__(self, method: BaseCaptureMethod, close_event: threading.Event):
         self.method = method
         self.uiDict = {}
         root = tk.Tk()
@@ -43,7 +43,6 @@ class TkOverlay(BaseOverlay):
         for ui in self.uiDict[key]:
             self.canvas.delete(ui)
         for box in boxes:
-            print(f"draw box {box}")
             self.uiDict[key].append(self.canvas.create_rectangle(box.x / self.dpi_scaling, box.y / self.dpi_scaling,
                                                                  (box.x + box.width) / self.dpi_scaling,
                                                                  (box.y + box.height) / self.dpi_scaling,

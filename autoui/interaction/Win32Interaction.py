@@ -3,14 +3,14 @@ import time
 
 import pydirectinput
 
-from autoui.capture.CaptureMethodBase import CaptureMethodBase
+from autoui.capture.BaseCaptureMethod import BaseCaptureMethod
 from autoui.feature.Box import Box
 from autoui.overlay.BaseOverlay import BaseOverlay
 
 
 class Win32Interaction:
 
-    def __init__(self, capture: CaptureMethodBase, overlay: BaseOverlay = None):
+    def __init__(self, capture: BaseCaptureMethod, overlay: BaseOverlay = None):
         self.overlay = overlay
         self.capture = capture
         self.post = ctypes.windll.user32.PostMessageW
@@ -31,6 +31,9 @@ class Win32Interaction:
         # time.sleep(0.05)
         # self.PostMessageW(static_lib.HANDLEOBJ.get_handle(), self.WM_KEYUP, wparam, lparam2)
 
+    def left_click_relative(self, x, y):
+        self.left_click(int(self.capture.width * x), int(self.capture.height * y))
+
     def left_click_box(self, box: Box):
         x, y = box.center_with_variance()
         self.left_click(x, y)
@@ -42,6 +45,7 @@ class Win32Interaction:
         # lParam = win32api.MAKELONG(x, y)
         if x != -1 and y != -1:
             x, y = self.capture.get_abs_cords(x, y)
+            print(f"Win32Interaction: left_click {x, y}")
             pydirectinput.moveTo(x, y)
         pydirectinput.click()
 

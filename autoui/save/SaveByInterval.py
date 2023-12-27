@@ -1,11 +1,13 @@
-import threading
 import time
+
 import cv2
-from autoui.capture.WindowsGraphicsCaptureMethod import CaptureMethodBase
+
+from autoui.capture.WindowsGraphicsCaptureMethod import BaseCaptureMethod
+
 
 class SaveByInterval:
 
-    def __init__(self, method : "CaptureMethodBase", interval = 1):
+    def __init__(self, method: "BaseCaptureMethod", interval=1):
         self.interval = interval
         self.method = method
 
