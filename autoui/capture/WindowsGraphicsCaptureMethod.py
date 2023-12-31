@@ -54,8 +54,7 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
         self.visible = False
         self.hwnd = win32gui.FindWindow(None, title)
         if not self.hwnd:
-            print("window {title} not found")
-            return
+            raise Exception(f"window {title} not found")
 
         item = create_for_window(self.hwnd)
         self.size = item.size

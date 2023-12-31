@@ -1,4 +1,5 @@
 import ctypes
+import sys
 import time
 
 import pydirectinput
@@ -14,6 +15,8 @@ class Win32Interaction:
         self.overlay = overlay
         self.capture = capture
         self.post = ctypes.windll.user32.PostMessageW
+        if not is_admin():
+            print(f"You must be an admin to use Win32Interaction", file=sys.stderr)
 
     def send_key(self, key, down_time=0.02):
         if not self.capture.visible:
@@ -53,3 +56,11 @@ class Win32Interaction:
         # win32gui.SendMessage(self.hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lParam)
         # time.sleep(down_time)
         # win32gui.SendMessage(self.hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, lParam)
+
+
+def is_admin():
+    try:
+        # Only Windows users with admin privileges can read the C drive directly
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False

@@ -1,4 +1,5 @@
 import threading
+import time  # Import time module to track update times
 import tkinter as tk
 from typing import List
 
@@ -12,6 +13,8 @@ class TkOverlay(BaseOverlay):
     lock = threading.Lock()
 
     def __init__(self, method: BaseCaptureMethod, close_event: threading.Event):
+        super().__init__()
+        self.canvas = None
         self.method = method
         self.uiDict = {}
         root = tk.Tk()
@@ -19,6 +22,7 @@ class TkOverlay(BaseOverlay):
         self.init_window()
         self.init_canvas()
         self.exit_event = close_event
+        self.time_to_expire = 1
         method.add_window_change_listener(self)
 
     def init_window(self):
@@ -38,18 +42,39 @@ class TkOverlay(BaseOverlay):
         self.root.after(0, lambda: self.tk_draw_boxes(key, boxes, outline))
 
     def tk_draw_boxes(self, key: str, boxes: List[Box], outline: str):
-        if key not in self.uiDict:
-            self.uiDict[key] = []
-        for ui in self.uiDict[key]:
-            self.canvas.delete(ui)
-        for box in boxes:
-            self.uiDict[key].append(self.canvas.create_rectangle(box.x / self.dpi_scaling, box.y / self.dpi_scaling,
-                                                                 (box.x + box.width) / self.dpi_scaling,
-                                                                 (box.y + box.height) / self.dpi_scaling,
-                                                                 outline=outline))
-            self.uiDict[key].append(
-                self.canvas.create_text(box.x / self.dpi_scaling, (box.y + box.width) / self.dpi_scaling, anchor="nw",
-                                        fill=outline, text=f"{key}_{round(box.confidence * 100)}", font=("Arial", 20)))
+        current_time = time.time()  # Get the current time
+        with self.lock:  # Use the lock to ensure thread safety
+            # Check and remove old UI elements
+            if key in self.uiDict:
+                # Identify old UI elements
+                old_uis = [ui for ui, update_time in self.uiDict[key] if
+                           current_time - update_time >= self.time_to_expire]
+                # Remove old UI elements
+                for ui in old_uis:
+                    self.canvas.delete(ui)
+                # Keep only recent UI elements
+                self.uiDict[key] = [item for item in self.uiDict[key] if current_time - item[1] < self.time_to_expire]
+
+            # If not present, initialize the list
+            if key not in self.uiDict:
+                self.uiDict[key] = []
+
+            for ui in self.uiDict[key]:
+                self.canvas.delete(ui[0])
+
+            # Draw new boxes and record their creation time
+            for box in boxes:
+                rect = self.canvas.create_rectangle(
+                    box.x / self.dpi_scaling, box.y / self.dpi_scaling,
+                    (box.x + box.width) / self.dpi_scaling,
+                    (box.y + box.height) / self.dpi_scaling,
+                    outline=outline)
+                text = self.canvas.create_text(
+                    box.x / self.dpi_scaling, (box.y + box.width) / self.dpi_scaling, anchor="nw",
+                    fill=outline, text=f"{key}_{round(box.confidence * 100)}", font=("Arial", 20))
+                # Append the UI element and the current time to the uiDict
+                self.uiDict[key].append([rect, current_time])
+                self.uiDict[key].append([text, current_time])
 
     def window_changed(self, visible, x, y, border, title_height, window_width, window_height, scaling):
         self.dpi_scaling = scaling

@@ -8,5 +8,5 @@ class BaseOverlay:
     def __init__(self) -> None:
         pass
 
-    def draw_boxes(self, boxes: List[Box], outline: str):
+    def draw_boxes(self, key: str, boxes: List[Box], outline: str):
         pass
