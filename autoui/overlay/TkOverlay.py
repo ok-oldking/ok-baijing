@@ -52,15 +52,14 @@ class TkOverlay(BaseOverlay):
                 # Remove old UI elements
                 for ui in old_uis:
                     self.canvas.delete(ui)
-                # Keep only recent UI elements
-                self.uiDict[key] = [item for item in self.uiDict[key] if current_time - item[1] < self.time_to_expire]
+                    del self.uiDict[ui]
 
             # If not present, initialize the list
-            if key not in self.uiDict:
-                self.uiDict[key] = []
+            if key in self.uiDict[key]:
+                for ui in self.uiDict[key]:
+                    self.canvas.delete(ui[0])
 
-            for ui in self.uiDict[key]:
-                self.canvas.delete(ui[0])
+            self.uiDict[key] = []
 
             # Draw new boxes and record their creation time
             for box in boxes:
