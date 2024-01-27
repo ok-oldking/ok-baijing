@@ -22,7 +22,7 @@ class TkOverlay(BaseOverlay):
         self.init_window()
         self.init_canvas()
         self.exit_event = close_event
-        self.time_to_expire = 1
+        self.time_to_expire = 0.5
         method.add_window_change_listener(self)
 
     def init_window(self):
@@ -45,22 +45,9 @@ class TkOverlay(BaseOverlay):
         current_time = time.time()  # Get the current time
         with self.lock:  # Use the lock to ensure thread safety
             # Check and remove old UI elements
-            if key in self.uiDict:
-                # Identify old UI elements
-                old_uis = [ui for ui, update_time in self.uiDict[key] if
-                           current_time - update_time >= self.time_to_expire]
-                # Remove old UI elements
-                for ui in old_uis:
-                    self.canvas.delete(ui)
+            self.remove_expired_ui(current_time)
 
-                remaining_uis = [ui for ui in self.uiDict[key] if
-                                 current_time - ui[1] < self.time_to_expire]
-                if len(remaining_uis) > 0:
-                    self.uiDict[key] = remaining_uis
-                else:
-                    del self.uiDict[key]
-
-            # If not present, initialize the list
+            # delete old
             if key in self.uiDict:
                 for ui in self.uiDict[key]:
                     self.canvas.delete(ui[0])
@@ -80,6 +67,25 @@ class TkOverlay(BaseOverlay):
                 # Append the UI element and the current time to the uiDict
                 self.uiDict[key].append([rect, current_time])
                 self.uiDict[key].append([text, current_time])
+
+    def remove_expired_ui(self, current_time):
+        for key in list(self.uiDict.keys()):  # Use list to iterate over a copy of the keys
+            old_uis = [ui for ui, update_time in self.uiDict[key] if
+                       current_time - update_time >= self.time_to_expire]
+
+            # Remove old UI elements
+            for ui in old_uis:
+                self.canvas.delete(ui)
+
+            # Filter out the old UI elements and keep the remaining ones
+            remaining_uis = [ui for ui in self.uiDict[key] if
+                             current_time - ui[1] < self.time_to_expire]
+
+            # Update the dictionary based on whether there are any remaining UIs
+            if remaining_uis:
+                self.uiDict[key] = remaining_uis
+            else:
+                del self.uiDict[key]
 
     def window_changed(self, visible, x, y, border, title_height, window_width, window_height, scaling):
         self.dpi_scaling = scaling
