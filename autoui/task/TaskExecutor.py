@@ -27,11 +27,14 @@ class TaskExecutor:
             start = time.time()
             frame = self.method.get_frame()
             if frame is not None:
+                # print("get frame is not None")
                 if hasattr(self.tasks[0].interaction.overlay, "draw_image"):
                     self.tasks[0].interaction.overlay.draw_image(frame)
                 self.last_frame = frame
                 self.detect_scene(frame)
                 self.wait_fps(start)
+            else:
+                print("get frame is None")
 
     def wait_fps(self, start):
         cost = time.time() - start
@@ -54,11 +57,12 @@ class TaskExecutor:
                 frame = self.last_frame
                 for task in self.tasks:
                     if self.last_frame is not None:
+                        # print(f"task {self.current_scene} {task} {self.last_frame}")
                         frame = self.last_frame
                     self.last_frame = None
                     if frame is not None:
                         task.run_frame(self, self.current_scene, frame)
-                # print(f"frame time {time.time() - start}")
+            # print(f"frame time {time.time() - start} {self.current_scene}")
             self.wait_fps(start)
 
     def detect_scene(self, frame):

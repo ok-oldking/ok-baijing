@@ -1,39 +1,32 @@
-# original https://github.com/Toufool/AutoSplit/blob/master/src/capture_method/WindowsGraphicsCaptureMethod.py
-import asyncio
+# original https://github.com/dantmnf & https://github.com/hakaboom/winAuto
+import ctypes
+import ctypes.wintypes
 import threading
-from typing import cast
 
 import numpy as np
-from cv2.typing import MatLike
 from typing_extensions import override
 from win32 import win32gui
-from winsdk.windows.graphics import SizeInt32
-from winsdk.windows.graphics.capture import Direct3D11CaptureFramePool, GraphicsCaptureSession
-from winsdk.windows.graphics.capture.interop import create_for_window
-from winsdk.windows.graphics.directx import DirectXPixelFormat
-from winsdk.windows.graphics.imaging import BitmapBufferAccessMode, SoftwareBitmap
 
 from autoui.capture.BaseCaptureMethod import BaseCaptureMethod
-from autoui.capture.utils import BGRA_CHANNEL_COUNT, WGC_MIN_BUILD, WINDOWS_BUILD_NUMBER, get_direct3d_device, \
-    is_valid_hwnd
+from autoui.capture.utils import is_valid_hwnd, WINDOWS_BUILD_NUMBER
 from autoui.capture.window import is_foreground_window, get_window_bounds
+from autoui.rotypes.Windows.Graphics.Capture import Direct3D11CaptureFramePool, IGraphicsCaptureItemInterop, \
+    IGraphicsCaptureItem, GraphicsCaptureItem
+from autoui.rotypes.Windows.Graphics.DirectX import DirectXPixelFormat
+from autoui.rotypes.Windows.Graphics.DirectX.Direct3D11 import IDirect3DDevice, CreateDirect3D11DeviceFromDXGIDevice, \
+    IDirect3DDxgiInterfaceAccess
+from autoui.rotypes.roapi import GetActivationFactory
+from . import d3d11
+from ..rotypes import IInspectable
+from ..rotypes.Windows.Foundation import TypedEventHandler
 
+PBYTE = ctypes.POINTER(ctypes.c_ubyte)
 WGC_NO_BORDER_MIN_BUILD = 20348
-LEARNING_MODE_DEVICE_BUILD = 17763
-"""https://learn.microsoft.com/en-us/uwp/api/windows.ai.machinelearning.learningmodeldevice"""
 
 
 class WindowsCaptureMethodGraphics(BaseCaptureMethod):
     name = "Windows Graphics Capture"
     short_description = "fast, most compatible, capped at 60fps"
-    description = (
-            f"\nOnly available in Windows 10.0.{WGC_MIN_BUILD} and up. "
-            + f"\nDue to current technical limitations, Windows versions below 10.0.0.{LEARNING_MODE_DEVICE_BUILD}"
-            + "\nrequire having at least one audio or video Capture Device connected and enabled."
-            + "\nAllows recording UWP apps, Hardware Accelerated and Exclusive Fullscreen windows. "
-            + "\nAdds a yellow border on Windows 10 (not on Windows 11)."
-            + "\nCaps at around 60 FPS. "
-    )
     visible = True
     x = 0
     y = 0
@@ -41,9 +34,6 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
     height = 0
     title_height = 0
     border = 0
-    size: SizeInt32
-    frame_pool: Direct3D11CaptureFramePool | None = None
-    session: GraphicsCaptureSession | None = None
     """This is stored to prevent session from being garbage collected"""
 
     hwnd = None
@@ -55,32 +45,60 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
         self.hwnd = win32gui.FindWindow(None, title)
         if not self.hwnd:
             raise Exception(f"window {title} not found")
+        self._rtdevice = IDirect3DDevice()
+        self._dxdevice = d3d11.ID3D11Device()
+        self._immediatedc = d3d11.ID3D11DeviceContext()
 
-        item = create_for_window(self.hwnd)
-        self.size = item.size
-
-        frame_pool = Direct3D11CaptureFramePool.create_free_threaded(
-            get_direct3d_device(),
-            DirectXPixelFormat.B8_G8_R8_A8_UINT_NORMALIZED,
-            1,
-            item.size,
-        )
-        if not frame_pool:
-            raise OSError("Unable to create a frame pool for a capture session.")
-        session = frame_pool.create_capture_session(item)
-        if not session:
-            raise OSError("Unable to create a capture session.")
-        session.is_cursor_capture_enabled = False
-        if WINDOWS_BUILD_NUMBER >= WGC_NO_BORDER_MIN_BUILD:
-            session.is_border_required = False
-        self.session = session
-        self.frame_pool = frame_pool
-        session.start_capture()
+        self.start(self.hwnd)
 
         self.thread = threading.Thread(target=self.update_window_size)
         self.exit_event = exit_event
         self.do_update_window_size()
         self.thread.start()
+
+    def _frame_arrived_callback(self, x, y):
+        # print("Frame arrived")
+        pass
+
+    def start(self, hwnd, capture_cursor=False):
+        self._create_device()
+        interop = GetActivationFactory('Windows.Graphics.Capture.GraphicsCaptureItem').astype(
+            IGraphicsCaptureItemInterop)
+        item = interop.CreateForWindow(hwnd, IGraphicsCaptureItem.GUID)
+        self._item = item
+        self._last_size = item.Size
+        delegate = TypedEventHandler(GraphicsCaptureItem, IInspectable).delegate(
+            self.close)
+        self._evtoken = item.add_Closed(delegate)
+        self.frame_pool = Direct3D11CaptureFramePool.CreateFreeThreaded(self._rtdevice,
+                                                                        DirectXPixelFormat.B8G8R8A8UIntNormalized,
+                                                                        1, item.Size)
+        self.session = self.frame_pool.CreateCaptureSession(item)
+        pool = self.frame_pool
+        pool.add_FrameArrived(
+            TypedEventHandler(Direct3D11CaptureFramePool, IInspectable).delegate(
+                self._frame_arrived_callback))
+        self.session.IsCursorCaptureEnabled = capture_cursor
+        if WINDOWS_BUILD_NUMBER >= WGC_NO_BORDER_MIN_BUILD:
+            print(f"Build number {WINDOWS_BUILD_NUMBER} is_border_required = False")
+            self.session.is_border_required = False
+        self.session.StartCapture()
+
+    def _create_device(self):
+        d3d11.D3D11CreateDevice(
+            None,
+            d3d11.D3D_DRIVER_TYPE_HARDWARE,
+            None,
+            d3d11.D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+            None,
+            0,
+            d3d11.D3D11_SDK_VERSION,
+            ctypes.byref(self._dxdevice),
+            None,
+            ctypes.byref(self._immediatedc)
+        )
+        self._rtdevice = CreateDirect3D11DeviceFromDXGIDevice(self._dxdevice)
+        self._evtoken = None
 
     @override
     def close(self):
@@ -130,56 +148,119 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
             for listener in self.window_change_listeners:
                 listener.window_changed(visible, x, y, border, title_height, window_width, window_height, scaling)
 
-    @override
-    def get_frame(self) -> MatLike | None:
-        # We still need to check the hwnd because WGC will return a blank black image
-        if not (
-                self.check_selected_region_exists()
-                # Only needed for the type-checker
-                and self.frame_pool
-        ):
-            return None
-
-        try:
-            frame = self.frame_pool.try_get_next_frame()
-        # Frame pool is closed
-        except OSError:
-            return None
-
+    def get_frame(self):
+        frame = self.frame_pool.TryGetNextFrame()
         if not frame:
-            # print("try_get_next_frame none")
             return None
+        img = None
+        with frame:
+            need_reset_framepool = False
+            need_reset_device = False
+            if frame.ContentSize.Width != self._last_size.Width or frame.ContentSize.Height != self._last_size.Height:
+                # print('size changed')
+                need_reset_framepool = True
+                self._last_size = frame.ContentSize
 
-        async def coroutine():
-            return await SoftwareBitmap.create_copy_from_surface_async(frame.surface)
+            if need_reset_framepool:
+                self._reset_framepool(frame.ContentSize)
+                return self.get_frame()
+            tex = None
+            cputex = None
+            try:
+                tex = frame.Surface.astype(IDirect3DDxgiInterfaceAccess).GetInterface(
+                    d3d11.ID3D11Texture2D.GUID).astype(d3d11.ID3D11Texture2D)
+                desc = tex.GetDesc()
+                desc2 = d3d11.D3D11_TEXTURE2D_DESC()
+                desc2.Width = desc.Width
+                desc2.Height = desc.Height
+                desc2.MipLevels = desc.MipLevels
+                desc2.ArraySize = desc.ArraySize
+                desc2.Format = desc.Format
+                desc2.SampleDesc = desc.SampleDesc
+                desc2.Usage = d3d11.D3D11_USAGE_STAGING
+                desc2.CPUAccessFlags = d3d11.D3D11_CPU_ACCESS_READ
+                desc2.BindFlags = 0
+                desc2.MiscFlags = 0
+                cputex = self._dxdevice.CreateTexture2D(ctypes.byref(desc2), None)
+                self._immediatedc.CopyResource(cputex, tex)
+                mapinfo = self._immediatedc.Map(cputex, 0, d3d11.D3D11_MAP_READ, 0)
+                img = np.ctypeslib.as_array(ctypes.cast(mapinfo.pData, PBYTE),
+                                            (desc.Height, mapinfo.RowPitch // 4, 4))[
+                      :, :desc.Width].copy()
+                self._immediatedc.Unmap(cputex, 0)
+            except OSError as e:
+                if e.winerror == d3d11.DXGI_ERROR_DEVICE_REMOVED or e.winerror == d3d11.DXGI_ERROR_DEVICE_RESET:
+                    need_reset_framepool = True
+                    need_reset_device = True
+                else:
+                    raise
+            finally:
+                if tex is not None:
+                    tex.Release()
+                if cputex is not None:
+                    cputex.Release()
+            if need_reset_framepool:
+                self._reset_framepool(frame.ContentSize, need_reset_device)
+                return self.get_frame()
+        return img
 
-        try:
-            software_bitmap = asyncio.run(coroutine())
-            frame.close()
-        except SystemError as exception:
-            # HACK: can happen when closing the GraphicsCapturePicker
-            if str(exception).endswith("returned a result with an error set"):
-                print("return last_captured frame result with an error set")
-                return None
-            raise
+    def _reset_framepool(self, size, reset_device=False):
+        if reset_device:
+            self._create_device()
+        self.frame_pool.Recreate(self._rtdevice,
+                                 DirectXPixelFormat.B8G8R8A8UIntNormalized, 1, size)
 
-        if not software_bitmap:
-            print("return last_captured frame")
-            # HACK: Can happen when starting the region selector
-            return None
-            # raise ValueError("Unable to convert Direct3D11CaptureFrame to SoftwareBitmap.")
-        bitmap_buffer = software_bitmap.lock_buffer(BitmapBufferAccessMode.READ_WRITE)
-        if not bitmap_buffer:
-            raise ValueError("Unable to obtain the BitmapBuffer from SoftwareBitmap.")
-        reference = bitmap_buffer.create_reference()
-        image = np.frombuffer(cast(bytes, reference), dtype=np.uint8)
-        # print(f"image.shape {self.title_height,self.border, self.size.height, self.size.width}")
-        image.shape = (self.size.height, self.size.width, BGRA_CHANNEL_COUNT)
-        image = image[
-                self.title_height: self.title_height + self.height,
-                self.border: self.border + self.width
-                ]
-        return image
+    # @override
+    # def get_frame(self) -> MatLike | None:
+    #     # We still need to check the hwnd because WGC will return a blank black image
+    #     if not (
+    #             self.check_selected_region_exists()
+    #             # Only needed for the type-checker
+    #             and self.frame_pool
+    #     ):
+    #         return None
+    #
+    #     try:
+    #         frame = self.frame_pool.TryGetNextFrame()
+    #     # Frame pool is closed
+    #     except OSError:
+    #         print("try_get_next_frame OSError")
+    #         return None
+    #
+    #     if not frame:
+    #         print("try_get_next_frame none")
+    #         return None
+    #
+    #     async def coroutine():
+    #         return await SoftwareBitmap.CreateCopyWithAlphaFromBuffer(frame.Surface)
+    #
+    #     try:
+    #         software_bitmap = asyncio.run(coroutine())
+    #         frame.close()
+    #     except SystemError as exception:
+    #         # HACK: can happen when closing the GraphicsCapturePicker
+    #         if str(exception).endswith("returned a result with an error set"):
+    #             print("return last_captured frame result with an error set")
+    #             return None
+    #         raise
+    #
+    #     if not software_bitmap:
+    #         print("return last_captured frame")
+    #         # HACK: Can happen when starting the region selector
+    #         return None
+    #         # raise ValueError("Unable to convert Direct3D11CaptureFrame to SoftwareBitmap.")
+    #     bitmap_buffer = software_bitmap.lock_buffer(BitmapBufferAccessMode.READ_WRITE)
+    #     if not bitmap_buffer:
+    #         raise ValueError("Unable to obtain the BitmapBuffer from SoftwareBitmap.")
+    #     reference = bitmap_buffer.create_reference()
+    #     image = np.frombuffer(cast(bytes, reference), dtype=np.uint8)
+    #     # print(f"image.shape {self.title_height,self.border, self.size.height, self.size.width}")
+    #     image.shape = (self.size.height, self.size.width, BGRA_CHANNEL_COUNT)
+    #     image = image[
+    #             self.title_height: self.title_height + self.height,
+    #             self.border: self.border + self.width
+    #             ]
+    #     return image
 
     @override
     def recover_window(self, captured_window_title: str, autosplit: "AutoSplit"):

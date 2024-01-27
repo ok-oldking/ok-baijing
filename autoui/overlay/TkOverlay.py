@@ -52,10 +52,16 @@ class TkOverlay(BaseOverlay):
                 # Remove old UI elements
                 for ui in old_uis:
                     self.canvas.delete(ui)
-                    del self.uiDict[ui]
+
+                remaining_uis = [ui for ui in self.uiDict[key] if
+                                 current_time - ui[1] < self.time_to_expire]
+                if len(remaining_uis) > 0:
+                    self.uiDict[key] = remaining_uis
+                else:
+                    del self.uiDict[key]
 
             # If not present, initialize the list
-            if key in self.uiDict[key]:
+            if key in self.uiDict:
                 for ui in self.uiDict[key]:
                     self.canvas.delete(ui[0])
 

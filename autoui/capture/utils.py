@@ -10,26 +10,24 @@ from platform import version
 from threading import Thread
 from typing import TYPE_CHECKING, Any, TypeGuard, TypeVar
 
+import win32gui
 import win32ui
 from cv2.typing import MatLike
-from typing_extensions import reveal_type
-from win32 import win32gui
-from winsdk.windows.ai.machinelearning import LearningModelDevice, LearningModelDeviceKind
-from winsdk.windows.media.capture import MediaCapture
 
 if TYPE_CHECKING:
     # Source does not exist, keep this under TYPE_CHECKING
     from _win32typing import PyCDC  # pyright: ignore[reportMissingModuleSource]
 
-_T = TypeVar("_T")
+T = TypeVar("T")
 
-
+ONE_SECOND = 1000
+"""1000 milliseconds in 1 second"""
 DWMWA_EXTENDED_FRAME_BOUNDS = 9
 MAXBYTE = 255
 BGR_CHANNEL_COUNT = 3
-"""How many channels in an RGB image"""
+"""How many channels in a BGR image"""
 BGRA_CHANNEL_COUNT = 4
-"""How many channels in an RGBA image"""
+"""How many channels in a BGRA image"""
 
 
 class ImageShape(IntEnum):
@@ -64,16 +62,13 @@ def is_valid_image(image: MatLike | None) -> TypeGuard[MatLike]:
     return image is not None and bool(image.size)
 
 
-def is_valid_hwnd(hwnd: int) -> bool:
+def is_valid_hwnd(hwnd: int):
     """Validate the hwnd points to a valid window and not the desktop or whatever window obtained with `""`."""
     if not hwnd:
         return False
     if sys.platform == "win32":
         return bool(win32gui.IsWindow(hwnd) and win32gui.GetWindowText(hwnd))
     return True
-
-
-T = TypeVar("T")
 
 
 def first(iterable: Iterable[T]) -> T:
@@ -118,36 +113,6 @@ def get_or_create_eventloop():
         return asyncio.get_event_loop()
 
 
-def get_direct3d_device():
-    # Note: Must create in the same thread (can't use a global) otherwise when ran from LiveSplit it will raise:
-    # OSError: The application called an interface that was marshalled for a different thread
-    media_capture = MediaCapture()
-
-    async def init_mediacapture():
-        await (media_capture.initialize_async() or asyncio.sleep(0))
-
-    asyncio.run(init_mediacapture())
-    direct_3d_device = media_capture.media_capture_settings and media_capture.media_capture_settings.direct3_d11_device
-    reveal_type(direct_3d_device)
-    if not direct_3d_device:
-        try:
-            # May be problematic? https://github.com/pywinrt/python-winsdk/issues/11#issuecomment-1315345318
-            direct_3d_device = LearningModelDevice(LearningModelDeviceKind.DIRECT_X_HIGH_PERFORMANCE).direct3_d11_device
-        # TODO: Unknown potential error, I don't have an older Win10 machine to test.
-        except BaseException:  # noqa: S110,BLE001
-            pass
-    if not direct_3d_device:
-        raise OSError("Unable to initialize a Direct3D Device.")
-    return direct_3d_device
-
-
-def try_get_direct3d_device():
-    try:
-        return get_direct3d_device()
-    except OSError:
-        return None
-
-
 def fire_and_forget(func: Callable[..., Any]):
     """
     Runs synchronous function asynchronously without waiting for a response.
@@ -168,7 +133,7 @@ def fire_and_forget(func: Callable[..., Any]):
     return wrapped
 
 
-def flatten(nested_iterable: Iterable[Iterable[_T]]) -> chain[_T]:
+def flatten(nested_iterable: Iterable[Iterable[T]]) -> chain[T]:
     return chain.from_iterable(nested_iterable)
 
 
