@@ -19,20 +19,11 @@ class Win32Interaction:
             print(f"You must be an admin to use Win32Interaction", file=sys.stderr)
 
     def send_key(self, key, down_time=0.02):
-        if not self.capture.visible:
+        if not self.capture.bring_to_front():
             return
         pydirectinput.keyDown(key)
         time.sleep(down_time)
         pydirectinput.keyUp(key)
-        # win32api.PostMessage(self.hwnd, win32con.WM_CHAR, key, 0)
-        # vk_code = self.get_virtual_keycode(key)
-        # scan_code = self.MapVirtualKeyW(vk_code, 0)
-        # wparam = vk_code
-        # lparam = (scan_code << 16) | 1
-        # lparam2 = (scan_code << 16) | 0XC0000001
-        # self.PostMessageW(static_lib.HANDLEOBJ.get_handle(), self.WM_KEYDOWN, wparam, lparam)
-        # time.sleep(0.05)
-        # self.PostMessageW(static_lib.HANDLEOBJ.get_handle(), self.WM_KEYUP, wparam, lparam2)
 
     def left_click_relative(self, x, y):
         self.left_click(int(self.capture.width * x), int(self.capture.height * y))
@@ -42,7 +33,7 @@ class Win32Interaction:
         self.left_click(x, y)
 
     def left_click(self, x=-1, y=-1):
-        if not self.capture.visible:
+        if not self.capture.bring_to_front():
             return
         # Convert the x, y position to lParam
         # lParam = win32api.MAKELONG(x, y)

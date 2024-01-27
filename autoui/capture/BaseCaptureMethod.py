@@ -23,5 +23,8 @@ class BaseCaptureMethod:
     def get_frame(self) -> MatLike | None:
         pass
 
+    def bring_to_front(self) -> bool:
+        pass
+
     def draw_rectangle(self):
         pass
