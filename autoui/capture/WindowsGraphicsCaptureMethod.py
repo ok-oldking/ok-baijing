@@ -81,7 +81,7 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
         self.session.IsCursorCaptureEnabled = capture_cursor
         if WINDOWS_BUILD_NUMBER >= WGC_NO_BORDER_MIN_BUILD:
             print(f"Build number {WINDOWS_BUILD_NUMBER} is_border_required = False")
-            self.session.is_border_required = False
+            self.session.IsBorderRequired = False
         self.session.StartCapture()
 
     def _create_device(self):

@@ -41,6 +41,11 @@ class IGraphicsCaptureSession2(IInspectable):
     pass
 
 
+@GUID('F2CDD966-22AE-5EA1-9596-3A289344C3BE')
+class IGraphicsCaptureSession3(IInspectable):
+    pass
+
+
 @GUID('3628E81B-3CAC-4C60-B7F4-23CE0E0C3356')
 class IGraphicsCaptureItemInterop(IUnknown):
     pass
@@ -58,7 +63,8 @@ class GraphicsCaptureItem(runtimeclass, IGraphicsCaptureItem):
     pass
 
 
-class GraphicsCaptureSession(runtimeclass, IGraphicsCaptureSession, IGraphicsCaptureSession2, IClosable):
+class GraphicsCaptureSession(runtimeclass, IGraphicsCaptureSession, IGraphicsCaptureSession2, IGraphicsCaptureSession3,
+                             IClosable):
     pass
 
 
@@ -94,6 +100,9 @@ define_winrt_com_method(IGraphicsCaptureSession, 'StartCapture')
 
 define_winrt_com_method(IGraphicsCaptureSession2, 'get_IsCursorCaptureEnabled', propget=c_bool)
 define_winrt_com_method(IGraphicsCaptureSession2, 'put_IsCursorCaptureEnabled', propput=c_bool)
+
+define_winrt_com_method(IGraphicsCaptureSession3, 'get_IsBorderRequired', propget=c_bool)
+define_winrt_com_method(IGraphicsCaptureSession3, 'put_IsBorderRequired', propput=c_bool)
 
 define_winrt_com_method(IGraphicsCaptureItemInterop, 'CreateForWindow', HWND, REFGUID, retval=GraphicsCaptureItem)
 define_winrt_com_method(IGraphicsCaptureItemInterop, 'CreateForMonitor', HMONITOR, REFGUID, retval=GraphicsCaptureItem)
