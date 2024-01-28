@@ -9,19 +9,8 @@ from autoui.feature.Box import Box
 from autoui.scene.Scene import Scene
 from autoui.task.FindFeatureTask import FindFeatureTask
 from autoui.task.TaskExecutor import TaskExecutor
+from genshin.matching.choice import find_choices
 from genshin.scene.DialogScene import DialogScene
-
-white_color = {
-    'r': (240, 255),  # Red range
-    'g': (240, 255),  # Green range
-    'b': (240, 255)  # Blue range
-}
-
-dark_gray_color = {
-    'r': (40, 60),  # Red range
-    'g': (50, 75),  # Green range
-    'b': (65, 85)  # Blue range
-}
 
 
 class AutoDialogTask(FindFeatureTask):
@@ -38,7 +27,7 @@ class AutoDialogTask(FindFeatureTask):
             elif not self.try_find_click_dialog(frame):  # no dialog choices, we send space to speed up
                 print(f"AutoDialogTask:found pause_button space")
                 self.interaction.left_click()
-                time.sleep(0.5)
+                time.sleep(1)
 
     def try_find_click_dialog(self, frame):
         dialogs = self.find(frame, "button_dialog", 0.5, 0.5)
@@ -46,7 +35,9 @@ class AutoDialogTask(FindFeatureTask):
             if len(dialogs) > 1:
                 self.dialog_vertical_distance = abs(dialogs[0].y - dialogs[1].y)
                 print(f"AutoDialogTask: dialog_vertical_distance {self.dialog_vertical_distance}")
-            above_count = len(self.find_choices_above(frame, dialogs[0]))
+            choices = find_choices(frame, dialogs[0], vertical=-self.dialog_vertical_distance, threshold=0.3)
+            self.draw_boxes("choices", choices)
+            above_count = len(choices)
             if above_count > 0:
                 print(f"AutoDialogTask: Found {above_count} choices above dialog, won't click")
                 return
@@ -56,10 +47,15 @@ class AutoDialogTask(FindFeatureTask):
 
     def find_choices_above(self, frame, box) -> List[Box]:
         result = []
-        if self.dialog_vertical_distance > 0:
-            to_find = Box(box.x, box.y + self.dialog_vertical_distance, box.width, box.height)
+        to_find = box
+        while self.dialog_vertical_distance > 0:
+            to_find = Box(to_find.x, to_find.y + self.dialog_vertical_distance, to_find.width, to_find.height)
             percentage_white = calculate_color_percentage(frame, to_find, white_color)
             percentage_grey = calculate_color_percentage(frame, to_find, dark_gray_color)
             print(
                 f"AutoDialogTask: find_choices_above percentage_white {percentage_white} percentage_grey {percentage_grey}")
+            if percentage_grey + percentage_white > 50:
+                result.append(to_find)
+            else:
+                break
         return result

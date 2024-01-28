@@ -127,9 +127,9 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
             self.exit_event.wait(0.01)
 
     def bring_to_front(self):
-        if not self.visible:
-            win32gui.SetForegroundWindow(self.hwnd)
-            self.do_update_window_size()
+        # if not self.visible:
+        #     win32gui.SetForegroundWindow(self.hwnd)
+        #     self.do_update_window_size()
         return self.visible
 
     def get_abs_cords(self, x, y):
