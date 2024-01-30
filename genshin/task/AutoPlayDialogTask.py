@@ -10,23 +10,23 @@ from autoui.scene.Scene import Scene
 from autoui.task.FindFeatureTask import FindFeatureTask
 from autoui.task.TaskExecutor import TaskExecutor
 from genshin.matching.choice import find_choices
-from genshin.scene.DialogScene import DialogScene
+from genshin.scene.DialogPlayingScene import DialogPlayingScene
 
 
-class AutoDialogTask(FindFeatureTask):
+class AutoPlayDialogTask(FindFeatureTask):
     dialog_vertical_distance = 0
 
     @override
     def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):
-        if isinstance(scene, DialogScene):
+        if isinstance(scene, DialogPlayingScene):
             if scene.button_play:
                 # turn on autoplay
                 print(f"AutoDialogTask:turn on auto play")
                 self.interaction.left_click_box(scene.button_play)
                 time.sleep(1)
-            elif not self.try_find_click_dialog(frame):  # no dialog choices, we send space to speed up
-                print(f"AutoDialogTask:found pause_button space")
-                self.interaction.left_click()
+            else:  # no dialog choices, we send space to speed up
+                # print(f"AutoDialogTask:found pause_button space")
+                self.interaction.send_key("space")
                 time.sleep(1)
 
     def try_find_click_dialog(self, frame):
