@@ -1,4 +1,4 @@
-from autoui.capture.WindowsGraphicsCaptureMethod import WindowsCaptureMethodGraphics
+from autoui.capture.windows.WindowsGraphicsCaptureMethod import WindowsCaptureMethodGraphics
 from autoui.save.BlackBarProcessor import BlackBarProcessor
 from autoui.save.SaveByKeyPress import SaveByKeyPress
 

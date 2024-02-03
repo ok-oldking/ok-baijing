@@ -2,7 +2,7 @@ import time
 
 import cv2
 
-from autoui.capture.WindowsGraphicsCaptureMethod import BaseCaptureMethod
+from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 
 
 class SaveByInterval:

@@ -9,17 +9,17 @@ from typing_extensions import override
 from win32 import win32gui
 
 from autoui.capture.BaseCaptureMethod import BaseCaptureMethod
-from autoui.capture.utils import is_valid_hwnd, WINDOWS_BUILD_NUMBER
-from autoui.capture.window import is_foreground_window, get_window_bounds
+from autoui.capture.windows import d3d11
+from autoui.capture.windows.utils import is_valid_hwnd, WINDOWS_BUILD_NUMBER
+from autoui.capture.windows.window import is_foreground_window, get_window_bounds
+from autoui.rotypes import IInspectable
+from autoui.rotypes.Windows.Foundation import TypedEventHandler
 from autoui.rotypes.Windows.Graphics.Capture import Direct3D11CaptureFramePool, IGraphicsCaptureItemInterop, \
     IGraphicsCaptureItem, GraphicsCaptureItem
 from autoui.rotypes.Windows.Graphics.DirectX import DirectXPixelFormat
 from autoui.rotypes.Windows.Graphics.DirectX.Direct3D11 import IDirect3DDevice, CreateDirect3D11DeviceFromDXGIDevice, \
     IDirect3DDxgiInterfaceAccess
 from autoui.rotypes.roapi import GetActivationFactory
-from . import d3d11
-from ..rotypes import IInspectable
-from ..rotypes.Windows.Foundation import TypedEventHandler
 
 PBYTE = ctypes.POINTER(ctypes.c_ubyte)
 WGC_NO_BORDER_MIN_BUILD = 20348

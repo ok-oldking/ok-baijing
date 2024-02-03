@@ -1,6 +1,6 @@
 from autoui.overlay.TkWindow import TkWindow
 
-from autoui.capture.WindowsGraphicsCaptureMethod import WindowsCaptureMethodGraphics
+from autoui.capture.windows.WindowsGraphicsCaptureMethod import WindowsCaptureMethodGraphics
 from autoui.feature.FeatureSet import FeatureSet
 from autoui.interaction.Win32Interaction import Win32Interaction
 from autoui.task.TaskExecutor import TaskExecutor

@@ -3,7 +3,7 @@ import time  # Import time module to track update times
 import tkinter as tk
 from typing import List
 
-from autoui.capture.WindowsGraphicsCaptureMethod import BaseCaptureMethod
+from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 from autoui.feature.Box import Box
 from autoui.overlay.BaseOverlay import BaseOverlay
 

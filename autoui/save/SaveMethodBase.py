@@ -3,7 +3,7 @@ import threading
 
 import cv2
 
-from autoui.capture.WindowsGraphicsCaptureMethod import BaseCaptureMethod
+from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 from autoui.save.PostProcessor import PostProcessor
 
 

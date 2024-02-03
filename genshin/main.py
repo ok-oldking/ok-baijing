@@ -1,6 +1,6 @@
 import threading
 
-from autoui.capture.WindowsGraphicsCaptureMethod import WindowsCaptureMethodGraphics
+from autoui.capture.windows.WindowsGraphicsCaptureMethod import WindowsCaptureMethodGraphics
 from autoui.feature.FeatureSet import FeatureSet
 from autoui.interaction.Win32Interaction import Win32Interaction
 from autoui.overlay.TkOverlay import TkOverlay
