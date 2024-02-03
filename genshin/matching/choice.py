@@ -30,14 +30,14 @@ def find_choices(frame, box, horizontal=0, vertical=0, limit=1000, threshold=0.6
     count = 0
     while True:
         to_find = Box(to_find.x + horizontal, to_find.y + vertical, to_find.width, to_find.height)
-        percentage_white = calculate_color_percentage(frame, to_find, white_color)
-        percentage_grey = calculate_color_percentage(frame, to_find, dark_gray_color)
+        percentage_white = calculate_color_percentage(frame, white_color, to_find)
+        percentage_grey = calculate_color_percentage(frame, dark_gray_color, to_find)
         to_find.confidence = percentage_grey + percentage_white
         if to_find.confidence > threshold:
             count = count + 1
             result.append(to_find)
-            print(
-                f"AutoDialogTask: find_choices_above percentage_white {percentage_white} percentage_grey {percentage_grey}")
+            # print(
+            #     f"AutoDialogTask: find_choices_above percentage_white {percentage_white} percentage_grey {percentage_grey}")
             if count >= limit:
                 break
             if horizontal == 0 and vertical == 0:

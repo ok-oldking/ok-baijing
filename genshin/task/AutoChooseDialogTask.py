@@ -15,6 +15,6 @@ class AutoChooseDialogTask(FindFeatureTask):
     @override
     def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):
         if isinstance(scene, DialogChoicesScene):
-            print(f"AutoChooseDialogTask choose last option")
-            self.interaction.left_click_box(scene.dialogs[-1])
+            print(f"AutoChooseDialogTask choose first option")
+            self.interaction.left_click_box(scene.dialogs[0])
             time.sleep(1)

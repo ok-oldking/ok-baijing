@@ -9,7 +9,6 @@ from autoui.scene.Scene import Scene
 class TaskExecutor:
     tasks = []
     scenes: List[Scene] = []
-    last_frame = None
     current_scene: Scene | None = None
 
     def __init__(self, method: BaseCaptureMethod, target_fps=10, exit_event=threading.Event()):
@@ -18,23 +17,6 @@ class TaskExecutor:
         self.thread = threading.Thread(target=self.execute)
         self.exit_event = exit_event
         self.thread.start()
-        self.capture_thread = threading.Thread(target=self.capture_frame)
-        self.capture_thread.start()
-        # self.frame = None    
-
-    def capture_frame(self):
-        while not self.exit_event.is_set():
-            start = time.time()
-            frame = self.method.get_frame()
-            if frame is not None:
-                # print("get frame is not None")
-                if hasattr(self.tasks[0].interaction.overlay, "draw_image"):
-                    self.tasks[0].interaction.overlay.draw_image(frame)
-                self.last_frame = frame
-                self.detect_scene(frame)
-                self.wait_fps(start)
-            else:
-                print("get frame is None")
 
     def wait_fps(self, start):
         cost = time.time() - start
@@ -44,8 +26,7 @@ class TaskExecutor:
 
     def next_frame(self):
         while not self.exit_event.is_set():
-            frame = self.last_frame
-            self.last_frame = None
+            frame = self.method.get_frame()
             if frame is not None:
                 return frame
 
@@ -53,16 +34,19 @@ class TaskExecutor:
         print(f"execute")
         while not self.exit_event.is_set():
             start = time.time()
-            if self.current_scene is not None:
-                frame = self.last_frame
-                for task in self.tasks:
-                    if self.last_frame is not None:
-                        # print(f"task {self.current_scene} {task} {self.last_frame}")
-                        frame = self.last_frame
-                    self.last_frame = None
-                    if frame is not None:
+            frame = self.method.get_frame()
+            if frame is not None:
+                self.detect_scene(frame)
+                if self.current_scene is not None:
+                    task_executed = 0
+                    for task in self.tasks:
                         task.run_frame(self, self.current_scene, frame)
-            # print(f"frame time {time.time() - start} {self.current_scene}")
+                        processing_time = time.time() - start
+                        task_executed += 1
+                        if processing_time > 0.2:
+                            print(
+                                f"{task.__class__.__name__} taking too long skip to next frame {processing_time} {task_executed} {len(self.tasks)}")
+                            break
             self.wait_fps(start)
 
     def detect_scene(self, frame):

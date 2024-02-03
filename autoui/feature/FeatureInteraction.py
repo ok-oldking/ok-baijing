@@ -12,6 +12,8 @@ class FeatureInteraction:
         self.feature_set = feature_set
 
     def find(self, frame, feature_name, horizontal_variance=0, vertical_variance=0, threshold=0.8) -> List[Box]:
+        if frame is None:
+            return list()
         boxes = self.feature_set.find_feature(frame, feature_name, horizontal_variance, vertical_variance, threshold)
         # for box in boxes:
         # print(f'Box {feature_name} found at: x={box.x}, y={box.y}, width={box.width}, height={box.height}')

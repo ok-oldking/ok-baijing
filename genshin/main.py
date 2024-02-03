@@ -5,7 +5,9 @@ from autoui.feature.FeatureSet import FeatureSet
 from autoui.interaction.Win32Interaction import Win32Interaction
 from autoui.overlay.TkOverlay import TkOverlay
 from autoui.task.TaskExecutor import TaskExecutor
+from genshin.scene.BlackDialogScene import BlackDialogScene
 from genshin.scene.DialogChoicesScene import DialogChoicesScene
+from genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene
 from genshin.scene.DialogPlayingScene import DialogPlayingScene
 from genshin.scene.MonthlyCardScene import MonthlyCardScene
 from genshin.scene.StartScence import StartScene
@@ -36,7 +38,9 @@ task_executor.tasks.append(AutoLoginTask(interaction, feature_set))
 task_executor.scenes.append(WorldScene(interaction, feature_set))
 task_executor.scenes.append(StartScene(interaction, feature_set))
 task_executor.scenes.append(MonthlyCardScene(interaction, feature_set))
+task_executor.scenes.append(DialogCloseButtonScene(interaction, feature_set))
 task_executor.scenes.append(DialogChoicesScene(interaction, feature_set))
 task_executor.scenes.append(DialogPlayingScene(interaction, feature_set))
+task_executor.scenes.append(BlackDialogScene(interaction, feature_set))
 
 overlay.start()

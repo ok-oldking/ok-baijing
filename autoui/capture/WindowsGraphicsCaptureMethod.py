@@ -2,6 +2,7 @@
 import ctypes
 import ctypes.wintypes
 import threading
+import time
 
 import numpy as np
 from typing_extensions import override
@@ -37,6 +38,8 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
     """This is stored to prevent session from being garbage collected"""
 
     hwnd = None
+    last_frame = None
+    last_frame_time = 0
 
     def __init__(self, title="", exit_event=threading.Event()):
         super().__init__()
@@ -58,7 +61,61 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
 
     def _frame_arrived_callback(self, x, y):
         # print("Frame arrived")
-        pass
+        frame = self.frame_pool.TryGetNextFrame()
+        if not frame:
+            return
+        self.last_frame_time = time.time()
+        img = None
+        with frame:
+            need_reset_framepool = False
+            need_reset_device = False
+            if frame.ContentSize.Width != self._last_size.Width or frame.ContentSize.Height != self._last_size.Height:
+                # print('size changed')
+                need_reset_framepool = True
+                self._last_size = frame.ContentSize
+
+            if need_reset_framepool:
+                self._reset_framepool(frame.ContentSize)
+                return
+            tex = None
+            cputex = None
+            try:
+                tex = frame.Surface.astype(IDirect3DDxgiInterfaceAccess).GetInterface(
+                    d3d11.ID3D11Texture2D.GUID).astype(d3d11.ID3D11Texture2D)
+                desc = tex.GetDesc()
+                desc2 = d3d11.D3D11_TEXTURE2D_DESC()
+                desc2.Width = desc.Width
+                desc2.Height = desc.Height
+                desc2.MipLevels = desc.MipLevels
+                desc2.ArraySize = desc.ArraySize
+                desc2.Format = desc.Format
+                desc2.SampleDesc = desc.SampleDesc
+                desc2.Usage = d3d11.D3D11_USAGE_STAGING
+                desc2.CPUAccessFlags = d3d11.D3D11_CPU_ACCESS_READ
+                desc2.BindFlags = 0
+                desc2.MiscFlags = 0
+                cputex = self._dxdevice.CreateTexture2D(ctypes.byref(desc2), None)
+                self._immediatedc.CopyResource(cputex, tex)
+                mapinfo = self._immediatedc.Map(cputex, 0, d3d11.D3D11_MAP_READ, 0)
+                img = np.ctypeslib.as_array(ctypes.cast(mapinfo.pData, PBYTE),
+                                            (desc.Height, mapinfo.RowPitch // 4, 4))[
+                      :, :desc.Width].copy()
+                self._immediatedc.Unmap(cputex, 0)
+            except OSError as e:
+                if e.winerror == d3d11.DXGI_ERROR_DEVICE_REMOVED or e.winerror == d3d11.DXGI_ERROR_DEVICE_RESET:
+                    need_reset_framepool = True
+                    need_reset_device = True
+                else:
+                    raise
+            finally:
+                if tex is not None:
+                    tex.Release()
+                if cputex is not None:
+                    cputex.Release()
+            if need_reset_framepool:
+                self._reset_framepool(frame.ContentSize, need_reset_device)
+                return self.get_frame()
+        self.last_frame = img
 
     def start(self, hwnd, capture_cursor=False):
         self._create_device()
@@ -155,60 +212,14 @@ class WindowsCaptureMethodGraphics(BaseCaptureMethod):
                 listener.window_changed(visible, x, y, border, title_height, window_width, window_height, scaling)
 
     def get_frame(self):
-        frame = self.frame_pool.TryGetNextFrame()
-        if not frame:
+        frame = self.last_frame
+        self.last_frame = None
+        latency = time.time() - self.last_frame_time
+        self.last_frame_time = 0
+        if latency > 0.2:
+            print(f"latency too large return None frame: {latency}")
             return None
-        img = None
-        with frame:
-            need_reset_framepool = False
-            need_reset_device = False
-            if frame.ContentSize.Width != self._last_size.Width or frame.ContentSize.Height != self._last_size.Height:
-                # print('size changed')
-                need_reset_framepool = True
-                self._last_size = frame.ContentSize
-
-            if need_reset_framepool:
-                self._reset_framepool(frame.ContentSize)
-                return self.get_frame()
-            tex = None
-            cputex = None
-            try:
-                tex = frame.Surface.astype(IDirect3DDxgiInterfaceAccess).GetInterface(
-                    d3d11.ID3D11Texture2D.GUID).astype(d3d11.ID3D11Texture2D)
-                desc = tex.GetDesc()
-                desc2 = d3d11.D3D11_TEXTURE2D_DESC()
-                desc2.Width = desc.Width
-                desc2.Height = desc.Height
-                desc2.MipLevels = desc.MipLevels
-                desc2.ArraySize = desc.ArraySize
-                desc2.Format = desc.Format
-                desc2.SampleDesc = desc.SampleDesc
-                desc2.Usage = d3d11.D3D11_USAGE_STAGING
-                desc2.CPUAccessFlags = d3d11.D3D11_CPU_ACCESS_READ
-                desc2.BindFlags = 0
-                desc2.MiscFlags = 0
-                cputex = self._dxdevice.CreateTexture2D(ctypes.byref(desc2), None)
-                self._immediatedc.CopyResource(cputex, tex)
-                mapinfo = self._immediatedc.Map(cputex, 0, d3d11.D3D11_MAP_READ, 0)
-                img = np.ctypeslib.as_array(ctypes.cast(mapinfo.pData, PBYTE),
-                                            (desc.Height, mapinfo.RowPitch // 4, 4))[
-                      :, :desc.Width].copy()
-                self._immediatedc.Unmap(cputex, 0)
-            except OSError as e:
-                if e.winerror == d3d11.DXGI_ERROR_DEVICE_REMOVED or e.winerror == d3d11.DXGI_ERROR_DEVICE_RESET:
-                    need_reset_framepool = True
-                    need_reset_device = True
-                else:
-                    raise
-            finally:
-                if tex is not None:
-                    tex.Release()
-                if cputex is not None:
-                    cputex.Release()
-            if need_reset_framepool:
-                self._reset_framepool(frame.ContentSize, need_reset_device)
-                return self.get_frame()
-        return img
+        return frame
 
     def _reset_framepool(self, size, reset_device=False):
         if reset_device:
