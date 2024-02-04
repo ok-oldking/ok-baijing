@@ -37,6 +37,7 @@ class TaskExecutor:
             frame = self.method.get_frame()
             if frame is not None:
                 self.detect_scene(frame)
+                print(f"detect_scene: {self.current_scene.__class__.__name__}")
                 if self.current_scene is not None:
                     task_executed = 0
                     for task in self.tasks:

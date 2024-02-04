@@ -25,7 +25,7 @@ PBYTE = ctypes.POINTER(ctypes.c_ubyte)
 WGC_NO_BORDER_MIN_BUILD = 20348
 
 
-class WindowsCaptureMethodGraphics(BaseCaptureMethod):
+class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
     name = "Windows Graphics Capture"
     short_description = "fast, most compatible, capped at 60fps"
     visible = True
