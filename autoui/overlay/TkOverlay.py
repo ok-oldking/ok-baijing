@@ -17,6 +17,7 @@ class TkOverlay(BaseOverlay):
         self.canvas = None
         self.method = method
         self.uiDict = {}
+        self.textDict = {}
         root = tk.Tk()
         self.root = root
         self.init_window()
@@ -40,6 +41,35 @@ class TkOverlay(BaseOverlay):
         if self.exit_event and self.exit_event.is_set():
             return
         self.root.after(0, lambda: self.tk_draw_boxes(key, boxes, outline))
+
+    def draw_text(self, key: str, x, y, text: str):
+        if self.exit_event and self.exit_event.is_set():
+            return
+        self.root.after(0, lambda: self.do_draw_text(key, x, y, text))
+
+    def do_draw_text(self, key: str, x, y, text: str):
+        """Draw or update text on the screen at a given position."""
+        with self.lock:  # Use the lock to ensure thread safety
+            # Convert relative position to actual position based on canvas size
+            canvas_width = self.canvas.winfo_width()
+            canvas_height = self.canvas.winfo_height()
+            abs_x, abs_y = x * canvas_width, y * canvas_height
+
+            # Check if text (and its position) needs to be updated or created
+            if key in self.textDict:
+                text_id, existing_text, existing_position = self.textDict[key]
+                # Update text and/or position if they have changed
+                if text != existing_text or (abs_x, abs_y) != existing_position:
+                    self.canvas.itemconfig(text_id, text=text)
+                    self.canvas.coords(text_id, abs_x, abs_y)
+                    # Update stored text and position
+                    self.textDict[key] = (text_id, text, (abs_x, abs_y))
+            else:
+                # Create new text element
+                text_id = self.canvas.create_text(abs_x, abs_y, anchor="nw", fill="white", text=text,
+                                                  font=("Arial", 20))
+                # Store text ID, content, and position
+                self.textDict[key] = (text_id, text, (abs_x, abs_y))
 
     def tk_draw_boxes(self, key: str, boxes: List[Box], outline: str):
         current_time = time.time()  # Get the current time

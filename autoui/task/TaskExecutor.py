@@ -4,19 +4,22 @@ from typing import List
 
 from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 from autoui.scene.Scene import Scene
+from autoui.stats.StreamStats import StreamStats
 
 
 class TaskExecutor:
     tasks = []
     scenes: List[Scene] = []
     current_scene: Scene | None = None
+    frame_stats = StreamStats()
 
-    def __init__(self, method: BaseCaptureMethod, target_fps=10, exit_event=threading.Event()):
+    def __init__(self, method: BaseCaptureMethod, overlay=None, target_fps=10, exit_event=threading.Event()):
         self.method = method
         self.target_delay = 1.0 / target_fps
         self.thread = threading.Thread(target=self.execute)
         self.exit_event = exit_event
         self.thread.start()
+        self.overlay = overlay
 
     def wait_fps(self, start):
         cost = time.time() - start
@@ -33,11 +36,11 @@ class TaskExecutor:
     def execute(self):
         print(f"execute")
         while not self.exit_event.is_set():
-            start = time.time()
             frame = self.method.get_frame()
+            start = time.time()
             if frame is not None:
                 self.detect_scene(frame)
-                print(f"detect_scene: {self.current_scene.__class__.__name__}")
+                # print(f"detect_scene: {self.current_scene.__class__.__name__} {(time.time() - start)}")
                 if self.current_scene is not None:
                     task_executed = 0
                     for task in self.tasks:
@@ -48,6 +51,14 @@ class TaskExecutor:
                             print(
                                 f"{task.__class__.__name__} taking too long skip to next frame {processing_time} {task_executed} {len(self.tasks)}")
                             break
+                if self.overlay:
+                    frame_time_ms = round((time.time() - start) * 1000)
+                    self.frame_stats.add(frame_time_ms)
+                    mean = self.frame_stats.mean()
+                    if mean > 0:
+                        # print(f"frame_stats.mean(): {mean}, fps:{round(1000 / mean)}")
+                        self.overlay.draw_text("fps", 0.3, 0.01,
+                                               f"Scene:{self.current_scene.__class__.__name__} FrameTime:{mean}, FPS:{round(1000 / mean)}")
             self.wait_fps(start)
 
     def detect_scene(self, frame):

@@ -19,7 +19,7 @@ class Win32Interaction:
             print(f"You must be an admin to use Win32Interaction", file=sys.stderr)
 
     def send_key(self, key, down_time=0.02):
-        if not self.capture.bring_to_front():
+        if not self.capture.visible:
             return
         pydirectinput.keyDown(key)
         time.sleep(down_time)
@@ -33,7 +33,7 @@ class Win32Interaction:
         self.left_click(x, y)
 
     def left_click(self, x=-1, y=-1):
-        if not self.capture.bring_to_front():
+        if not self.capture.visible:
             return
         # Convert the x, y position to lParam
         # lParam = win32api.MAKELONG(x, y)

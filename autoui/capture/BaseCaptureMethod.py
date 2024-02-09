@@ -10,6 +10,8 @@ class BaseCaptureMethod:
     bottom_cut = 0
     left_cut = 0
     right_cut = 0
+    width = 0
+    height = 0
     window_change_listeners = []
 
     def __init__(self):
@@ -21,9 +23,6 @@ class BaseCaptureMethod:
         pass
 
     def get_frame(self) -> MatLike | None:
-        pass
-
-    def bring_to_front(self) -> bool:
         pass
 
     def draw_rectangle(self):
