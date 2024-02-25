@@ -12,10 +12,10 @@ class TkOverlay(BaseOverlay):
     dpi_scaling = 1
     lock = threading.Lock()
 
-    def __init__(self, method: HwndWindow, close_event: threading.Event):
+    def __init__(self, window: HwndWindow, close_event: threading.Event):
         super().__init__()
         self.canvas = None
-        self.method = method
+        self.window = window
         self.uiDict = {}
         self.textDict = {}
         root = tk.Tk()
@@ -24,7 +24,7 @@ class TkOverlay(BaseOverlay):
         self.init_canvas()
         self.exit_event = close_event
         self.time_to_expire = 0.5
-        method.add_window_change_listener(self)
+        window.add_window_change_listener(self)
 
     def init_window(self):
         self.root.title("TkOverlay")
@@ -86,13 +86,17 @@ class TkOverlay(BaseOverlay):
 
             # Draw new boxes and record their creation time
             for box in boxes:
+                x = self.window.frame_ratio(box.x)
+                y = self.window.frame_ratio(box.y)
+                width = self.window.frame_ratio(box.width)
+                height = self.window.frame_ratio(box.height)
                 rect = self.canvas.create_rectangle(
-                    box.x / self.dpi_scaling, box.y / self.dpi_scaling,
-                    (box.x + box.width) / self.dpi_scaling,
-                    (box.y + box.height) / self.dpi_scaling,
+                    x / self.dpi_scaling, y / self.dpi_scaling,
+                    (x + width) / self.dpi_scaling,
+                    (y + height) / self.dpi_scaling,
                     outline=outline)
                 text = self.canvas.create_text(
-                    box.x / self.dpi_scaling, (box.y + box.width) / self.dpi_scaling, anchor="nw",
+                    x / self.dpi_scaling, (y + width) / self.dpi_scaling, anchor="nw",
                     fill=outline, text=f"{key}_{round(box.confidence * 100)}", font=("Arial", 20))
                 # Append the UI element and the current time to the uiDict
                 self.uiDict[key].append([rect, current_time])

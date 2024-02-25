@@ -3,6 +3,8 @@ import time
 from typing import List
 
 from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
+from autoui.feature.Box import Box
+from autoui.interaction.BaseInteraction import BaseInteraction
 from autoui.scene.Scene import Scene
 from autoui.stats.StreamStats import StreamStats
 
@@ -13,7 +15,9 @@ class TaskExecutor:
     current_scene: Scene | None = None
     frame_stats = StreamStats()
 
-    def __init__(self, method: BaseCaptureMethod, overlay=None, target_fps=10, exit_event=threading.Event()):
+    def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, overlay=None, target_fps=10,
+                 exit_event=threading.Event()):
+        self.interaction = interaction
         self.method = method
         self.target_delay = 1.0 / target_fps
         self.thread = threading.Thread(target=self.execute)
@@ -32,6 +36,21 @@ class TaskExecutor:
             frame = self.method.get_frame()
             if frame is not None:
                 return frame
+
+    def click(self, x, y):
+        self.reset_scene()
+        self.interaction.click(x, y)
+
+    def click_relative(self, x, y):
+        self.reset_scene()
+        self.interaction.click_relative(x, y)
+
+    def click_box(self, box: Box, relative_x=0.5, relative_y=0.5):
+        self.reset_scene()
+        self.interaction.click_box(box, relative_x, relative_y)
+
+    def reset_scene(self):
+        self.current_scene = None
 
     def execute(self):
         print(f"execute")

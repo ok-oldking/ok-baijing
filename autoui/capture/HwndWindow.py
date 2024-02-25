@@ -21,12 +21,19 @@ class HwndWindow:
     bottom_cut = 0
     left_cut = 0
     window_change_listeners = []
+    frame_aspect_ratio = 0
     hwnd = None
+    frame_width = 0
+    frame_height = 0
 
-    def __init__(self, title="", exit_event=threading.Event()):
+    def __init__(self, title="", exit_event=threading.Event(), frame_width=0, frame_height=0):
         super().__init__()
         self.title = title
         self.visible = False
+        self.frame_width = frame_width
+        self.frame_height = frame_height
+        if frame_width > 0 and frame_height > 0:
+            self.frame_aspect_ratio = frame_width / frame_height
         self.hwnd = win32gui.FindWindow(None, title)
         if not self.hwnd:
             raise Exception(f"window {title} not found")
@@ -54,10 +61,14 @@ class HwndWindow:
         return int(self.x + (self.border + x) / self.scaling), int(self.y + (y + self.title_height) / self.scaling)
 
     def do_update_window_size(self):
-        x, y, border, title_height, window_width, window_height, scaling = get_window_bounds(self.hwnd, self.top_cut,
-                                                                                             self.bottom_cut,
-                                                                                             self.left_cut,
-                                                                                             self.right_cut)
+        x, y, border, title_height, window_width, window_height, scaling = get_window_bounds(self.hwnd)
+        if self.frame_aspect_ratio != 0:
+            window_ratio = window_width / window_height
+            # print(f"window_ratio: {window_ratio} frame_aspect_ratio: {self.frame_aspect_ratio}")
+            if window_ratio < self.frame_aspect_ratio:
+                cropped_window_height = int(window_width / self.frame_aspect_ratio)
+                title_height += window_height - cropped_window_height
+                window_height = cropped_window_height
         visible = is_foreground_window(self.hwnd)
         if self.title_height != title_height or self.border != border or visible != self.visible or self.x != x or self.y != y or self.width != window_width or self.height != window_height:
             print(f"update_window_size: {x} {y} {title_height} {border} {window_width} {window_height}")
@@ -71,3 +82,9 @@ class HwndWindow:
             self.scaling = scaling
             for listener in self.window_change_listeners:
                 listener.window_changed(visible, x, y, border, title_height, window_width, window_height, scaling)
+
+    def frame_ratio(self, size):
+        if self.frame_width > 0 and self.width > 0:
+            return int(size / self.frame_width * self.width)
+        else:
+            return size

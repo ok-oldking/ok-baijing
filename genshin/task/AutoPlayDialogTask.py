@@ -21,12 +21,12 @@ class AutoPlayDialogTask(FindFeatureTask):
             # For DialogPlayingScene, check if the button_play is present
             if isinstance(scene, DialogPlayingScene) and scene.button_play:
                 print("AutoDialogTask: turn on auto play")
-                self.interaction.left_click_box(scene.button_play)
+                self.interaction.click_box(scene.button_play)
             elif isinstance(scene, DialogCloseButtonScene):
                 print("AutoDialogTask: turn on auto play")
-                self.interaction.left_click_box(scene.close_button)
+                self.interaction.click_box(scene.close_button)
             else:
                 # This covers the else case for DialogPlayingScene without button_play
                 # and all instances of BlackDialogScene
-                self.interaction.left_click_relative(0.5, 0.5)
+                self.interaction.click_relative(0.5, 0.5)
             time.sleep(1)

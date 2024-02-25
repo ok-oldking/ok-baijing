@@ -6,16 +6,14 @@ from typing_extensions import override
 from autoui.scene.Scene import Scene
 from autoui.task.FindFeatureTask import FindFeatureTask
 from autoui.task.TaskExecutor import TaskExecutor
-from genshin.scene.MonthlyCardScene import MonthlyCardScene
-from genshin.scene.StartScence import StartScene
+from blue_archive.scene.NotificationScence import NotificationScene
 
 
-class AutoLoginTask(FindFeatureTask):
+class CloseNotificationTask(FindFeatureTask):
 
     @override
     def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):
-        # print("run_frame AutoLoginTask")
-        if isinstance(scene, StartScene) or isinstance(scene, MonthlyCardScene):
+        if isinstance(scene, NotificationScene):
             print(f"Start scene click")
-            self.interaction.click_relative(0.6, 0.6)
+            executor.click_box(scene.close_event, 0.8)
             time.sleep(1)

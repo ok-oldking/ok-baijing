@@ -12,10 +12,10 @@ class Box:
     def __str__(self) -> str:
         return f"Box(x={self.x}, y={self.y}, width={self.width}, height={self.height}, confidence={self.confidence})"
 
-    def center_with_variance(self):
+    def relative_with_variance(self, relative_x=0.5, relative_y=0.5):
         # Calculate the center of the box
-        center_x = self.x + self.width / 2
-        center_y = self.y + self.height / 2
+        center_x = self.x + self.width * relative_x
+        center_y = self.y + self.height * relative_y
 
         # Add random variance
         variance = random.uniform(0, 0.1)

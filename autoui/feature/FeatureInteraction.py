@@ -20,14 +20,18 @@ class FeatureInteraction:
         return self.draw_boxes(feature_name, boxes)
 
     def draw_boxes(self, feature_name, boxes):
-        if hasattr(self.interaction.overlay, "draw_boxes"):
+        if len(boxes) > 0 and self.can_draw():
+            print(f"2 {feature_name} {boxes[0]}")
             self.interaction.overlay.draw_boxes(feature_name, boxes, "red")
         return boxes
 
     def draw_box(self, feature_name, box):
-        if hasattr(self.interaction.overlay, "draw_boxes"):
+        if self.can_draw():
             self.interaction.overlay.draw_boxes(feature_name, [box], "red")
         return box
+
+    def can_draw(self):
+        return (self.interaction.overlay is not None) and hasattr(self.interaction.overlay, "draw_boxes")
 
     def find_one(self, frame, feature_name, horizontal_variance=0, vertical_variance=0, threshold=0.8) -> Box:
         boxes = self.find(frame, feature_name, horizontal_variance, vertical_variance, threshold)
