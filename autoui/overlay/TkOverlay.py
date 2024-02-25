@@ -3,7 +3,7 @@ import time  # Import time module to track update times
 import tkinter as tk
 from typing import List
 
-from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
+from autoui.capture.HwndWindow import HwndWindow
 from autoui.feature.Box import Box
 from autoui.overlay.BaseOverlay import BaseOverlay
 
@@ -12,7 +12,7 @@ class TkOverlay(BaseOverlay):
     dpi_scaling = 1
     lock = threading.Lock()
 
-    def __init__(self, method: BaseCaptureMethod, close_event: threading.Event):
+    def __init__(self, method: HwndWindow, close_event: threading.Event):
         super().__init__()
         self.canvas = None
         self.method = method

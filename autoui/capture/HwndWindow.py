@@ -1,0 +1,73 @@
+# original https://github.com/dantmnf & https://github.com/hakaboom/winAuto
+import threading
+
+from typing_extensions import override
+from win32 import win32gui
+
+from autoui.capture.windows.window import is_foreground_window, get_window_bounds
+
+
+class HwndWindow:
+    visible = True
+    x = 0
+    y = 0
+    width = 0
+    height = 0
+    title_height = 0
+    border = 0
+    scaling = 1
+    top_cut = 0
+    right_cut = 0
+    bottom_cut = 0
+    left_cut = 0
+    window_change_listeners = []
+    hwnd = None
+
+    def __init__(self, title="", exit_event=threading.Event()):
+        super().__init__()
+        self.title = title
+        self.visible = False
+        self.hwnd = win32gui.FindWindow(None, title)
+        if not self.hwnd:
+            raise Exception(f"window {title} not found")
+
+        self.thread = threading.Thread(target=self.update_window_size)
+        self.exit_event = exit_event
+        self.do_update_window_size()
+        self.thread.start()
+
+    @override
+    def close(self):
+        self.exit_event.set()
+
+    def add_window_change_listener(self, listener):
+        self.window_change_listeners.append(listener)
+        listener.window_changed(self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height,
+                                self.scaling)
+
+    def update_window_size(self):
+        while not self.exit_event.is_set():
+            self.do_update_window_size()
+            self.exit_event.wait(0.01)
+
+    def get_abs_cords(self, x, y):
+        return int(self.x + (self.border + x) / self.scaling), int(self.y + (y + self.title_height) / self.scaling)
+
+    def do_update_window_size(self):
+        x, y, border, title_height, window_width, window_height, scaling = get_window_bounds(self.hwnd, self.top_cut,
+                                                                                             self.bottom_cut,
+                                                                                             self.left_cut,
+                                                                                             self.right_cut)
+        visible = is_foreground_window(self.hwnd)
+        if self.title_height != title_height or self.border != border or visible != self.visible or self.x != x or self.y != y or self.width != window_width or self.height != window_height:
+            print(f"update_window_size: {x} {y} {title_height} {border} {window_width} {window_height}")
+            self.visible = visible
+            self.x = x  # border_width
+            self.y = y  # titlebar_with_border_height
+            self.title_height = title_height
+            self.border = border
+            self.width = window_width  # client_width
+            self.height = window_height  # client_height - border_width * 2
+            self.scaling = scaling
+            for listener in self.window_change_listeners:
+                listener.window_changed(visible, x, y, border, title_height, window_width, window_height, scaling)

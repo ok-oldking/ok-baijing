@@ -27,3 +27,6 @@ class BaseCaptureMethod:
 
     def draw_rectangle(self):
         pass
+
+    def clickable(self):
+        pass

@@ -1,17 +1,15 @@
 # original https://github.com/dantmnf & https://github.com/hakaboom/winAuto
 import ctypes
 import ctypes.wintypes
-import threading
 import time
 
 import numpy as np
 from typing_extensions import override
-from win32 import win32gui
 
 from autoui.capture.BaseCaptureMethod import BaseCaptureMethod
+from autoui.capture.HwndWindow import HwndWindow
 from autoui.capture.windows import d3d11
-from autoui.capture.windows.utils import is_valid_hwnd, WINDOWS_BUILD_NUMBER
-from autoui.capture.windows.window import is_foreground_window, get_window_bounds
+from autoui.capture.windows.utils import WINDOWS_BUILD_NUMBER
 from autoui.rotypes import IInspectable
 from autoui.rotypes.Windows.Foundation import TypedEventHandler
 from autoui.rotypes.Windows.Graphics.Capture import Direct3D11CaptureFramePool, IGraphicsCaptureItemInterop, \
@@ -28,36 +26,19 @@ WGC_NO_BORDER_MIN_BUILD = 20348
 class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
     name = "Windows Graphics Capture"
     short_description = "fast, most compatible, capped at 60fps"
-    visible = True
-    x = 0
-    y = 0
-    width = 0
-    height = 0
-    title_height = 0
-    border = 0
-    """This is stored to prevent session from being garbage collected"""
-
-    hwnd = None
     last_frame = None
     last_frame_time = 0
+    hwnd_window: HwndWindow = None
 
-    def __init__(self, title="", exit_event=threading.Event()):
+    def __init__(self, hwnd_window: HwndWindow):
         super().__init__()
-        self.title = title
-        self.visible = False
-        self.hwnd = win32gui.FindWindow(None, title)
-        if not self.hwnd:
-            raise Exception(f"window {title} not found")
+        self.hwnd_window = hwnd_window
+
         self._rtdevice = IDirect3DDevice()
         self._dxdevice = d3d11.ID3D11Device()
         self._immediatedc = d3d11.ID3D11DeviceContext()
 
-        self.start(self.hwnd)
-
-        self.thread = threading.Thread(target=self.update_window_size)
-        self.exit_event = exit_event
-        self.do_update_window_size()
-        self.thread.start()
+        self.start()
 
     def _frame_arrived_callback(self, x, y):
         # print("Frame arrived")
@@ -117,11 +98,11 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
                 return self.get_frame()
         self.last_frame = img
 
-    def start(self, hwnd, capture_cursor=False):
+    def start(self, capture_cursor=False):
         self._create_device()
         interop = GetActivationFactory('Windows.Graphics.Capture.GraphicsCaptureItem').astype(
             IGraphicsCaptureItemInterop)
-        item = interop.CreateForWindow(hwnd, IGraphicsCaptureItem.GUID)
+        item = interop.CreateForWindow(self.hwnd_window.hwnd, IGraphicsCaptureItem.GUID)
         self._item = item
         self._last_size = item.Size
         delegate = TypedEventHandler(GraphicsCaptureItem, IInspectable).delegate(
@@ -159,7 +140,6 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
 
     @override
     def close(self):
-        self.exit_event.set()
         if self.frame_pool:
             self.frame_pool.close()
             self.frame_pool = None
@@ -172,38 +152,6 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
                 # "AutoSplit.exe	<process started at 00:05:37.020 has terminated with 0xc0000409 (EXCEPTION_STACK_BUFFER_OVERRUN)>" # noqa: E501
                 pass
             self.session = None
-
-    def add_window_change_listener(self, listener):
-        self.window_change_listeners.append(listener)
-        listener.window_changed(self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height,
-                                self.scaling)
-
-    def update_window_size(self):
-        while not self.exit_event.is_set():
-            self.do_update_window_size()
-            self.exit_event.wait(0.01)
-
-    def get_abs_cords(self, x, y):
-        return int(self.x + (self.border + x) / self.scaling), int(self.y + (y + self.title_height) / self.scaling)
-
-    def do_update_window_size(self):
-        x, y, border, title_height, window_width, window_height, scaling = get_window_bounds(self.hwnd, self.top_cut,
-                                                                                             self.bottom_cut,
-                                                                                             self.left_cut,
-                                                                                             self.right_cut)
-        visible = is_foreground_window(self.hwnd)
-        if self.title_height != title_height or self.border != border or visible != self.visible or self.x != x or self.y != y or self.width != window_width or self.height != window_height:
-            print(f"update_window_size: {x} {y} {title_height} {border} {window_width} {window_height}")
-            self.visible = visible
-            self.x = x  # border_width
-            self.y = y  # titlebar_with_border_height
-            self.title_height = title_height
-            self.border = border
-            self.width = window_width  # client_width
-            self.height = window_height  # client_height - border_width * 2
-            self.scaling = scaling
-            for listener in self.window_change_listeners:
-                listener.window_changed(visible, x, y, border, title_height, window_width, window_height, scaling)
 
     def get_frame(self):
         frame = self.last_frame
@@ -221,77 +169,8 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
         self.frame_pool.Recreate(self._rtdevice,
                                  DirectXPixelFormat.B8G8R8A8UIntNormalized, 1, size)
 
-    # @override
-    # def get_frame(self) -> MatLike | None:
-    #     # We still need to check the hwnd because WGC will return a blank black image
-    #     if not (
-    #             self.check_selected_region_exists()
-    #             # Only needed for the type-checker
-    #             and self.frame_pool
-    #     ):
-    #         return None
-    #
-    #     try:
-    #         frame = self.frame_pool.TryGetNextFrame()
-    #     # Frame pool is closed
-    #     except OSError:
-    #         print("try_get_next_frame OSError")
-    #         return None
-    #
-    #     if not frame:
-    #         print("try_get_next_frame none")
-    #         return None
-    #
-    #     async def coroutine():
-    #         return await SoftwareBitmap.CreateCopyWithAlphaFromBuffer(frame.Surface)
-    #
-    #     try:
-    #         software_bitmap = asyncio.run(coroutine())
-    #         frame.close()
-    #     except SystemError as exception:
-    #         # HACK: can happen when closing the GraphicsCapturePicker
-    #         if str(exception).endswith("returned a result with an error set"):
-    #             print("return last_captured frame result with an error set")
-    #             return None
-    #         raise
-    #
-    #     if not software_bitmap:
-    #         print("return last_captured frame")
-    #         # HACK: Can happen when starting the region selector
-    #         return None
-    #         # raise ValueError("Unable to convert Direct3D11CaptureFrame to SoftwareBitmap.")
-    #     bitmap_buffer = software_bitmap.lock_buffer(BitmapBufferAccessMode.READ_WRITE)
-    #     if not bitmap_buffer:
-    #         raise ValueError("Unable to obtain the BitmapBuffer from SoftwareBitmap.")
-    #     reference = bitmap_buffer.create_reference()
-    #     image = np.frombuffer(cast(bytes, reference), dtype=np.uint8)
-    #     # print(f"image.shape {self.title_height,self.border, self.size.height, self.size.width}")
-    #     image.shape = (self.size.height, self.size.width, BGRA_CHANNEL_COUNT)
-    #     image = image[
-    #             self.title_height: self.title_height + self.height,
-    #             self.border: self.border + self.width
-    #             ]
-    #     return image
+    def get_abs_cords(self, x, y):
+        return self.hwnd_window.get_abs_cords(x, y)
 
-    @override
-    def recover_window(self, captured_window_title: str, autosplit: "AutoSplit"):
-        hwnd = win32gui.FindWindow(None, captured_window_title)
-        if not is_valid_hwnd(hwnd):
-            return False
-        autosplit.hwnd = hwnd
-        try:
-            self.reinitialize(autosplit)
-        # Unrecordable hwnd found as the game is crashing
-        except OSError as exception:
-            if str(exception).endswith("The parameter is incorrect"):
-                return False
-            raise
-        return self.check_selected_region_exists(autosplit)
-
-    @override
-    def check_selected_region_exists(self, ):
-        return bool(
-            is_valid_hwnd(self.hwnd)
-            and self.frame_pool
-            and self.session,
-        )
+    def clickable(self):
+        return self.hwnd_window.visible

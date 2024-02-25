@@ -1,5 +1,6 @@
 import threading
 
+from autoui.capture.HwndWindow import HwndWindow
 from autoui.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
 from autoui.feature.FeatureSet import FeatureSet
 from autoui.interaction.Win32Interaction import Win32Interaction
@@ -22,14 +23,15 @@ exit_event = threading.Event()
 
 # Initialize screen capture method with the game window title (supports multilanguage titles)
 # Example for English client: capture = WindowsGraphicsCaptureMethod(title="Genshin Impact", exit_event=exit_event)
-capture = WindowsGraphicsCaptureMethod(title="原神", exit_event=exit_event)  # Example for Japanese/Chinese client
+hwnd_window = HwndWindow(title="原神", exit_event=exit_event)
+capture = WindowsGraphicsCaptureMethod(hwnd_window)  # Example for Japanese/Chinese client
 
 # FeatureSet loads in-game UI elements from a COCO-format dataset for accurate automation
 coco_folder = 'genshin/assets/coco_feature'
-feature_set = FeatureSet(coco_folder, capture.width, capture.height)
+feature_set = FeatureSet(coco_folder, hwnd_window.width, hwnd_window.height)
 
 # Setup UI overlay for detection box display, optional
-overlay = TkOverlay(capture, exit_event)
+overlay = TkOverlay(hwnd_window, exit_event)
 
 # TaskExecutor to manage the scenes and tasks
 task_executor = TaskExecutor(capture, overlay=overlay, target_fps=30, exit_event=exit_event)
