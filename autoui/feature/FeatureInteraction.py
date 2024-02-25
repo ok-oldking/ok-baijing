@@ -21,7 +21,6 @@ class FeatureInteraction:
 
     def draw_boxes(self, feature_name, boxes):
         if len(boxes) > 0 and self.can_draw():
-            print(f"2 {feature_name} {boxes[0]}")
             self.interaction.overlay.draw_boxes(feature_name, boxes, "red")
         return boxes
 
