@@ -13,6 +13,7 @@ from blue_archive.scene.NotificationScence import NotificationScene
 from blue_archive.scene.StartScence import StartScene
 from blue_archive.task.AutoLoginTask import AutoLoginTask
 from blue_archive.task.CloseNotificationTask import CloseNotificationTask
+from blue_archive.task.DailyTask import DailyTask
 
 exit_event = threading.Event()
 # Example usage
@@ -21,10 +22,11 @@ adb.connect("127.0.0.1:16384")
 for info in adb.list():
     print(info.serial, info.state)
     # <serial> <device|offline>
-
+android_package = "com.YostarJP.BlueArchive"
+android_activity = "com.yostarjp.bluearchive.MxUnityPlayerActivity"
 device = adb.device()
+device.shell(f"am start {android_package}/{android_activity}")
 capture = ADBCaptureMethod(device)
-
 hwnd_window = HwndWindow(title="Mumu Player 12", exit_event=exit_event, frame_width=capture.width,
                          frame_height=capture.height)
 
@@ -49,6 +51,7 @@ task_executor.scenes.extend([
 task_executor.tasks.extend([
     AutoLoginTask(feature_set),
     CloseNotificationTask(feature_set),
+    DailyTask(feature_set)
 ])
 
 overlay.start()

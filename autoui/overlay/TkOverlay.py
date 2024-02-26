@@ -12,7 +12,7 @@ class TkOverlay(BaseOverlay):
     dpi_scaling = 1
     lock = threading.Lock()
 
-    def __init__(self, window: HwndWindow, close_event: threading.Event):
+    def __init__(self, window: HwndWindow, exit_event: threading.Event):
         super().__init__()
         self.canvas = None
         self.window = window
@@ -22,8 +22,9 @@ class TkOverlay(BaseOverlay):
         self.root = root
         self.init_window()
         self.init_canvas()
-        self.exit_event = close_event
+        self.exit_event = exit_event
         self.time_to_expire = 0.5
+        self.root.after(100, self.remove_expired_ui)
         window.add_window_change_listener(self)
 
     def init_window(self):
@@ -75,7 +76,7 @@ class TkOverlay(BaseOverlay):
         current_time = time.time()  # Get the current time
         with self.lock:  # Use the lock to ensure thread safety
             # Check and remove old UI elements
-            self.remove_expired_ui(current_time)
+            # self.remove_expired_ui(current_time)
 
             # delete old
             if key in self.uiDict:
@@ -102,7 +103,12 @@ class TkOverlay(BaseOverlay):
                 self.uiDict[key].append([rect, current_time])
                 self.uiDict[key].append([text, current_time])
 
-    def remove_expired_ui(self, current_time):
+    def remove_expired_ui(self):
+        if self.exit_event.is_set():
+            print("TKOverlay: Exit event")
+            self.root.destroy()
+            return
+        current_time = time.time()
         for key in list(self.uiDict.keys()):  # Use list to iterate over a copy of the keys
             old_uis = [ui for ui, update_time in self.uiDict[key] if
                        current_time - update_time >= self.time_to_expire]
@@ -120,6 +126,7 @@ class TkOverlay(BaseOverlay):
                 self.uiDict[key] = remaining_uis
             else:
                 del self.uiDict[key]
+        self.root.after(200, self.remove_expired_ui)
 
     def window_changed(self, visible, x, y, border, title_height, window_width, window_height, scaling):
         self.dpi_scaling = scaling

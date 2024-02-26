@@ -1,17 +1,19 @@
+import time
+
 from cv2.typing import MatLike
 from typing_extensions import override
 
 from autoui.scene.Scene import Scene
 from autoui.task.FindFeatureTask import FindFindFeatureTask
 from autoui.task.TaskExecutor import TaskExecutor
-from blue_archive.scene.StartScence import StartScene
+from blue_archive.scene.MainScene import MainScene
 
 
-class AutoLoginTask(FindFindFeatureTask):
+class DailyTask(FindFindFeatureTask):
 
     @override
     def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):
-        if isinstance(scene, StartScene):
-            print(f"Start scene click")
-            executor.click_relative(0.5, 0.5)
-            executor.sleep(1)
+        if isinstance(scene, MainScene):
+            print(f"DailyTask:click mission")
+            executor.click_box(scene.main_screen_mission)
+            time.sleep(1)
