@@ -66,7 +66,7 @@ class TkOverlay(BaseOverlay):
                     self.textDict[key] = (text_id, text, (abs_x, abs_y))
             else:
                 # Create new text element
-                text_id = self.canvas.create_text(abs_x, abs_y, anchor="nw", fill="white", text=text,
+                text_id = self.canvas.create_text(abs_x, abs_y, anchor="nw", fill="red", text=text,
                                                   font=("Arial", 20))
                 # Store text ID, content, and position
                 self.textDict[key] = (text_id, text, (abs_x, abs_y))

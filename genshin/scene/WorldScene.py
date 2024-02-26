@@ -1,7 +1,7 @@
-from autoui.scene.FeatureScene import FeatureScene
+from autoui.scene.FeatureScene import FindFeatureScene
 
 
-class WorldScene(FeatureScene):
+class WorldScene(FindFeatureScene):
 
     def detect(self, frame):
         if self.find_one(frame, "top_left_paimon", 0.05, 0.05):

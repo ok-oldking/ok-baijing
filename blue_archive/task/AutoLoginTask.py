@@ -4,12 +4,12 @@ from cv2.typing import MatLike
 from typing_extensions import override
 
 from autoui.scene.Scene import Scene
-from autoui.task.FindFeatureTask import FindFeatureTask
+from autoui.task.FindFeatureTask import FindFindFeatureTask
 from autoui.task.TaskExecutor import TaskExecutor
 from blue_archive.scene.StartScence import StartScene
 
 
-class AutoLoginTask(FindFeatureTask):
+class AutoLoginTask(FindFindFeatureTask):
 
     @override
     def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):

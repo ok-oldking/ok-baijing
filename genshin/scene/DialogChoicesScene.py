@@ -1,11 +1,11 @@
 from typing import List
 
 from autoui.feature.Box import Box
-from autoui.scene.FeatureScene import FeatureScene
+from autoui.scene.FeatureScene import FindFeatureScene
 from genshin.matching.choice import find_choices
 
 
-class DialogChoicesScene(FeatureScene):
+class DialogChoicesScene(FindFeatureScene):
     button_pause: Box = None
     button_pause_transparent: Box = None
     button_play: Box = None

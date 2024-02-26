@@ -1,7 +1,7 @@
-from autoui.scene.FeatureScene import FeatureScene
+from autoui.scene.FeatureScene import FindFeatureScene
 
 
-class StartScene(FeatureScene):
+class StartScene(FindFeatureScene):
     button_start_power_down = None
     button_start_exit = None
     button_start_note = None

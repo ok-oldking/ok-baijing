@@ -16,7 +16,7 @@ class FeatureSet:
     # Category_name to OpenCV Mat
     featureDict: Dict[str, Feature] = {}
 
-    def __init__(self, coco_folder: str, width: int, height: int) -> None:
+    def __init__(self, coco_folder: str, width: int, height: int, overlay=None, default_threshold=0.95) -> None:
         """
         Initialize the FeatureSet by loading images and annotations from a COCO dataset.
 
@@ -34,6 +34,8 @@ class FeatureSet:
         # Process images and annotations
         self.width = width
         self.height = height
+        self.overlay = overlay
+        self.default_threshold = default_threshold
         self.process_data(data, coco_folder)
 
     def process_data(self, data: dict, coco_folder: str) -> None:
@@ -110,7 +112,7 @@ class FeatureSet:
             return boxes[0]
 
     def find_feature(self, mat: MatLike, category_name: str, horizontal_variance: float = 0,
-                     vertical_variance: float = 0, threshold=0.8) -> List[Box]:
+                     vertical_variance: float = 0, threshold: float = 0) -> List[Box]:
         """
         Find a feature within a given variance.
 
@@ -123,6 +125,8 @@ class FeatureSet:
         Returns:
             List[Box]: A list of boxes where the feature is found.
         """
+        if threshold == 0:
+            threshold = self.default_threshold
         if category_name not in self.featureDict:
             return []
 
@@ -156,7 +160,13 @@ class FeatureSet:
             # cv2.rectangle(mat, (x, y), (x + feature_width,y+feature_height),(0, 255, 0), 2)
             # cv2.imwrite("images/test.jpg", mat)
 
-        return Box.sort_boxes(boxes)
+        result = Box.sort_boxes(boxes)
+        if self.can_draw():
+            self.overlay.draw_boxes(category_name, result, "red")
+        return result
+
+    def can_draw(self):
+        return (self.overlay is not None) and hasattr(self.overlay, "draw_boxes")
 
 
 def filter_and_sort_matches(result, threshold, width, height):

@@ -4,14 +4,14 @@ from cv2.typing import MatLike
 from typing_extensions import override
 
 from autoui.scene.Scene import Scene
-from autoui.task.FindFeatureTask import FindFeatureTask
+from autoui.task.FindFeatureTask import FindFindFeatureTask
 from autoui.task.TaskExecutor import TaskExecutor
 from genshin.scene.BlackDialogScene import BlackDialogScene
 from genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene
 from genshin.scene.DialogPlayingScene import DialogPlayingScene
 
 
-class AutoPlayDialogTask(FindFeatureTask):
+class AutoPlayDialogTask(FindFindFeatureTask):
     dialog_vertical_distance = 0
 
     @override

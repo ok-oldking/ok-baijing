@@ -1,8 +1,8 @@
 from autoui.feature.Box import Box
-from autoui.scene.FeatureScene import FeatureScene
+from autoui.scene.FeatureScene import FindFeatureScene
 
 
-class DialogPlayingScene(FeatureScene):
+class DialogPlayingScene(FindFeatureScene):
     button_pause: Box = None
     button_pause_transparent: Box = None
     button_play: Box = None

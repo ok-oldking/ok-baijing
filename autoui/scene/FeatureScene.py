@@ -1,14 +1,14 @@
 from abc import abstractmethod
 
-from autoui.feature.FeatureInteraction import FeatureInteraction
 from autoui.feature.FeatureSet import FeatureSet
+from autoui.feature.FindFeature import FindFeature
 from autoui.scene.Scene import Scene
 
 
-class FeatureScene(Scene, FeatureInteraction):
-    def __init__(self, interaction, feature_set: FeatureSet):
-        FeatureInteraction.__init__(self, interaction, feature_set)
+class FindFeatureScene(Scene, FindFeature):
+    def __init__(self, feature_set: FeatureSet):
         Scene.__init__(self)
+        self.feature_set = feature_set
 
     @abstractmethod
     def detect(self, frame):

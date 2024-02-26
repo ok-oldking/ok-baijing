@@ -1,7 +1,7 @@
-from autoui.scene.FeatureScene import FeatureScene
+from autoui.scene.FeatureScene import FindFeatureScene
 
 
-class DialogCloseButtonScene(FeatureScene):
+class DialogCloseButtonScene(FindFeatureScene):
     close_button = None
 
     def detect(self, frame):

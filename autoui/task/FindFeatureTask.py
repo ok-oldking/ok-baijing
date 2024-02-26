@@ -1,6 +1,6 @@
-from autoui.feature.FeatureInteraction import FeatureInteraction
+from autoui.feature.FindFeature import FindFeature
 from autoui.task.BaseTask import BaseTask
 
 
-class FindFeatureTask(BaseTask, FeatureInteraction):
+class FindFindFeatureTask(BaseTask, FindFeature):
     pass

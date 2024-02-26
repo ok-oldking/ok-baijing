@@ -1,7 +1,7 @@
-from autoui.scene.FeatureScene import FeatureScene
+from autoui.scene.FeatureScene import FindFeatureScene
 
 
-class NotificationScene(FeatureScene):
+class NotificationScene(FindFeatureScene):
     close_event = None
 
     def detect(self, frame):

@@ -33,22 +33,22 @@ overlay = TkOverlay(hwnd_window, exit_event)
 interaction = ADBBaseInteraction(device, capture, overlay)
 
 coco_folder = 'blue_archive/assets/coco_feature'
-feature_set = FeatureSet(coco_folder, capture.width, capture.height)
+feature_set = FeatureSet(coco_folder, capture.width, capture.height, overlay=overlay, default_threshold=0.95)
 
 # task_executor = TaskExecutor(capture,target_fps=0.1)
 task_executor = TaskExecutor(capture, overlay=overlay, interaction=interaction, exit_event=exit_event)
 
 # Defining game scenes to handle different in-game situations through automated tasks
 task_executor.scenes.extend([
-    StartScene(interaction, feature_set),
-    NotificationScene(interaction, feature_set),
-    MainScene(interaction, feature_set),
+    StartScene(feature_set),
+    NotificationScene(feature_set),
+    MainScene(feature_set),
 ])
 
 # Adding automated tasks for gameplay, such as dialog navigation and item collection
 task_executor.tasks.extend([
-    AutoLoginTask(interaction, feature_set),
-    CloseNotificationTask(interaction, feature_set),
+    AutoLoginTask(feature_set),
+    CloseNotificationTask(feature_set),
 ])
 
 overlay.start()
