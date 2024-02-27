@@ -29,6 +29,9 @@ class BaseTask:
     def sleep(self, timeout):
         self.executor.sleep(timeout)
 
+    def wait_until(self, condition, time_out=0):
+        return self.executor.wait_until(condition, time_out)
+
     @property
     def scene(self):
         return self.executor.current_scene

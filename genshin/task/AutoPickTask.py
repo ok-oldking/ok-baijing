@@ -13,7 +13,7 @@ class AutoPickTask(FindFindFeatureTask):
     @override
     def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):
         if isinstance(scene, WorldScene):
-            button_f = self.find_one(frame, "button_f", 0.3, 0.3)
+            button_f = self.find_one("button_f", 0.3, 0.3)
             if button_f:
                 if not self.has_dialogs(frame):
                     time.sleep(0.1)

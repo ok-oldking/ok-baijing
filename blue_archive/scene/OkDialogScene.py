@@ -5,5 +5,5 @@ class OkDialogScene(FindFeatureScene):
     dialog_ok = None
 
     def detect(self, frame):
-        self.dialog_ok = self.find_one(frame, "dialog_ok", 0.5, 0.5)
+        self.dialog_ok = self.find_one("dialog_ok", 0.5, 0.5)
         return self.dialog_ok is not None

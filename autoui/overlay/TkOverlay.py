@@ -98,7 +98,7 @@ class TkOverlay(BaseOverlay):
                     (y + height) / self.dpi_scaling,
                     outline=outline)
                 text = self.canvas.create_text(
-                    x / self.dpi_scaling, (y + width) / self.dpi_scaling, anchor="nw",
+                    x / self.dpi_scaling, (y + height) / self.dpi_scaling, anchor="nw",
                     fill=outline, text=f"{key}_{round(box.confidence * 100)}", font=("Arial", 20))
                 # Append the UI element and the current time to the uiDict
                 self.uiDict[key].append([rect, current_time])
@@ -107,6 +107,10 @@ class TkOverlay(BaseOverlay):
     def remove_expired_ui(self):
         if self.exit_event.is_set():
             print("TKOverlay: Exit event")
+            try:
+                self.root.destroy()
+            except Exception as e:
+                print("TKOverlay: destroy exception {e}")
             return
         current_time = time.time()
         for key in list(self.uiDict.keys()):  # Use list to iterate over a copy of the keys

@@ -130,7 +130,7 @@ class FeatureSet:
         if threshold == 0:
             threshold = self.default_threshold
         if category_name not in self.featureDict:
-            return []
+            raise ValueError(f"FeatureSet: {category_name} not found in featureDict")
 
         feature = self.featureDict[category_name]
         feature_width, feature_height = feature.width, feature.height
