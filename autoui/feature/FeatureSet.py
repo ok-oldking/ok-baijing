@@ -67,8 +67,7 @@ class FeatureSet:
                 continue
             scale_x, scale_y = self.width / image.shape[1], self.height / image.shape[0]
             image = cv2.resize(image, (self.width, self.height))
-            print(
-                f"FeatureSet: self.width / image.shape {self.width} / {image.shape[1]},scale_x:{scale_x} scale_y:{scale_y}")
+
             # Calculate the scaled bounding box
             x, y, w, h = bbox
             x, y, w, h = round(x * scale_x), round(y * scale_y), round(w * scale_x), round(h * scale_y)
@@ -78,8 +77,10 @@ class FeatureSet:
 
             # Store in featureDict using the category name
             category_name = category_map[category_id]
+            print(
+                f"FeatureSet: loaded {category_name} self.width / image.shape {self.width} / {image.shape[1]},scale_x:{scale_x} scale_y:{scale_y}")
             if category_name in self.featureDict:
-                raise ValueError(f"Multiple boxes found for category '{category_name}'")
+                raise ValueError(f"Multiple boxes found for category {category_name}")
             self.featureDict[category_name] = Feature(cropped_image, x, y, w, h)
 
     def save_images(self, target_folder: str) -> None:
@@ -121,6 +122,7 @@ class FeatureSet:
             category_name (str): The category name of the feature to find.
             horizontal_variance (float): Allowed horizontal variance as a percentage of width.
             vertical_variance (float): Allowed vertical variance as a percentage of height.
+            threshold: Allowed confidence threshold for the feature
 
         Returns:
             List[Box]: A list of boxes where the feature is found.

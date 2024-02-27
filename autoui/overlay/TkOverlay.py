@@ -1,3 +1,4 @@
+import signal
 import threading
 import time  # Import time module to track update times
 import tkinter as tk
@@ -106,7 +107,6 @@ class TkOverlay(BaseOverlay):
     def remove_expired_ui(self):
         if self.exit_event.is_set():
             print("TKOverlay: Exit event")
-            self.root.destroy()
             return
         current_time = time.time()
         for key in list(self.uiDict.keys()):  # Use list to iterate over a copy of the keys
@@ -128,6 +128,10 @@ class TkOverlay(BaseOverlay):
                 del self.uiDict[key]
         self.root.after(200, self.remove_expired_ui)
 
+    def on_keyboard_interrupt(self, sig, frame):
+        print("KeyboardInterrupt (ID: {}) has been caught. Cleaning up...".format(signal))
+        self.close()
+
     def window_changed(self, visible, x, y, border, title_height, window_width, window_height, scaling):
         self.dpi_scaling = scaling
         print(
@@ -140,11 +144,15 @@ class TkOverlay(BaseOverlay):
             self.root.withdraw()
 
     def start(self):
+        signal.signal(signal.SIGINT, self.on_keyboard_interrupt)
         try:
             self.root.mainloop()
         except KeyboardInterrupt:
             # Handle what happens after Ctrl+C is presse
             print("TkinterCaught KeyboardInterrupt, exiting...")
-            if self.exit_event:
-                self.exit_event.set()
-            self.root.destroy()
+            self.on_keyboard_interrupt(None, None)
+
+    def close(self):
+        if self.exit_event:
+            self.exit_event.set()
+        self.root.destroy()

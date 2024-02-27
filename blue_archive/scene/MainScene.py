@@ -3,7 +3,12 @@ from autoui.scene.FeatureScene import FindFeatureScene
 
 class MainScene(FindFeatureScene):
     main_screen_mission = None
+    main_screen_schedule = None
+    main_screen_cafe = None
 
     def detect(self, frame):
         self.main_screen_mission = self.find_one(frame, "main_screen_mission")
-        return self.main_screen_mission is not None and self.find_one(frame, "close_event") is None
+        self.main_screen_schedule = self.find_one(frame, "main_screen_schedule")
+        self.main_screen_cafe = self.find_one(frame, "main_screen_cafe")
+        return self.main_screen_mission is not None and self.main_screen_schedule is not None and self.main_screen_cafe is not None and self.find_one(
+            frame, "close_event") is None
