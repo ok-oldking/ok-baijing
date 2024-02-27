@@ -5,15 +5,14 @@ import time
 import pydirectinput
 
 from autoui.capture.BaseCaptureMethod import BaseCaptureMethod
-from autoui.feature.Box import Box
+from autoui.interaction.BaseInteraction import BaseInteraction
 from autoui.overlay.BaseOverlay import BaseOverlay
 
 
-class Win32Interaction:
+class Win32Interaction(BaseInteraction):
 
     def __init__(self, capture: BaseCaptureMethod, overlay: BaseOverlay = None):
-        self.overlay = overlay
-        self.capture = capture
+        super().__init__(capture, overlay)
         self.post = ctypes.windll.user32.PostMessageW
         if not is_admin():
             print(f"You must be an admin to use Win32Interaction", file=sys.stderr)
@@ -25,15 +24,10 @@ class Win32Interaction:
         time.sleep(down_time)
         pydirectinput.keyUp(key)
 
-    def left_click_relative(self, x, y):
-        self.left_click(int(self.capture.width * x), int(self.capture.height * y))
-
-    def left_click_box(self, box: Box):
-        x, y = box.center_with_variance()
-        self.left_click(x, y)
-
-    def left_click(self, x=-1, y=-1):
+    def click(self, x=-1, y=-1):
+        super().click(x, y)
         if not self.capture.clickable():
+            print(f"Win32Interaction:not clickable")
             return
         # Convert the x, y position to lParam
         # lParam = win32api.MAKELONG(x, y)

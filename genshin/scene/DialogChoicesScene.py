@@ -13,7 +13,7 @@ class DialogChoicesScene(FindFeatureScene):
     dialog_vertical_distance = 0
 
     def detect(self, frame):
-        self.dialogs = self.find(frame, "button_dialog", 0.3, 0.3, 0.9)
+        self.dialogs = self.find("button_dialog", 0.3, 0.3, 0.9)
         if len(self.dialogs) > 0:  # try to find dialog choices and click the first
             if len(self.dialogs) > 1:
                 self.dialog_vertical_distance = abs(self.dialogs[0].y - self.dialogs[1].y)

@@ -14,11 +14,12 @@ class TaskExecutor:
     frame = None
 
     def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, overlay=None, target_fps=10,
-                 wait_scene_timeout=10,
+                 wait_until_timeout=10, wait_until_delay=1,
                  exit_event=threading.Event(), tasks=[], scenes=[]):
         self.interaction = interaction
+        self.wait_until_delay = wait_until_delay
         self.method = method
-        self.wait_scene_timeout = wait_scene_timeout
+        self.wait_scene_timeout = wait_until_timeout
         self.target_delay = 1.0 / target_fps
         self.thread = threading.Thread(target=self.execute)
         self.exit_event = exit_event
@@ -38,10 +39,11 @@ class TaskExecutor:
             self.sleep(self.target_delay - cost)
 
     def next_frame(self):
+        self.reset_scene()
         while not self.exit_event.is_set():
-            frame = self.method.get_frame()
-            if frame is not None:
-                return frame
+            self.frame = self.method.get_frame()
+            if self.frame is not None:
+                return self.frame
 
     def sleep(self, timeout):
         """
@@ -72,8 +74,10 @@ class TaskExecutor:
             if self.frame is not None:
                 result = condition()
                 self.add_frame_stats()
-                print(f"TaskExecutor: wait_until {result}")
+                # print(f"TaskExecutor: wait_until {result}")
                 if is_not_empty(result):
+                    print(f"TaskExecutor: found result {result}")
+                    self.sleep(self.wait_until_delay)
                     return result
             self.wait_fps(start)
             if time.time() - start > time_out:
@@ -148,4 +152,6 @@ class TaskExecutor:
 
 
 def is_not_empty(val):
-    return (isinstance(val, list) and len(val) > 0) or val is not None
+    if isinstance(val, list):
+        return len(val) > 0
+    return val is not None

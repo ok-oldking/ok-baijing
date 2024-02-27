@@ -29,9 +29,19 @@ class BaseTask:
     def sleep(self, timeout):
         self.executor.sleep(timeout)
 
+    def send_key(self, key, down_time=0.02):
+        self.executor.interaction.send_key(key, down_time)
+
     def wait_until(self, condition, time_out=0):
         return self.executor.wait_until(condition, time_out)
+
+    def next_frame(self):
+        return self.executor.next_frame()
 
     @property
     def scene(self):
         return self.executor.current_scene
+
+    @property
+    def frame(self):
+        return self.executor.frame

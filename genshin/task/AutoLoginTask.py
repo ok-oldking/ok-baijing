@@ -1,11 +1,8 @@
 import time
 
-from cv2.typing import MatLike
 from typing_extensions import override
 
-from autoui.scene.Scene import Scene
 from autoui.task.FindFeatureTask import FindFindFeatureTask
-from autoui.task.TaskExecutor import TaskExecutor
 from genshin.scene.MonthlyCardScene import MonthlyCardScene
 from genshin.scene.StartScence import StartScene
 
@@ -13,9 +10,9 @@ from genshin.scene.StartScence import StartScene
 class AutoLoginTask(FindFindFeatureTask):
 
     @override
-    def run_frame(self, executor: TaskExecutor, scene: Scene, frame: MatLike):
+    def run_frame(self):
         # print("run_frame AutoLoginTask")
-        if isinstance(scene, StartScene) or isinstance(scene, MonthlyCardScene):
+        if self.is_scene(StartScene) or self.is_scene(MonthlyCardScene):
             print(f"Start scene click")
-            self.interaction.click_relative(0.6, 0.6)
+            self.click_relative(0.6, 0.6)
             time.sleep(1)

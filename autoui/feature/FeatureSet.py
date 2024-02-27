@@ -8,8 +8,9 @@ import cv2
 import numpy as np
 from cv2.typing import MatLike
 
-from autoui.feature.Box import Box
+from autoui.feature.Box import Box, sort_boxes
 from autoui.feature.Feature import Feature
+from autoui.overlay.BaseOverlay import draw_boxes
 
 
 class FeatureSet:
@@ -158,17 +159,13 @@ class FeatureSet:
         for loc in locations:  # Iterate through found locations            
             x, y = loc[0] + search_x1, loc[1] + search_y1
             confidence = result[loc[1], loc[0]]  # Retrieve the confidence score
-            boxes.append(Box(x, y, feature_width, feature_height, confidence))
+            boxes.append(Box(x, y, feature_width, feature_height, confidence, category_name))
             # cv2.rectangle(mat, (x, y), (x + feature_width,y+feature_height),(0, 255, 0), 2)
             # cv2.imwrite("images/test.jpg", mat)
 
-        result = Box.sort_boxes(boxes)
-        if self.can_draw():
-            self.overlay.draw_boxes(category_name, result, "red")
+        result = sort_boxes(boxes)
+        draw_boxes(self, category_name, result, "red")
         return result
-
-    def can_draw(self):
-        return (self.overlay is not None) and hasattr(self.overlay, "draw_boxes")
 
 
 def filter_and_sort_matches(result, threshold, width, height):
