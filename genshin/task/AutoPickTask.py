@@ -2,11 +2,11 @@ import time
 
 from typing_extensions import override
 
-from autoui.task.FindFeatureTask import FindFindFeatureTask
+from autoui.task.FindFeatureTask import FindFeatureTask
 from genshin.scene.WorldScene import WorldScene
 
 
-class AutoPickTask(FindFindFeatureTask):
+class AutoPickTask(FindFeatureTask):
     @override
     def run_frame(self):
         if self.is_scene(WorldScene):

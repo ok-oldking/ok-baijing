@@ -10,6 +10,7 @@ from autoui.stats.StreamStats import StreamStats
 
 class TaskExecutor:
     current_scene: Scene | None = None
+    last_scene: Scene | None = None
     frame_stats = StreamStats()
     frame = None
 
@@ -40,10 +41,14 @@ class TaskExecutor:
 
     def next_frame(self):
         self.reset_scene()
+        start = time.time()
         while not self.exit_event.is_set():
             self.frame = self.method.get_frame()
             if self.frame is not None:
                 return self.frame
+            time.sleep(0.01)
+            if time.time() - start > self.wait_scene_timeout:
+                return None
 
     def sleep(self, timeout):
         """
@@ -51,26 +56,29 @@ class TaskExecutor:
 
         :param timeout: The total time to sleep in seconds.
         """
-        start_time = time.time()
-        end_time = start_time + timeout
         self.frame_stats.add_sleep(timeout)
-        while time.time() < end_time:
+        end_time = time.time() + timeout
+        while True:
             if self.exit_event.is_set():
                 print("Exit event set. Exiting early.")
                 return
             remaining = end_time - time.time()
+            if remaining <= 0:
+                return
             time.sleep(min(0.1, remaining))  # Sleep for 100ms or the remaining time, whichever is smaller
 
-    def wait_scene(self, scene_type, time_out=0):
-        return self.wait_until(lambda: self.detect_scene(scene_type), time_out)
+    def wait_scene(self, scene_type, time_out, pre_action, post_action):
+        return self.wait_until(lambda: self.detect_scene(scene_type), time_out, pre_action, post_action)
 
-    def wait_until(self, condition, time_out=0):
+    def wait_until(self, condition, time_out, pre_action, post_action):
         self.reset_scene()
         start = time.time()
         if time_out == 0:
             time_out = self.wait_scene_timeout
         while not self.exit_event.is_set():
-            self.frame = self.method.get_frame()
+            if pre_action is not None:
+                pre_action()
+            self.frame = self.next_frame()
             if self.frame is not None:
                 result = condition()
                 self.add_frame_stats()
@@ -79,6 +87,8 @@ class TaskExecutor:
                     print(f"TaskExecutor: found result {result}")
                     self.sleep(self.wait_until_delay)
                     return result
+            if post_action is not None:
+                post_action()
             self.wait_fps(start)
             if time.time() - start > time_out:
                 print(f"TaskExecutor: wait_until timeout {condition} {time_out} seconds")
@@ -87,13 +97,14 @@ class TaskExecutor:
 
     def reset_scene(self):
         self.frame = None
+        self.last_scene = self.current_scene
         self.current_scene = None
 
     def execute(self):
         print(f"TaskExecutor: start execute")
         try:
             while not self.exit_event.is_set():
-                self.frame = self.method.get_frame()
+                self.frame = self.next_frame()
                 start = time.time()
                 if self.frame is not None:
                     self.detect_scene()
@@ -101,6 +112,8 @@ class TaskExecutor:
                     if self.current_scene is not None:
                         task_executed = 0
                         for task in self.tasks:
+                            if task.done:
+                                continue
                             task.run_frame()
                             processing_time = time.time() - start
                             task_executed += 1
@@ -126,15 +139,20 @@ class TaskExecutor:
                 self.overlay.draw_text("fps", 0.3, 0.01,
                                        f"Scene:{self.current_scene.__class__.__name__} FrameTime:{mean}, FPS:{round(1000 / mean)}")
 
+    def latest_scene(self):
+        return self.current_scene or self.last_scene
+
     def detect_scene(self, scene_type=None):
-        if self.current_scene is not None:
+        latest_scene = self.latest_scene()
+        if latest_scene is not None:
             # detect the last scene optimistically
-            if self.current_scene.detect(self.frame):
+            if latest_scene.detect(self.frame):
+                self.current_scene = latest_scene
                 return
         for scene in self.scenes:
             if scene_type is not None and isinstance(scene, scene_type) == False:
                 continue
-            if scene != self.current_scene:
+            if scene != latest_scene:
                 if scene.detect(self.frame):
                     self.current_scene = scene
                     print(f"TaskExecutor: scene changed {scene.__class__.__name__}")

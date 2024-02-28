@@ -2,13 +2,13 @@ import time
 
 from typing_extensions import override
 
-from autoui.task.FindFeatureTask import FindFindFeatureTask
+from autoui.task.FindFeatureTask import FindFeatureTask
 from genshin.scene.BlackDialogScene import BlackDialogScene
 from genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene
 from genshin.scene.DialogPlayingScene import DialogPlayingScene
 
 
-class AutoPlayDialogTask(FindFindFeatureTask):
+class AutoPlayDialogTask(FindFeatureTask):
     dialog_vertical_distance = 0
 
     @override

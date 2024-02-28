@@ -8,7 +8,8 @@ class ADBBaseInteraction(BaseInteraction):
         self.device = device
 
     def send_key(self, key, down_time=0.02):
-        pass
+        super().send_key(key, down_time)
+        self.device.shell(f"input keyevent {key}")
 
     def click(self, x=-1, y=-1):
         super().click(x, y)

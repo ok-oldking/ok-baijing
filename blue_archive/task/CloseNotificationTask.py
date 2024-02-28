@@ -1,10 +1,10 @@
 from typing_extensions import override
 
-from autoui.task.FindFeatureTask import FindFindFeatureTask
+from autoui.task.FindFeatureTask import FindFeatureTask
 from blue_archive.scene.NotificationScence import NotificationScene
 
 
-class CloseNotificationTask(FindFindFeatureTask):
+class CloseNotificationTask(FindFeatureTask):
 
     @override
     def run_frame(self):

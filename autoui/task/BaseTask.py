@@ -4,6 +4,7 @@ from autoui.task.TaskExecutor import TaskExecutor
 
 class BaseTask:
     executor: TaskExecutor
+    done = False
 
     def run_frame(self):
         pass
@@ -23,8 +24,8 @@ class BaseTask:
         self.executor.reset_scene()
         self.executor.interaction.click_box(box, relative_x, relative_y)
 
-    def wait_scene(self, scene_type=None, time_out=0):
-        return self.executor.wait_scene(scene_type, time_out)
+    def wait_scene(self, scene_type=None, time_out=0, pre_action=None, post_action=None):
+        return self.executor.wait_scene(scene_type, time_out, pre_action, post_action)
 
     def sleep(self, timeout):
         self.executor.sleep(timeout)
@@ -32,8 +33,8 @@ class BaseTask:
     def send_key(self, key, down_time=0.02):
         self.executor.interaction.send_key(key, down_time)
 
-    def wait_until(self, condition, time_out=0):
-        return self.executor.wait_until(condition, time_out)
+    def wait_until(self, condition, time_out=0, pre_action=None, post_action=None):
+        return self.executor.wait_until(condition, time_out, pre_action, post_action)
 
     def next_frame(self):
         return self.executor.next_frame()

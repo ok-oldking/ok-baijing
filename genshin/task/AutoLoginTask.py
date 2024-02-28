@@ -2,12 +2,12 @@ import time
 
 from typing_extensions import override
 
-from autoui.task.FindFeatureTask import FindFindFeatureTask
+from autoui.task.FindFeatureTask import FindFeatureTask
 from genshin.scene.MonthlyCardScene import MonthlyCardScene
 from genshin.scene.StartScence import StartScene
 
 
-class AutoLoginTask(FindFindFeatureTask):
+class AutoLoginTask(FindFeatureTask):
 
     @override
     def run_frame(self):
