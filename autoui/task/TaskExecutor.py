@@ -22,9 +22,7 @@ class TaskExecutor:
         self.method = method
         self.wait_scene_timeout = wait_until_timeout
         self.target_delay = 1.0 / target_fps
-        self.thread = threading.Thread(target=self.execute)
         self.exit_event = exit_event
-        self.thread.start()
         self.overlay = overlay
         self.tasks = tasks
         self.scenes = scenes
@@ -32,6 +30,8 @@ class TaskExecutor:
             scene.executor = self
         for task in self.tasks:
             task.executor = self
+        self.thread = threading.Thread(target=self.execute)
+        self.thread.start()
 
     def wait_fps(self, start):
         cost = time.time() - start

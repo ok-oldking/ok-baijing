@@ -16,6 +16,7 @@ from blue_archive.scene.StartScence import StartScene
 from blue_archive.task.AutoLoginTask import AutoLoginTask
 from blue_archive.task.ClickOkTask import ClickOkTask
 from blue_archive.task.CloseNotificationTask import CloseNotificationTask
+from blue_archive.task.DailyCafeTask import DailyCafeTask
 from blue_archive.task.DailyScheduleTask import DailyScheduleTask
 
 exit_event = threading.Event()
@@ -46,6 +47,7 @@ feature_set = FeatureSet(coco_folder, capture.width, capture.height, overlay=ove
 task_executor = TaskExecutor(capture, overlay=overlay, interaction=interaction, exit_event=exit_event, tasks=[
     AutoLoginTask(feature_set),
     CloseNotificationTask(feature_set),
+    DailyCafeTask(feature_set),
     DailyScheduleTask(feature_set),
     ClickOkTask(feature_set),
 ], scenes=[

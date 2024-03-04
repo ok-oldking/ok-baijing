@@ -105,7 +105,7 @@ class FeatureSet:
             print(f"Saved {file_path}")
 
     def find_one(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0,
-                 threshold=0.9) -> Box:
+                 threshold=0) -> Box:
         boxes = self.find_feature(mat, category_name, horizontal_variance=horizontal_variance,
                                   vertical_variance=vertical_variance, threshold=threshold)
         if len(boxes) > 1:

@@ -24,7 +24,7 @@ class TkOverlay(BaseOverlay):
         self.init_window()
         self.init_canvas()
         self.exit_event = exit_event
-        self.time_to_expire = 0.5
+        self.time_to_expire = 1
         self.root.after(100, self.remove_expired_ui)
         window.add_window_change_listener(self)
 

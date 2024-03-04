@@ -11,4 +11,4 @@ class MainScene(FindFeatureScene):
         self.main_screen_schedule = self.find_one("main_screen_schedule")
         self.main_screen_cafe = self.find_one("main_screen_cafe")
         return self.main_screen_mission is not None and self.main_screen_schedule is not None and self.main_screen_cafe is not None and self.find_one(
-            "close_event") is None
+            "close_event") is None and self.find_one("main_screen_loading") is None

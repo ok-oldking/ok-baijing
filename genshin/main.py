@@ -1,9 +1,10 @@
+import sys
 import threading
 
 from autoui.capture.HwndWindow import HwndWindow
 from autoui.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
 from autoui.feature.FeatureSet import FeatureSet
-from autoui.interaction.Win32Interaction import Win32Interaction
+from autoui.interaction.Win32Interaction import Win32Interaction, is_admin
 from autoui.overlay.TkOverlay import TkOverlay
 from autoui.task.TaskExecutor import TaskExecutor
 from genshin.scene.BlackDialogScene import BlackDialogScene
@@ -18,6 +19,9 @@ from genshin.task.AutoLoginTask import AutoLoginTask
 from genshin.task.AutoPickTask import AutoPickTask
 from genshin.task.AutoPlayDialogTask import AutoPlayDialogTask
 
+if not is_admin():
+    print("not starting as a admin, can't use click in windows, exiting script")
+    sys.exit(1)
 # for graceful shutdown of the script
 exit_event = threading.Event()
 
