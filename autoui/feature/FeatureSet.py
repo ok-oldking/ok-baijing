@@ -17,7 +17,8 @@ class FeatureSet:
     # Category_name to OpenCV Mat
     featureDict: Dict[str, Feature] = {}
 
-    def __init__(self, coco_folder: str, width: int, height: int, overlay=None, default_threshold=0.95) -> None:
+    def __init__(self, coco_folder: str, width: int, height: int, overlay=None, default_horizontal_variance=0,
+                 default_vertical_variance=0, default_threshold=0.95) -> None:
         """
         Initialize the FeatureSet by loading images and annotations from a COCO dataset.
 
@@ -26,29 +27,37 @@ class FeatureSet:
             width (int): Scale images to this width.
             height (int): Scale images to this height.
         """
-        json_path = f'{coco_folder}/_annotations.coco.json'
-
-        # Read the JSON file
-        with open(json_path, 'r') as file:
-            data = json.load(file)
+        self.coco_folder = coco_folder
 
         # Process images and annotations
         self.width = width
         self.height = height
         self.overlay = overlay
         self.default_threshold = default_threshold
-        self.process_data(data, coco_folder)
+        self.default_horizontal_variance = default_horizontal_variance
+        self.default_vertical_variance = default_vertical_variance
+        self.process_data()
 
-    def process_data(self, data: dict, coco_folder: str) -> None:
+    def check_size(self, frame):
+        height, width = frame.shape[:2]
+        if self.width != width or self.height != height:
+            print(f"FeatureSet: Width and height changed from {self.width}x{self.height} to {width}x{height}")
+            self.width = width
+            self.height = height
+            self.process_data()
+
+    def process_data(self) -> None:
         """
         Process the images and annotations from the COCO dataset.
 
         Args:
-            data (dict): Parsed JSON data.
-            coco_folder (str): Directory containing the images.
             width (int): Target width for scaling images.
             height (int): Target height for scaling images.
         """
+        self.featureDict.clear()
+        json_path = f'{self.coco_folder}/_annotations.coco.json'
+        with open(json_path, 'r') as file:
+            data = json.load(file)
 
         # Create a map from image ID to file name
         image_map = {image['id']: image['file_name'] for image in data['images']}
@@ -62,7 +71,7 @@ class FeatureSet:
             bbox = annotation['bbox']
 
             # Load and scale the image
-            image_path = f'{coco_folder}/{image_map[image_id]}'
+            image_path = f'{self.coco_folder}/{image_map[image_id]}'
             image = cv2.imread(image_path)
             if image is None:
                 continue
@@ -128,8 +137,14 @@ class FeatureSet:
         Returns:
             List[Box]: A list of boxes where the feature is found.
         """
+        self.check_size(mat)
+
         if threshold == 0:
             threshold = self.default_threshold
+        if horizontal_variance == 0:
+            horizontal_variance = self.default_horizontal_variance
+        if vertical_variance == 0:
+            vertical_variance = self.default_vertical_variance
         if category_name not in self.featureDict:
             raise ValueError(f"FeatureSet: {category_name} not found in featureDict")
 

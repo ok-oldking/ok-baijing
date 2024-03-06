@@ -34,7 +34,7 @@ class BaseTask:
         self.executor.interaction.send_key(key, down_time)
 
     def wait_until(self, condition, time_out=0, pre_action=None, post_action=None):
-        return self.executor.wait_until(condition, time_out, pre_action, post_action)
+        return self.executor.wait_condition(condition, time_out, pre_action, post_action)
 
     def next_frame(self):
         return self.executor.next_frame()

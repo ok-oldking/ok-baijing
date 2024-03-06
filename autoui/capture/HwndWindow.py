@@ -30,10 +30,7 @@ class HwndWindow:
         super().__init__()
         self.title = title
         self.visible = False
-        self.frame_width = frame_width
-        self.frame_height = frame_height
-        if frame_width > 0 and frame_height > 0:
-            self.frame_aspect_ratio = frame_width / frame_height
+        self.update_frame_size(frame_width, frame_height)
         self.hwnd = win32gui.FindWindow(None, title)
         if not self.hwnd:
             raise Exception(f"window {title} not found")
@@ -46,6 +43,14 @@ class HwndWindow:
     @override
     def close(self):
         self.exit_event.set()
+
+    def update_frame_size(self, width, height):
+        if width != self.frame_width or height != self.frame_height:
+            self.frame_width = width
+            self.frame_height = height
+            if width > 0 and height > 0:
+                self.frame_aspect_ratio = width / height
+                print(f"HwndWindow: frame ratio:{self.frame_aspect_ratio} width: {width}, height: {height}")
 
     def add_window_change_listener(self, listener):
         self.window_change_listeners.append(listener)
@@ -71,7 +76,7 @@ class HwndWindow:
                 window_height = cropped_window_height
         visible = is_foreground_window(self.hwnd)
         if self.title_height != title_height or self.border != border or visible != self.visible or self.x != x or self.y != y or self.width != window_width or self.height != window_height:
-            print(f"update_window_size: {x} {y} {title_height} {border} {window_width} {window_height}")
+            print(f"update_window_size: {visible} {x} {y} {title_height} {border} {window_width} {window_height}")
             self.visible = visible
             self.x = x  # border_width
             self.y = y  # titlebar_with_border_height

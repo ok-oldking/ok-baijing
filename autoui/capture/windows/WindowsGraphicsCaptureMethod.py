@@ -154,13 +154,23 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
             self.session = None
 
     def get_frame(self):
+        # print(f"WindowsGraphicsCaptureMethod:get_frame {self.hwnd_window.title_height} {self.hwnd_window.border}")
         frame = self.last_frame
         self.last_frame = None
         latency = time.time() - self.last_frame_time
         self.last_frame_time = 0
-        if latency > 0.2:
+        if latency > 1:
             print(f"latency too large return None frame: {latency}")
             return None
+        if frame is not None and self.hwnd_window.title_height != 0 and self.hwnd_window.border != 0:
+            frame = crop_image(frame, self.hwnd_window.border, self.hwnd_window.title_height)
+
+        if frame is not None:
+            new_height, new_width = frame.shape[:2]
+            self.width = new_width
+            self.height = new_height
+            self.hwnd_window.update_frame_size(new_width, new_height)
+
         return frame
 
     def _reset_framepool(self, size, reset_device=False):
@@ -174,3 +184,25 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
 
     def clickable(self):
         return self.hwnd_window.visible
+
+
+def crop_image(image, border, title_height):
+    # Load the image
+    # Image dimensions
+    height, width = image.shape[:2]
+
+    # Calculate the coordinates for the bottom-right corner
+    x2 = width - border
+    y2 = height - border
+
+    # Crop the image
+    cropped_image = image[title_height:y2, border:x2]
+
+    # print(f"cropped image: {title_height}-{y2}, {border}-{x2} {cropped_image.shape}")
+    #
+    # cv2.imshow('Image Window', cropped_image)
+    #
+    # # Wait for any key to be pressed before closing the window
+    # cv2.waitKey(0)
+
+    return cropped_image

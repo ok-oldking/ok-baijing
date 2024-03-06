@@ -15,10 +15,11 @@ class TaskExecutor:
     frame = None
 
     def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, overlay=None, target_fps=10,
-                 wait_until_timeout=10, wait_until_delay=1,
+                 wait_until_timeout=10, wait_until_before_delay=1, wait_until_check_delay=1,
                  exit_event=threading.Event(), tasks=[], scenes=[]):
         self.interaction = interaction
-        self.wait_until_delay = wait_until_delay
+        self.wait_until_check_delay = wait_until_check_delay
+        self.wait_until_before_delay = wait_until_before_delay
         self.method = method
         self.wait_scene_timeout = wait_until_timeout
         self.target_delay = 1.0 / target_fps
@@ -68,10 +69,11 @@ class TaskExecutor:
             time.sleep(min(0.1, remaining))  # Sleep for 100ms or the remaining time, whichever is smaller
 
     def wait_scene(self, scene_type, time_out, pre_action, post_action):
-        return self.wait_until(lambda: self.detect_scene(scene_type), time_out, pre_action, post_action)
+        return self.wait_condition(lambda: self.detect_scene(scene_type), time_out, pre_action, post_action)
 
-    def wait_until(self, condition, time_out, pre_action, post_action):
+    def wait_condition(self, condition, time_out, pre_action, post_action):
         self.reset_scene()
+        self.sleep(self.wait_until_before_delay)
         start = time.time()
         if time_out == 0:
             time_out = self.wait_scene_timeout
@@ -85,7 +87,7 @@ class TaskExecutor:
                 # print(f"TaskExecutor: wait_until {result}")
                 if is_not_empty(result):
                     print(f"TaskExecutor: found result {result}")
-                    self.sleep(self.wait_until_delay)
+                    self.sleep(self.wait_until_check_delay)
                     return result
             if post_action is not None:
                 post_action()
