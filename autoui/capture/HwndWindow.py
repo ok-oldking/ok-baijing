@@ -5,6 +5,9 @@ from typing_extensions import override
 from win32 import win32gui
 
 from autoui.capture.windows.window import is_foreground_window, get_window_bounds
+from autoui.logging.Logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class HwndWindow:
@@ -76,7 +79,7 @@ class HwndWindow:
                 window_height = cropped_window_height
         visible = is_foreground_window(self.hwnd)
         if self.title_height != title_height or self.border != border or visible != self.visible or self.x != x or self.y != y or self.width != window_width or self.height != window_height:
-            print(f"update_window_size: {visible} {x} {y} {title_height} {border} {window_width} {window_height}")
+            logger.debug(f"update_window_size: {x} {y} {title_height} {border} {window_width} {window_height}")
             self.visible = visible
             self.x = x  # border_width
             self.y = y  # titlebar_with_border_height

@@ -3,6 +3,7 @@ import time
 import traceback
 
 from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
+from autoui.gui.Communicate import communicate
 from autoui.interaction.BaseInteraction import BaseInteraction
 from autoui.scene.Scene import Scene
 from autoui.stats.StreamStats import StreamStats
@@ -46,6 +47,7 @@ class TaskExecutor:
         while not self.exit_event.is_set():
             self.frame = self.method.get_frame()
             if self.frame is not None:
+                communicate.frame.emit(self.frame)
                 return self.frame
             time.sleep(0.01)
             if time.time() - start > self.wait_scene_timeout:
