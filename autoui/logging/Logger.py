@@ -1,12 +1,14 @@
 import logging
+import os
 from logging.handlers import TimedRotatingFileHandler
 
 from autoui.gui.Communicate import communicate
 
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
 
+os.makedirs("logs", exist_ok=True)
 # File handler with rotation
-file_handler = TimedRotatingFileHandler(f"auto_ui_log.log", when="midnight", interval=1,
+file_handler = TimedRotatingFileHandler(f"logs/auto_ui.log", when="midnight", interval=1,
                                         backupCount=7)
 file_handler.setFormatter(formatter)
 file_handler.setLevel(logging.DEBUG)  # File handler level
@@ -25,10 +27,20 @@ communicate_handler = CommunicateHandler()
 communicate_handler.setFormatter(formatter)
 
 
+def get_substring_from_last_dot_exclusive(s):
+    # Find the last occurrence of "."
+    last_dot_index = s.rfind(".")
+    # If there's no ".", return an empty string or the original string based on your need
+    if last_dot_index == -1:
+        return ""  # or return s to return the whole string if there's no dot
+    # Slice the string from just after the last "." to the end
+    return s[last_dot_index + 1:]
+
+
 class Logger:
     def __init__(self, name):
         # Initialize the logger with the name of the subclass
-        self.logger = logging.getLogger(name)
+        self.logger = logging.getLogger(get_substring_from_last_dot_exclusive(name))
 
         # Set the log level
         self.logger.setLevel(logging.DEBUG)  # Or any other level

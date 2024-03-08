@@ -6,13 +6,12 @@ import pydirectinput
 
 from autoui.capture.BaseCaptureMethod import BaseCaptureMethod
 from autoui.interaction.BaseInteraction import BaseInteraction
-from autoui.overlay.BaseOverlay import BaseOverlay
 
 
 class Win32Interaction(BaseInteraction):
 
-    def __init__(self, capture: BaseCaptureMethod, overlay: BaseOverlay = None):
-        super().__init__(capture, overlay)
+    def __init__(self, capture: BaseCaptureMethod):
+        super().__init__(capture)
         self.post = ctypes.windll.user32.PostMessageW
         if not is_admin():
             print(f"You must be an admin to use Win32Interaction", file=sys.stderr)

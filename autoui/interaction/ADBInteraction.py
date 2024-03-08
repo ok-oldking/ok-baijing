@@ -3,8 +3,8 @@ from autoui.interaction.BaseInteraction import BaseInteraction
 
 class ADBBaseInteraction(BaseInteraction):
 
-    def __init__(self, device, capture, width, height, overlay=None):
-        super().__init__(capture, overlay)
+    def __init__(self, device, capture, width, height):
+        super().__init__(capture)
         self.device = device
         self.width = width
         self.height = height

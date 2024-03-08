@@ -10,6 +10,7 @@ from autoui.capture.BaseCaptureMethod import BaseCaptureMethod
 from autoui.capture.HwndWindow import HwndWindow
 from autoui.capture.windows import d3d11
 from autoui.capture.windows.utils import WINDOWS_BUILD_NUMBER
+from autoui.logging.Logger import get_logger
 from autoui.rotypes import IInspectable
 from autoui.rotypes.Windows.Foundation import TypedEventHandler
 from autoui.rotypes.Windows.Graphics.Capture import Direct3D11CaptureFramePool, IGraphicsCaptureItemInterop, \
@@ -21,6 +22,8 @@ from autoui.rotypes.roapi import GetActivationFactory
 
 PBYTE = ctypes.POINTER(ctypes.c_ubyte)
 WGC_NO_BORDER_MIN_BUILD = 20348
+
+logger = get_logger(__name__)
 
 
 class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
@@ -158,9 +161,9 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
         frame = self.last_frame
         self.last_frame = None
         latency = time.time() - self.last_frame_time
-        self.last_frame_time = 0
+        self.last_frame_time = time.time()
         if latency > 1:
-            print(f"latency too large return None frame: {latency}")
+            logger.warning(f"latency too large return None frame: {latency}")
             return None
         if frame is not None and self.hwnd_window.title_height != 0 and self.hwnd_window.border != 0:
             frame = crop_image(frame, self.hwnd_window.border, self.hwnd_window.title_height)
@@ -170,6 +173,9 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
             self.width = new_width
             self.height = new_height
             self.hwnd_window.update_frame_size(new_width, new_height)
+
+            if frame.shape[2] == 4:
+                frame = frame[:, :, :3]
 
         return frame
 

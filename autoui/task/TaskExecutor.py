@@ -5,8 +5,11 @@ import traceback
 from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 from autoui.gui.Communicate import communicate
 from autoui.interaction.BaseInteraction import BaseInteraction
+from autoui.logging.Logger import get_logger
 from autoui.scene.Scene import Scene
 from autoui.stats.StreamStats import StreamStats
+
+logger = get_logger(__name__)
 
 
 class TaskExecutor:
@@ -15,7 +18,7 @@ class TaskExecutor:
     frame_stats = StreamStats()
     frame = None
 
-    def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, overlay=None, target_fps=10,
+    def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, target_fps=10,
                  wait_until_timeout=10, wait_until_before_delay=1, wait_until_check_delay=1,
                  exit_event=threading.Event(), tasks=[], scenes=[]):
         self.interaction = interaction
@@ -25,7 +28,6 @@ class TaskExecutor:
         self.wait_scene_timeout = wait_until_timeout
         self.target_delay = 1.0 / target_fps
         self.exit_event = exit_event
-        self.overlay = overlay
         self.tasks = tasks
         self.scenes = scenes
         for scene in self.scenes:
@@ -38,7 +40,6 @@ class TaskExecutor:
     def wait_fps(self, start):
         cost = time.time() - start
         if cost < self.target_delay:
-            # print(f"TaskExecutor:cost {cost} lower than target {self.target_delay}, sleeping")
             self.sleep(self.target_delay - cost)
 
     def next_frame(self):
@@ -63,7 +64,7 @@ class TaskExecutor:
         end_time = time.time() + timeout
         while True:
             if self.exit_event.is_set():
-                print("Exit event set. Exiting early.")
+                logger.info("Exit event set. Exiting early.")
                 return
             remaining = end_time - time.time()
             if remaining <= 0:
@@ -86,16 +87,17 @@ class TaskExecutor:
             if self.frame is not None:
                 result = condition()
                 self.add_frame_stats()
-                # print(f"TaskExecutor: wait_until {result}")
-                if is_not_empty(result):
-                    print(f"TaskExecutor: found result {result}")
+                # logger.debug(f"TaskExecutor: wait_until {result}")
+                result_str = list_or_obj_to_str(result)
+                if result_str is not None:
+                    logger.debug(f"found result {result_str}")
                     self.sleep(self.wait_until_check_delay)
                     return result
             if post_action is not None:
                 post_action()
             self.wait_fps(start)
             if time.time() - start > time_out:
-                print(f"TaskExecutor: wait_until timeout {condition} {time_out} seconds")
+                logger.info(f"wait_until timeout {condition} {time_out} seconds")
                 break
         return None
 
@@ -105,14 +107,14 @@ class TaskExecutor:
         self.current_scene = None
 
     def execute(self):
-        print(f"TaskExecutor: start execute")
+        logger.info(f"start execute")
         try:
             while not self.exit_event.is_set():
                 self.frame = self.next_frame()
                 start = time.time()
                 if self.frame is not None:
                     self.detect_scene()
-                    # print(f"detect_scene: {self.current_scene.__class__.__name__} {(time.time() - start)}")
+                    # logger.debug(f"detect_scene: {self.current_scene.__class__.__name__} {(time.time() - start)}")
                     if self.current_scene is not None:
                         task_executed = 0
                         for task in self.tasks:
@@ -122,7 +124,7 @@ class TaskExecutor:
                             processing_time = time.time() - start
                             task_executed += 1
                             if processing_time > 0.2:
-                                print(
+                                logger.debug(
                                     f"{task.__class__.__name__} taking too long skip to next frame {processing_time} {task_executed} {len(self.tasks)}")
                                 self.add_frame_stats()
                                 break
@@ -130,18 +132,20 @@ class TaskExecutor:
                 self.wait_fps(start)
         except Exception as e:
             # Handle the exception or store it for later use
-            print(f"TaskExecutor Thread Exception : {e}")
+            logger.error(f"TaskExecutor Thread Exception : {e}")
             traceback.print_exc()
             self.exit_event.set()
 
     def add_frame_stats(self):
-        if self.overlay:
-            self.frame_stats.add_frame()
-            mean = self.frame_stats.mean()
-            if mean > 0:
-                # print(f"frame_stats.mean(): {mean}, fps:{round(1000 / mean)}")
-                self.overlay.draw_text("fps", 0.3, 0.01,
-                                       f"Scene:{self.current_scene.__class__.__name__} FrameTime:{mean}, FPS:{round(1000 / mean)}")
+        self.frame_stats.add_frame()
+        mean = self.frame_stats.mean()
+        if mean > 0:
+            communicate.frame_time.emit(mean)
+            communicate.fps.emit(round(1000 / mean))
+            scene = "None"
+            if self.current_scene is not None:
+                scene = self.current_scene.name or self.current_scene.__class__.__name__
+            communicate.scene.emit(scene)
 
     def latest_scene(self):
         return self.current_scene or self.last_scene
@@ -152,17 +156,17 @@ class TaskExecutor:
             # detect the last scene optimistically
             if latest_scene.detect(self.frame):
                 self.current_scene = latest_scene
-                return
+                return latest_scene
         for scene in self.scenes:
-            if scene_type is not None and isinstance(scene, scene_type) == False:
+            if scene_type is not None and not isinstance(scene, scene_type):
                 continue
             if scene != latest_scene:
                 if scene.detect(self.frame):
                     self.current_scene = scene
-                    print(f"TaskExecutor: scene changed {scene.__class__.__name__}")
+                    logger.debug(f"TaskExecutor: scene changed {scene.__class__.__name__}")
                     return scene
         if self.current_scene is not None:
-            print(f"TaskExecutor: scene changed to None")
+            logger.debug(f"TaskExecutor: scene changed to None")
             self.current_scene = None
         return self.current_scene
 
@@ -173,7 +177,11 @@ class TaskExecutor:
         self.thread.join()
 
 
-def is_not_empty(val):
-    if isinstance(val, list):
-        return len(val) > 0
-    return val is not None
+def list_or_obj_to_str(val):
+    if val is not None:
+        if isinstance(val, list):
+            return ', '.join(str(obj) for obj in val)
+        else:
+            return str(val)
+    else:
+        return None

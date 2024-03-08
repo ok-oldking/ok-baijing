@@ -63,7 +63,7 @@ class HwndWindow:
     def update_window_size(self):
         while not self.exit_event.is_set():
             self.do_update_window_size()
-            self.exit_event.wait(0.01)
+            self.exit_event.wait(0.1)
 
     def get_abs_cords(self, x, y):
         return int(self.x + (self.border + x) / self.scaling), int(self.y + (y + self.title_height) / self.scaling)

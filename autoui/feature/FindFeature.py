@@ -3,7 +3,7 @@ from typing import List
 
 from autoui.feature.Box import Box
 from autoui.feature.FeatureSet import FeatureSet
-from autoui.overlay.BaseOverlay import draw_boxes
+from autoui.gui.Communicate import communicate
 
 
 class FindFeature:
@@ -37,8 +37,9 @@ class FindFeature:
                 print(f"find_one:found {feature_name} too many {len(boxes)}", file=sys.stderr)
             return boxes[0]
 
-    def draw_boxes(self, boxes, feature_name):
-        draw_boxes(self, boxes, feature_name)
+    @staticmethod
+    def draw_boxes(boxes, feature_name):
+        communicate.draw_box.emit(feature_name, boxes)
 
     def on_feature(self, boxes):
         pass

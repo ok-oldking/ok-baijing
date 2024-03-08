@@ -10,14 +10,14 @@ from cv2.typing import MatLike
 
 from autoui.feature.Box import Box, sort_boxes
 from autoui.feature.Feature import Feature
-from autoui.overlay.BaseOverlay import draw_boxes
+from autoui.gui.Communicate import communicate
 
 
 class FeatureSet:
     # Category_name to OpenCV Mat
     featureDict: Dict[str, Feature] = {}
 
-    def __init__(self, coco_folder: str, width: int, height: int, overlay=None, default_horizontal_variance=0,
+    def __init__(self, coco_folder: str, width: int, height: int, default_horizontal_variance=0,
                  default_vertical_variance=0, default_threshold=0.95) -> None:
         """
         Initialize the FeatureSet by loading images and annotations from a COCO dataset.
@@ -32,7 +32,6 @@ class FeatureSet:
         # Process images and annotations
         self.width = width
         self.height = height
-        self.overlay = overlay
         self.default_threshold = default_threshold
         self.default_horizontal_variance = default_horizontal_variance
         self.default_vertical_variance = default_vertical_variance
@@ -179,7 +178,7 @@ class FeatureSet:
             # cv2.imwrite("images/test.jpg", mat)
 
         result = sort_boxes(boxes)
-        draw_boxes(self, category_name, result, "red")
+        communicate.draw_box.emit(category_name, result)
         return result
 
 

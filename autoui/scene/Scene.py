@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 
 class Scene:
+    name = None
 
     def __init__(self):
         pass
