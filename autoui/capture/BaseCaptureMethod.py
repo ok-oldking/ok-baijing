@@ -3,7 +3,6 @@ from cv2.typing import MatLike
 
 class BaseCaptureMethod:
     name = "None"
-    short_description = ""
     description = ""
     last_captured_frame: MatLike
     top_cut = 0

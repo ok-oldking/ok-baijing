@@ -17,7 +17,7 @@ class FeatureSet:
     # Category_name to OpenCV Mat
     featureDict: Dict[str, Feature] = {}
 
-    def __init__(self, coco_folder: str, width: int, height: int, default_horizontal_variance=0,
+    def __init__(self, coco_folder: str, default_horizontal_variance=0,
                  default_vertical_variance=0, default_threshold=0.95) -> None:
         """
         Initialize the FeatureSet by loading images and annotations from a COCO dataset.
@@ -30,12 +30,11 @@ class FeatureSet:
         self.coco_folder = coco_folder
 
         # Process images and annotations
-        self.width = width
-        self.height = height
+        self.width = 0
+        self.height = 0
         self.default_threshold = default_threshold
         self.default_horizontal_variance = default_horizontal_variance
         self.default_vertical_variance = default_vertical_variance
-        self.process_data()
 
     def check_size(self, frame):
         height, width = frame.shape[:2]

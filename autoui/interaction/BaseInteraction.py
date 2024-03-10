@@ -1,5 +1,8 @@
 from autoui.feature.Box import Box
 from autoui.gui.Communicate import communicate
+from autoui.logging.Logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class BaseInteraction:
@@ -14,11 +17,11 @@ class BaseInteraction:
         self.click(int(self.capture.width * x), int(self.capture.height * y))
 
     def click_box(self, box: Box, relative_x=0.5, relative_y=0.5):
-        print(f"BaseInteraction: click_box {box}")
+        logger.info(f"click_box {box}")
         communicate.draw_box.emit("click", [box])
         x, y = box.relative_with_variance(relative_x, relative_y)
         self.click(x, y)
 
     def click(self, x=-1, y=-1):
-        print(f"BaseInteraction: click {x, y}")
+        logger.info(f"click {x, y}")
         pass

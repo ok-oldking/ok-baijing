@@ -2,14 +2,13 @@ import sys
 from typing import List
 
 from autoui.feature.Box import Box
-from autoui.feature.FeatureSet import FeatureSet
 from autoui.gui.Communicate import communicate
 
 
 class FindFeature:
 
-    def __init__(self, feature_set: FeatureSet):
-        self.feature_set = feature_set
+    def __init__(self):
+        self.feature_set = None
         self.executor = None
 
     def find(self, feature_name, horizontal_variance=0, vertical_variance=0, threshold=0) -> List[Box]:

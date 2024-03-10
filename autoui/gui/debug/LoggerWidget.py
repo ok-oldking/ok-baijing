@@ -23,6 +23,7 @@ class LoggerWidget(QWidget):
 
     def __init__(self, parent=None):
         super(LoggerWidget, self).__init__(parent)
+        self.max_length = 1000
         self.init_ui()
         self.logs = []  # Store logs as tuples (level, message)
         communicate.log.connect(self.add_log)
@@ -53,6 +54,11 @@ class LoggerWidget(QWidget):
 
     def add_log(self, level, message):
         self.logs.append((level, message))
+        if len(self.logs) > self.max_length:
+            # Calculate how many elements to remove
+            excess_length = len(self.logs) - self.max_length
+            # Remove the oldest elements
+            del self.logs[:excess_length]
         self.update_display()
 
     def update_display(self):

@@ -1,13 +1,22 @@
+from autoui.capture.adb.ADBCaptureMethod import screencap
 from autoui.interaction.BaseInteraction import BaseInteraction
+from autoui.logging.Logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ADBBaseInteraction(BaseInteraction):
 
-    def __init__(self, device, capture, width, height):
+    def __init__(self, device, capture):
         super().__init__(capture)
+        self.width = 0
+        self.height = 0
         self.device = device
-        self.width = width
-        self.height = height
+        screencap(self)
+        logger.info(f"width: {self.width}, height: {self.height}")
+        if self.width == 0 or self.height == 0:
+            logger.critical(f"Could not parse screen resolution. {result}")
+            raise RuntimeError(f"ADBBaseInteraction: Could not parse screen resolution. {result}")
 
     def send_key(self, key, down_time=0.02):
         super().send_key(key, down_time)

@@ -3,6 +3,9 @@ from PySide6.QtWidgets import QMessageBox, QTabWidget
 
 from autoui.gui.TabTitles import TabContent
 from autoui.gui.debug.DebugTab import DebugTab
+from autoui.logging.Logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Communicate(QObject):
@@ -63,6 +66,6 @@ class MainWindow(QTabWidget):
         if reply == QMessageBox.Yes:
             self.exit_event.set()
             event.accept()
-            print("Window closed")  # Place your code here
+            logger.info("Window closed")  # Place your code here
         else:
             event.ignore()

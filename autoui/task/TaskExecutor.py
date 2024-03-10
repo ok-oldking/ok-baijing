@@ -20,8 +20,9 @@ class TaskExecutor:
 
     def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, target_fps=10,
                  wait_until_timeout=10, wait_until_before_delay=1, wait_until_check_delay=1,
-                 exit_event=threading.Event(), tasks=[], scenes=[]):
+                 exit_event=threading.Event(), tasks=[], scenes=[], feature_set=None):
         self.interaction = interaction
+        self.feature_set = feature_set
         self.wait_until_check_delay = wait_until_check_delay
         self.wait_until_before_delay = wait_until_before_delay
         self.method = method
@@ -32,8 +33,10 @@ class TaskExecutor:
         self.scenes = scenes
         for scene in self.scenes:
             scene.executor = self
+            scene.feature_set = self.feature_set
         for task in self.tasks:
             task.executor = self
+            task.feature_set = self.feature_set
         self.thread = threading.Thread(target=self.execute)
         self.thread.start()
 
@@ -126,8 +129,8 @@ class TaskExecutor:
                             if processing_time > 0.2:
                                 logger.debug(
                                     f"{task.__class__.__name__} taking too long skip to next frame {processing_time} {task_executed} {len(self.tasks)}")
-                                self.add_frame_stats()
-                                break
+                                self.next_frame()
+                                start = time.time()
                     self.add_frame_stats()
                 self.wait_fps(start)
         except Exception as e:

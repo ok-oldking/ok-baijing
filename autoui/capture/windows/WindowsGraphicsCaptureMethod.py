@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 
 class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
     name = "Windows Graphics Capture"
-    short_description = "fast, most compatible, capped at 60fps"
+    description = "fast, most compatible, capped at 60fps"
     last_frame = None
     last_frame_time = 0
     hwnd_window: HwndWindow = None
