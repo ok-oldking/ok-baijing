@@ -9,6 +9,7 @@ class Communicate(QObject):
     frame_time = Signal(int)
     scene = Signal(str)
     draw_box = Signal(str, list)
+    tasks = Signal()
 
 
 communicate = Communicate()

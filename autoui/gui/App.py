@@ -7,11 +7,11 @@ from autoui.gui.MainWindow import MainWindow
 
 
 class App:
-    def __init__(self, exit_event):
+    def __init__(self, tasks, exit_event):
         super().__init__()
         self.exit_event = exit_event
         self.app = QApplication(sys.argv)
-        self.ex = MainWindow(exit_event=self.exit_event)
+        self.ex = MainWindow(tasks, exit_event=self.exit_event)
 
     def start(self):
         self.app.setStyle(QStyleFactory.create("Fusion"))

@@ -13,7 +13,7 @@ from task.AutoLoginTask import AutoLoginTask
 
 config = {
     'debug': True,  # Optional, default: False
-    'use_gui': True,
+    'use_gui': True,  # Optional, default: False
     'capture': 'windows',  # adb/windows, see #autoui.capture
     'interaction': 'windows',  # adb/windows, see #autoui.interaction
     'window_title': '原神',  # required  when using windows capture

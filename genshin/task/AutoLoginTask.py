@@ -1,5 +1,3 @@
-import time
-
 from typing_extensions import override
 
 from autoui.task.FindFeatureTask import FindFeatureTask
@@ -11,8 +9,7 @@ class AutoLoginTask(FindFeatureTask):
 
     @override
     def run_frame(self):
-        # print("run_frame AutoLoginTask")
         if self.is_scene(StartScene) or self.is_scene(MonthlyCardScene):
-            print(f"Start scene click")
+            self.logger.info(f"AutoLoginTask click")
             self.click_relative(0.6, 0.6)
-            time.sleep(1)
+            self.sleep(1)

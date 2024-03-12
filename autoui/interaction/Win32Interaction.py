@@ -6,6 +6,9 @@ import pydirectinput
 
 from autoui.capture.BaseCaptureMethod import BaseCaptureMethod
 from autoui.interaction.BaseInteraction import BaseInteraction
+from autoui.logging.Logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Win32Interaction(BaseInteraction):
@@ -14,7 +17,7 @@ class Win32Interaction(BaseInteraction):
         super().__init__(capture)
         self.post = ctypes.windll.user32.PostMessageW
         if not is_admin():
-            print(f"You must be an admin to use Win32Interaction", file=sys.stderr)
+            logger.error(f"You must be an admin to use Win32Interaction", file=sys.stderr)
 
     def send_key(self, key, down_time=0.02):
         if not self.capture.clickable():
@@ -26,13 +29,13 @@ class Win32Interaction(BaseInteraction):
     def click(self, x=-1, y=-1):
         super().click(x, y)
         if not self.capture.clickable():
-            print(f"Win32Interaction:not clickable")
+            logger.info(f"window in background, not clickable")
             return
         # Convert the x, y position to lParam
         # lParam = win32api.MAKELONG(x, y)
         if x != -1 and y != -1:
             x, y = self.capture.get_abs_cords(x, y)
-            print(f"Win32Interaction: left_click {x, y}")
+            logger.info(f"left_click {x, y}")
             pydirectinput.moveTo(x, y)
         pydirectinput.click()
 

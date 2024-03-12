@@ -1,5 +1,3 @@
-import time
-
 from typing_extensions import override
 
 from autoui.task.FindFeatureTask import FindFeatureTask
@@ -17,13 +15,12 @@ class AutoPlayDialogTask(FindFeatureTask):
         if self.is_scene((DialogPlayingScene, BlackDialogScene, DialogCloseButtonScene)):
             # For DialogPlayingScene, check if the button_play is present
             if self.is_scene(DialogPlayingScene) and self.scene.button_play:
-                print("AutoDialogTask: turn on auto play")
+                self.logger.info("turn on auto play")
                 self.click_box(self.scene.button_play)
             elif self.is_scene(DialogCloseButtonScene):
-                print("AutoDialogTask: turn on auto play")
+                self.logger.info("click dialog close button")
                 self.click_box(self.scene.close_button)
             else:
-                # This covers the else case for DialogPlayingScene without button_play
-                # and all instances of BlackDialogScene
+                self.logger.info("click center of the screen, fast forward dialog")
                 self.click_relative(0.5, 0.5)
-            time.sleep(1)
+            self.sleep(1)

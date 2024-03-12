@@ -1,4 +1,5 @@
 import threading
+import time
 from typing import Dict, Any
 
 import adbutils
@@ -44,14 +45,38 @@ class AutoUI:
         if config['coco_feature_folder'] is not None:
             coco_feature_folder = config['coco_feature_folder']
             self.feature_set = FeatureSet(coco_feature_folder,
-                                          default_horizontal_variance=config['default_horizontal_variance'],
-                                          default_vertical_variance=config['default_vertical_variance'],
-                                          default_threshold=config['default_threshold'])
+                                          default_horizontal_variance=config.get('default_horizontal_variance', 0),
+                                          default_vertical_variance=config.get('default_vertical_variance', 0),
+                                          default_threshold=config.get('default_threshold', 0))
 
         self.task_executor = TaskExecutor(self.capture, interaction=self.interaction, exit_event=exit_event,
                                           tasks=config['tasks'], scenes=config['scenes'], feature_set=self.feature_set)
-        app = App(exit_event)
-        app.start()
+
+        if config['use_gui']:
+            app = App(config['tasks'], exit_event)
+            app.start()
+        else:
+            try:
+                # Starting the task in a separate thread (optional)
+                # This allows the main thread to remain responsive to keyboard interrupts
+                task_thread = threading.Thread(target=self.wait_task())
+                task_thread.start()
+
+                # Wait for the task thread to end (which it won't, in this case, without an interrupt)
+                task_thread.join()
+            except KeyboardInterrupt:
+                exit_event.set()
+                logger.info("Keyboard interrupt received, exiting script.")
+            finally:
+                # Clean-up code goes here (if any)
+                # This block ensures that the script terminates gracefully,
+                # releasing resources or performing necessary clean-up operations.
+                logger.info("Script has terminated.")
+
+    @staticmethod
+    def wait_task():
+        while True:
+            time.sleep(1)
 
     def init_hwnd(self, window_title, exit_event):
         if self.hwnd is None:

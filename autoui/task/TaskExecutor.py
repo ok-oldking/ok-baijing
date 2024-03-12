@@ -1,6 +1,5 @@
 import threading
 import time
-import traceback
 
 from autoui.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
 from autoui.gui.Communicate import communicate
@@ -17,6 +16,7 @@ class TaskExecutor:
     last_scene: Scene | None = None
     frame_stats = StreamStats()
     frame = None
+    paused = True
 
     def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, target_fps=10,
                  wait_until_timeout=10, wait_until_before_delay=1, wait_until_check_delay=1,
@@ -111,33 +111,39 @@ class TaskExecutor:
 
     def execute(self):
         logger.info(f"start execute")
-        try:
-            while not self.exit_event.is_set():
-                self.frame = self.next_frame()
-                start = time.time()
-                if self.frame is not None:
-                    self.detect_scene()
-                    # logger.debug(f"detect_scene: {self.current_scene.__class__.__name__} {(time.time() - start)}")
-                    if self.current_scene is not None:
-                        task_executed = 0
-                        for task in self.tasks:
-                            if task.done:
-                                continue
-                            task.run_frame()
-                            processing_time = time.time() - start
-                            task_executed += 1
-                            if processing_time > 0.2:
-                                logger.debug(
-                                    f"{task.__class__.__name__} taking too long skip to next frame {processing_time} {task_executed} {len(self.tasks)}")
-                                self.next_frame()
-                                start = time.time()
-                    self.add_frame_stats()
-                self.wait_fps(start)
-        except Exception as e:
-            # Handle the exception or store it for later use
-            logger.error(f"TaskExecutor Thread Exception : {e}")
-            traceback.print_exc()
-            self.exit_event.set()
+        while not self.exit_event.is_set():
+            self.frame = self.next_frame()
+            start = time.time()
+            if self.frame is not None:
+                self.detect_scene()
+                if self.current_scene is not None:
+                    task_executed = 0
+                    for task in self.tasks:
+                        if task.done:
+                            continue
+                        task.running = True
+                        communicate.tasks.emit()
+                        try:
+                            result = task.run_frame()
+                            if result is not None:
+                                if result:
+                                    task.success_count += 1
+                                else:
+                                    task.error_count += 1
+                        except Exception as e:
+                            logger.error(f"{task.name} exception {e}")
+                            task.error_count += 1
+                        task.running = False
+                        communicate.tasks.emit()
+                        processing_time = time.time() - start
+                        task_executed += 1
+                        if processing_time > 0.2:
+                            logger.debug(
+                                f"{task.__class__.__name__} taking too long get new frame {processing_time} {task_executed} {len(self.tasks)}")
+                            self.next_frame()
+                            start = time.time()
+                self.add_frame_stats()
+            self.wait_fps(start)
 
     def add_frame_stats(self):
         self.frame_stats.add_frame()

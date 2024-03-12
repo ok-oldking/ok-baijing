@@ -11,6 +11,9 @@ from cv2.typing import MatLike
 from autoui.feature.Box import Box, sort_boxes
 from autoui.feature.Feature import Feature
 from autoui.gui.Communicate import communicate
+from autoui.logging.Logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class FeatureSet:
@@ -32,6 +35,8 @@ class FeatureSet:
         # Process images and annotations
         self.width = 0
         self.height = 0
+        if default_threshold == 0:
+            default_threshold = 0.95
         self.default_threshold = default_threshold
         self.default_horizontal_variance = default_horizontal_variance
         self.default_vertical_variance = default_vertical_variance
@@ -85,7 +90,7 @@ class FeatureSet:
 
             # Store in featureDict using the category name
             category_name = category_map[category_id]
-            print(
+            logger.debug(
                 f"FeatureSet: loaded {category_name} self.width / image.shape {self.width} / {image.shape[1]},scale_x:{scale_x} scale_y:{scale_y}")
             if category_name in self.featureDict:
                 raise ValueError(f"Multiple boxes found for category {category_name}")
@@ -116,8 +121,8 @@ class FeatureSet:
         boxes = self.find_feature(mat, category_name, horizontal_variance=horizontal_variance,
                                   vertical_variance=vertical_variance, threshold=threshold)
         if len(boxes) > 1:
-            print("find_one:found too many len(boxes)", file=sys.stderr)
-        if len(boxes) == 1:
+            logger.warning(f"find_one:found too many {len(boxes)} return first", file=sys.stderr)
+        if len(boxes) >= 1:
             return boxes[0]
 
     def find_feature(self, mat: MatLike, category_name: str, horizontal_variance: float = 0,

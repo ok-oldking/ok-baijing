@@ -1,10 +1,20 @@
 from autoui.feature.Box import Box
+from autoui.logging.Logger import get_logger
 from autoui.task.TaskExecutor import TaskExecutor
 
 
 class BaseTask:
     executor: TaskExecutor
-    done = False
+    _done = False
+
+    def __init__(self):
+        self.logger = get_logger(self.__class__.__name__)
+        self.name = self.__class__.__name__
+        self.success_count = 0
+        self.error_count = 0
+        self.enabled = True
+        self.running = False
+        self.config = {}
 
     def run_frame(self):
         pass
@@ -29,6 +39,13 @@ class BaseTask:
 
     def sleep(self, timeout):
         self.executor.sleep(timeout)
+
+    @property
+    def done(self):
+        return self._done
+
+    def set_done(self, done=True):
+        self._done = done
 
     def send_key(self, key, down_time=0.02):
         self.executor.interaction.send_key(key, down_time)

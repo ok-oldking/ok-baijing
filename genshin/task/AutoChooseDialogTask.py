@@ -1,5 +1,3 @@
-import time
-
 from typing_extensions import override
 
 from autoui.task.FindFeatureTask import FindFeatureTask
@@ -12,6 +10,6 @@ class AutoChooseDialogTask(FindFeatureTask):
     @override
     def run_frame(self):
         if self.is_scene(DialogChoicesScene):
-            print(f"AutoChooseDialogTask choose first option")
+            self.logger.info(f"AutoChooseDialogTask choose first option")
             self.click_box(self.scene.dialogs[0])
-            time.sleep(1)
+            self.sleep(1)
