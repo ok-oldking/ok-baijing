@@ -16,7 +16,7 @@ config = {
     'use_gui': True,  # Optional, default: False
     'capture': 'windows',  # adb/windows, see #autoui.capture
     'interaction': 'windows',  # adb/windows, see #autoui.interaction
-    'window_title': '原神',  # required  when using windows capture
+    'capture_window_title': '原神',  # required  when using windows capture
     'default_horizontal_variance': 0,
     'default_vertical_variance': 0,
     'default_threshold': 0.95,

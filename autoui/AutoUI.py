@@ -33,13 +33,13 @@ class AutoUI:
             self.init_adb(config)
             self.capture = ADBCaptureMethod(self.adb_device)
         else:
-            self.init_hwnd(config['window_title'], exit_event)
+            self.init_hwnd(config['capture_window_title'], exit_event)
             self.capture = WindowsGraphicsCaptureMethod(self.hwnd)
         if config['interaction'] == 'adb':
             self.init_adb(config)
             self.interaction = ADBBaseInteraction(self.adb_device, self.capture)
         else:
-            self.init_hwnd(config['window_title'], exit_event)
+            self.init_hwnd(config['capture_window_title'], exit_event)
             self.interaction = Win32Interaction(self.capture)
 
         if config['coco_feature_folder'] is not None:
@@ -53,7 +53,7 @@ class AutoUI:
                                           tasks=config['tasks'], scenes=config['scenes'], feature_set=self.feature_set)
 
         if config['use_gui']:
-            app = App(config['tasks'], exit_event)
+            app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], exit_event)
             app.start()
         else:
             try:
