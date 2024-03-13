@@ -1,4 +1,4 @@
-from autoui.AutoUI import AutoUI
+from autohelper.AutoHelper import AutoHelper
 from genshin.config import config
 
-autoui = AutoUI(config)
+autoui = AutoHelper(config)

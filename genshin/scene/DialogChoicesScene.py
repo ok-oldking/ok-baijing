@@ -1,7 +1,7 @@
 from typing import List
 
-from autoui.feature.Box import Box
-from autoui.scene.FeatureScene import FindFeatureScene
+from autohelper.feature.Box import Box
+from autohelper.scene.FeatureScene import FindFeatureScene
 from genshin.matching.choice import find_choices
 
 

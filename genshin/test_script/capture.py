@@ -1,6 +1,6 @@
-from autoui.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
-from autoui.save.BlackBarProcessor import BlackBarProcessor
-from autoui.save.SaveByKeyPress import SaveByKeyPress
+from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
+from autohelper.save.BlackBarProcessor import BlackBarProcessor
+from autohelper.save.SaveByKeyPress import SaveByKeyPress
 
 capture = WindowsGraphicsCaptureMethod("Genshin Impact")
 # capture = WindowsGraphicsCaptureMethod("MuMu Player 12")

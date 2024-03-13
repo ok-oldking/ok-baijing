@@ -1,4 +1,4 @@
-from autoui.scene.FeatureScene import FindFeatureScene
+from autohelper.scene.FeatureScene import FindFeatureScene
 
 
 class StartScene(FindFeatureScene):

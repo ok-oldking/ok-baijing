@@ -2,10 +2,10 @@ import threading
 
 import adbutils
 
-from autoui.capture.adb.ADBCaptureMethod import ADBCaptureMethod
-from autoui.feature.FeatureSet import FeatureSet
-from autoui.interaction.Win32Interaction import Win32Interaction
-from autoui.task.TaskExecutor import TaskExecutor
+from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
+from autohelper.feature.FeatureSet import FeatureSet
+from autohelper.interaction.Win32Interaction import Win32Interaction
+from autohelper.task.TaskExecutor import TaskExecutor
 from genshin.scene.BlackDialogScene import BlackDialogScene
 from genshin.scene.DialogChoicesScene import DialogChoicesScene
 from genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene

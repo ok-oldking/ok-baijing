@@ -1,7 +1,7 @@
 from typing import List
 
-from autoui.color.Color import calculate_color_percentage
-from autoui.feature.Box import Box
+from autohelper.color.Color import calculate_color_percentage
+from autohelper.feature.Box import Box
 
 white_color = {
     'r': (240, 255),  # Red range
