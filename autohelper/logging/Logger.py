@@ -44,14 +44,14 @@ class Logger:
         self.name = name
 
     def config(self, config):
-        if config['debug']:
+        if config.get('debug'):
             self.logger.setLevel(logging.DEBUG)
         else:
             self.logger.setLevel(logging.INFO)
 
         self.logger.addHandler(communicate_handler)
 
-        if config['log_file']:
+        if config.get('log_file'):
             ensure_dir_for_file(config['log_file'])
             self.logger.addHandler(file_handler)
         console_handler = logging.StreamHandler()

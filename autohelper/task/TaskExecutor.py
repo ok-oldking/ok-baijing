@@ -1,7 +1,7 @@
 import threading
 import time
 
-from autohelper.capture.windows.WindowsGraphicsCaptureMethod import BaseCaptureMethod
+from autohelper.capture.BaseCaptureMethod import BaseCaptureMethod
 from autohelper.gui.Communicate import communicate
 from autohelper.interaction.BaseInteraction import BaseInteraction
 from autohelper.logging.Logger import get_logger

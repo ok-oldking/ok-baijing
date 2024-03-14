@@ -2,11 +2,9 @@ import threading
 import time
 from typing import Dict, Any
 
-import adbutils
-
 from autohelper.capture.HwndWindow import HwndWindow
 from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
-from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
+from autohelper.capture.adb.DeviceManager import DeviceManager
 from autohelper.feature.FeatureSet import FeatureSet
 from autohelper.gui.App import App
 from autohelper.interaction.ADBInteraction import ADBBaseInteraction
@@ -23,6 +21,7 @@ class AutoHelper:
     adb_device = None
     feature_set = None
     hwnd = None
+    device_manager = None
 
     def __init__(self, config: Dict[str, Any]):
         logger.config(config)
@@ -30,14 +29,15 @@ class AutoHelper:
         exit_event = threading.Event()
 
         if config['capture'] == 'adb':
-            self.init_adb(config)
-            self.capture = ADBCaptureMethod(self.adb_device)
+            self.init_adb()
+            self.capture = ADBCaptureMethod(self.device_manager)
         else:
+            from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
             self.init_hwnd(config['capture_window_title'], exit_event)
             self.capture = WindowsGraphicsCaptureMethod(self.hwnd)
         if config['interaction'] == 'adb':
-            self.init_adb(config)
-            self.interaction = ADBBaseInteraction(self.adb_device, self.capture)
+            self.init_adb()
+            self.interaction = ADBBaseInteraction(self.device_manager, self.capture)
         else:
             self.init_hwnd(config['capture_window_title'], exit_event)
             self.interaction = Win32Interaction(self.capture)
@@ -82,8 +82,6 @@ class AutoHelper:
         if self.hwnd is None:
             self.hwnd = HwndWindow(window_title, exit_event)
 
-    def init_adb(self, config):
-        if self.adb is None:
-            self.adb = adbutils.AdbClient(host="127.0.0.1", port=5037)
-            self.adb.connect(f"{config['adb_host']}:{config['adb_port']}")
-            self.adb_device = self.adb.device()
+    def init_adb(self):
+        if self.device_manager is None:
+            self.device_manager = DeviceManager()
