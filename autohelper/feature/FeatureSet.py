@@ -91,7 +91,7 @@ class FeatureSet:
             # Store in featureDict using the category name
             category_name = category_map[category_id]
             logger.debug(
-                f"FeatureSet: loaded {category_name} self.width / image.shape {self.width} / {image.shape[1]},scale_x:{scale_x} scale_y:{scale_y}")
+                f"loaded {category_name} self.width / image.shape {self.width} / {image.shape[1]},scale_x:{scale_x} scale_y:{scale_y}")
             if category_name in self.featureDict:
                 raise ValueError(f"Multiple boxes found for category {category_name}")
             self.featureDict[category_name] = Feature(cropped_image, x, y, w, h)

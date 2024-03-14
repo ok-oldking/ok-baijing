@@ -50,7 +50,7 @@ class HwndWindow:
             self.frame_height = height
             if width > 0 and height > 0:
                 self.frame_aspect_ratio = width / height
-                print(f"HwndWindow: frame ratio:{self.frame_aspect_ratio} width: {width}, height: {height}")
+                logger.debug(f"HwndWindow: frame ratio:{self.frame_aspect_ratio} width: {width}, height: {height}")
 
     def update_window_size(self):
         while not self.exit_event.is_set():
@@ -67,19 +67,19 @@ class HwndWindow:
             self.exists = win32gui.IsWindow(self.hwnd)
             if self.exists:
                 self.visible = is_foreground_window(self.hwnd)
-                if self.visible:
-                    self.x, self.y, self.border, self.title_height, width, height, self.scaling = get_window_bounds(
-                        self.hwnd)
-                    width = width - self.border * 2
-                    height = height - self.border - self.title_height
-                    if self.frame_aspect_ratio != 0:
-                        window_ratio = width / height
-                        if window_ratio < self.frame_aspect_ratio:
-                            cropped_window_height = int(width / self.frame_aspect_ratio)
-                            height = height - cropped_window_height
-                            self.width = width - self.border * 2
-                    self.height = height
-                    self.width = width
+                self.x, self.y, self.border, title_height, width, height, self.scaling = get_window_bounds(
+                    self.hwnd)
+                width = width - self.border * 2
+                height = height - self.border - title_height
+                if self.frame_aspect_ratio != 0:
+                    window_ratio = width / height
+                    if window_ratio < self.frame_aspect_ratio:
+                        cropped_window_height = int(width / self.frame_aspect_ratio)
+                        title_height += height - cropped_window_height
+                        height = cropped_window_height
+                self.height = height
+                self.width = width
+                self.title_height = title_height
             else:
                 self.hwnd = None
 

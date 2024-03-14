@@ -101,6 +101,7 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
 
     def start_or_stop(self, capture_cursor=False):
         if self.hwnd_window.exists and self.frame_pool is None:
+            logger.info('init windows capture')
             self.rtdevice = IDirect3DDevice()
             self.dxdevice = d3d11.ID3D11Device()
             self.immediatedc = d3d11.ID3D11DeviceContext()
@@ -123,21 +124,10 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
                     self.frame_arrived_callback))
             self.session.IsCursorCaptureEnabled = capture_cursor
             if WINDOWS_BUILD_NUMBER >= WGC_NO_BORDER_MIN_BUILD:
-                print(f"Build number {WINDOWS_BUILD_NUMBER} is_border_required = False")
                 self.session.IsBorderRequired = False
             self.session.StartCapture()
         elif not self.hwnd_window.exists and self.frame_pool is not None:
-            if self.frame_pool is not None:
-                self.frame_pool.Close()
-                self.frame_pool = None
-            if self.session is not None:
-                self.session.Close()  # E_UNEXPECTED ???
-                self.session = None
-            self.item = None
-            self.rtdevice.Release()
-            self.dxdevice.Release()
-            if self.cputex:
-                self.cputex.Release()
+            self.close()
         return self.hwnd_window.exists
 
     def create_device(self):
@@ -158,18 +148,18 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
 
     @override
     def close(self):
-        if self.frame_pool:
-            self.frame_pool.close()
+        logger.info('destroy windows capture')
+        if self.frame_pool is not None:
+            self.frame_pool.Close()
             self.frame_pool = None
-        if self.session:
-            try:
-                self.session.close()
-            except OSError:
-                # OSError: The application called an interface that was marshalled for a different thread
-                # This still seems to close the session and prevent the following hard crash in LiveSplit
-                # "AutoSplit.exe	<process started at 00:05:37.020 has terminated with 0xc0000409 (EXCEPTION_STACK_BUFFER_OVERRUN)>" # noqa: E501
-                pass
+        if self.session is not None:
+            self.session.Close()  # E_UNEXPECTED ???
             self.session = None
+        self.item = None
+        self.rtdevice.Release()
+        self.dxdevice.Release()
+        if self.cputex:
+            self.cputex.Release()
 
     def get_frame(self):
         if self.start_or_stop():
@@ -180,14 +170,13 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
             if latency > 1:
                 logger.warning(f"latency too large return None frame: {latency}")
                 return None
-            if frame is not None and self.hwnd_window.title_height != 0 and self.hwnd_window.border != 0:
+            if frame is not None and (self.hwnd_window.title_height != 0 or self.hwnd_window.border != 0):
                 frame = crop_image(frame, self.hwnd_window.border, self.hwnd_window.title_height)
 
             if frame is not None:
                 new_height, new_width = frame.shape[:2]
                 self.width = new_width
                 self.height = new_height
-                self.hwnd_window.update_frame_size(new_width, new_height)
 
                 if frame.shape[2] == 4:
                     frame = frame[:, :, :3]

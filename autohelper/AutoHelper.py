@@ -24,21 +24,20 @@ class AutoHelper:
     def __init__(self, config: Dict[str, Any]):
         logger.config(config)
         logger.info(f"initializing {self.__class__.__name__}, config: {config}")
-        exit_event = threading.Event()
-
+        self.exit_event = threading.Event()
+        if config['interaction'] == 'adb' or config['capture'] == 'adb':
+            self.init_adb()
         if config['capture'] == 'adb':
             from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
-            self.init_adb()
             self.capture = ADBCaptureMethod(self.device_manager)
         else:
             from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
-            self.init_hwnd(config['capture_window_title'], exit_event)
+            self.init_hwnd(config['capture_window_title'], self.exit_event)
             self.capture = WindowsGraphicsCaptureMethod(self.hwnd)
         if config['interaction'] == 'adb':
-            self.init_adb()
             self.interaction = ADBBaseInteraction(self.device_manager, self.capture)
         else:
-            self.init_hwnd(config['capture_window_title'], exit_event)
+            self.init_hwnd(config['capture_window_title'], self.exit_event)
             self.interaction = Win32Interaction(self.capture)
 
         if config['coco_feature_folder'] is not None:
@@ -48,11 +47,11 @@ class AutoHelper:
                                           default_vertical_variance=config.get('default_vertical_variance', 0),
                                           default_threshold=config.get('default_threshold', 0))
 
-        self.task_executor = TaskExecutor(self.capture, interaction=self.interaction, exit_event=exit_event,
+        self.task_executor = TaskExecutor(self.capture, interaction=self.interaction, exit_event=self.exit_event,
                                           tasks=config['tasks'], scenes=config['scenes'], feature_set=self.feature_set)
 
         if config['use_gui']:
-            app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], exit_event)
+            app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], self.exit_event)
             app.start()
         else:
             try:
@@ -64,7 +63,7 @@ class AutoHelper:
                 # Wait for the task thread to end (which it won't, in this case, without an interrupt)
                 task_thread.join()
             except KeyboardInterrupt:
-                exit_event.set()
+                self.exit_event.set()
                 logger.info("Keyboard interrupt received, exiting script.")
             finally:
                 # Clean-up code goes here (if any)
@@ -72,14 +71,16 @@ class AutoHelper:
                 # releasing resources or performing necessary clean-up operations.
                 logger.info("Script has terminated.")
 
-    @staticmethod
-    def wait_task():
-        while True:
+    def wait_task(self):
+        while not self.exit_event.is_set():
             time.sleep(1)
 
     def init_hwnd(self, window_title, exit_event):
         if self.hwnd is None:
-            self.hwnd = HwndWindow(window_title, exit_event)
+            if self.device_manager is not None and self.device_manager.device is not None:
+                self.hwnd = HwndWindow(window_title, exit_event, self.device_manager.width, self.device_manager.height)
+            else:
+                self.hwnd = HwndWindow(window_title, exit_event)
 
     def init_adb(self):
         if self.device_manager is None:

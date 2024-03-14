@@ -27,4 +27,4 @@ def GetActivationFactory(classname, interface=IActivationFactory):
     return insp
 
 
-RoInitialize(RO_INIT_TYPE.RO_INIT_MULTITHREADED)
+RoInitialize(RO_INIT_TYPE.RO_INIT_SINGLETHREADED)

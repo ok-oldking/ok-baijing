@@ -4,7 +4,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 from autohelper.gui.Communicate import communicate
 
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(threadName)s %(message)s')
 
 os.makedirs("logs", exist_ok=True)
 # File handler with rotation

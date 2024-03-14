@@ -5,6 +5,9 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from autohelper.gui.MainWindow import MainWindow
+from autohelper.logging.Logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class App:
@@ -33,7 +36,7 @@ class App:
         if translator.load(f"your_application_{locale}", "path/to/translations"):
             self.app.installTranslator(translator)
         else:
-            print(f"No translation available for {locale}, falling back to English/default.")
+            logger.debug(f"No translation available for {locale}, falling back to English/default.")
         size = QSize(half_screen_width, half_screen_height)
         self.main_window.resize(size)
         self.main_window.setMinimumSize(size)
