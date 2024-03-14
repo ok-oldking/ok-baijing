@@ -115,6 +115,7 @@ def installed_emulator():
                                     ADBControllerTarget(None, f'{server.vendor}: {machine_name}',
                                                         address, 2, 1, override_identifier=identifier,
                                                         preload_device_info={'emulator_hypervisor': 'vbox'}))
+            logger.debug(f'try checking {server}')
         except Exception as e:
             logger.debug(f'failed to check server :{server} {e}')
     return results

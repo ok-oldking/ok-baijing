@@ -24,3 +24,4 @@ class AutoPlayDialogTask(FindFeatureTask):
                 self.logger.info("click center of the screen, fast forward dialog")
                 self.click_relative(0.5, 0.5)
             self.sleep(1)
+            return True

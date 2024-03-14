@@ -24,6 +24,7 @@ class AutoPickTask(FindFeatureTask):
                         self.sleep(0.1)
                         self.send_key("f")
                         self.sleep(0.1)
+                        return True
 
     def has_dialogs(self):
         dialogs = self.find("button_dialog_world", 0.4, 0.4)

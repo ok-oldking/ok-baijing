@@ -1,5 +1,4 @@
 import ctypes
-import sys
 import time
 
 import pydirectinput
@@ -17,7 +16,7 @@ class Win32Interaction(BaseInteraction):
         super().__init__(capture)
         self.post = ctypes.windll.user32.PostMessageW
         if not is_admin():
-            logger.error(f"You must be an admin to use Win32Interaction", file=sys.stderr)
+            logger.error(f"You must be an admin to use Win32Interaction")
 
     def send_key(self, key, down_time=0.02):
         if not self.capture.clickable():

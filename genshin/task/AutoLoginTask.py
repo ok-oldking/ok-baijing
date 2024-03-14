@@ -13,3 +13,4 @@ class AutoLoginTask(FindFeatureTask):
             self.logger.info(f"AutoLoginTask click")
             self.click_relative(0.6, 0.6)
             self.sleep(1)
+            return True

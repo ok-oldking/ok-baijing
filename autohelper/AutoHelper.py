@@ -3,8 +3,6 @@ import time
 from typing import Dict, Any
 
 from autohelper.capture.HwndWindow import HwndWindow
-from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
-from autohelper.capture.adb.DeviceManager import DeviceManager
 from autohelper.feature.FeatureSet import FeatureSet
 from autohelper.gui.App import App
 from autohelper.interaction.ADBInteraction import ADBBaseInteraction
@@ -29,6 +27,7 @@ class AutoHelper:
         exit_event = threading.Event()
 
         if config['capture'] == 'adb':
+            from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
             self.init_adb()
             self.capture = ADBCaptureMethod(self.device_manager)
         else:
@@ -84,4 +83,5 @@ class AutoHelper:
 
     def init_adb(self):
         if self.device_manager is None:
+            from autohelper.capture.adb.DeviceManager import DeviceManager
             self.device_manager = DeviceManager()

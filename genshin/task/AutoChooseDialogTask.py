@@ -13,3 +13,4 @@ class AutoChooseDialogTask(FindFeatureTask):
             self.logger.info(f"AutoChooseDialogTask choose first option")
             self.click_box(self.scene.dialogs[0])
             self.sleep(1)
+            return True

@@ -16,7 +16,8 @@ from autohelper.rotypes.Windows.Foundation import TypedEventHandler
 from autohelper.rotypes.Windows.Graphics.Capture import Direct3D11CaptureFramePool, IGraphicsCaptureItemInterop, \
     IGraphicsCaptureItem, GraphicsCaptureItem
 from autohelper.rotypes.Windows.Graphics.DirectX import DirectXPixelFormat
-from autohelper.rotypes.Windows.Graphics.DirectX.Direct3D11 import IDirect3DDevice, CreateDirect3D11DeviceFromDXGIDevice, \
+from autohelper.rotypes.Windows.Graphics.DirectX.Direct3D11 import IDirect3DDevice, \
+    CreateDirect3D11DeviceFromDXGIDevice, \
     IDirect3DDxgiInterfaceAccess
 from autohelper.rotypes.roapi import GetActivationFactory
 
@@ -32,19 +33,16 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
     last_frame = None
     last_frame_time = 0
     hwnd_window: HwndWindow = None
+    frame_pool = None
+    item = None
+    session = None
+    cputex = None
 
     def __init__(self, hwnd_window: HwndWindow):
         super().__init__()
         self.hwnd_window = hwnd_window
 
-        self._rtdevice = IDirect3DDevice()
-        self._dxdevice = d3d11.ID3D11Device()
-        self._immediatedc = d3d11.ID3D11DeviceContext()
-
-        self.start()
-
-    def _frame_arrived_callback(self, x, y):
-        # print("Frame arrived")
+    def frame_arrived_callback(self, x, y):
         frame = self.frame_pool.TryGetNextFrame()
         if not frame:
             return
@@ -53,13 +51,13 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
         with frame:
             need_reset_framepool = False
             need_reset_device = False
-            if frame.ContentSize.Width != self._last_size.Width or frame.ContentSize.Height != self._last_size.Height:
+            if frame.ContentSize.Width != self.last_size.Width or frame.ContentSize.Height != self.last_size.Height:
                 # print('size changed')
                 need_reset_framepool = True
-                self._last_size = frame.ContentSize
+                self.last_size = frame.ContentSize
 
             if need_reset_framepool:
-                self._reset_framepool(frame.ContentSize)
+                self.reset_framepool(frame.ContentSize)
                 return
             tex = None
             cputex = None
@@ -78,13 +76,13 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
                 desc2.CPUAccessFlags = d3d11.D3D11_CPU_ACCESS_READ
                 desc2.BindFlags = 0
                 desc2.MiscFlags = 0
-                cputex = self._dxdevice.CreateTexture2D(ctypes.byref(desc2), None)
-                self._immediatedc.CopyResource(cputex, tex)
-                mapinfo = self._immediatedc.Map(cputex, 0, d3d11.D3D11_MAP_READ, 0)
+                cputex = self.dxdevice.CreateTexture2D(ctypes.byref(desc2), None)
+                self.immediatedc.CopyResource(cputex, tex)
+                mapinfo = self.immediatedc.Map(cputex, 0, d3d11.D3D11_MAP_READ, 0)
                 img = np.ctypeslib.as_array(ctypes.cast(mapinfo.pData, PBYTE),
                                             (desc.Height, mapinfo.RowPitch // 4, 4))[
                       :, :desc.Width].copy()
-                self._immediatedc.Unmap(cputex, 0)
+                self.immediatedc.Unmap(cputex, 0)
             except OSError as e:
                 if e.winerror == d3d11.DXGI_ERROR_DEVICE_REMOVED or e.winerror == d3d11.DXGI_ERROR_DEVICE_RESET:
                     need_reset_framepool = True
@@ -97,35 +95,52 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
                 if cputex is not None:
                     cputex.Release()
             if need_reset_framepool:
-                self._reset_framepool(frame.ContentSize, need_reset_device)
+                self.reset_framepool(frame.ContentSize, need_reset_device)
                 return self.get_frame()
         self.last_frame = img
 
-    def start(self, capture_cursor=False):
-        self._create_device()
-        interop = GetActivationFactory('Windows.Graphics.Capture.GraphicsCaptureItem').astype(
-            IGraphicsCaptureItemInterop)
-        item = interop.CreateForWindow(self.hwnd_window.hwnd, IGraphicsCaptureItem.GUID)
-        self._item = item
-        self._last_size = item.Size
-        delegate = TypedEventHandler(GraphicsCaptureItem, IInspectable).delegate(
-            self.close)
-        self._evtoken = item.add_Closed(delegate)
-        self.frame_pool = Direct3D11CaptureFramePool.CreateFreeThreaded(self._rtdevice,
-                                                                        DirectXPixelFormat.B8G8R8A8UIntNormalized,
-                                                                        1, item.Size)
-        self.session = self.frame_pool.CreateCaptureSession(item)
-        pool = self.frame_pool
-        pool.add_FrameArrived(
-            TypedEventHandler(Direct3D11CaptureFramePool, IInspectable).delegate(
-                self._frame_arrived_callback))
-        self.session.IsCursorCaptureEnabled = capture_cursor
-        if WINDOWS_BUILD_NUMBER >= WGC_NO_BORDER_MIN_BUILD:
-            print(f"Build number {WINDOWS_BUILD_NUMBER} is_border_required = False")
-            self.session.IsBorderRequired = False
-        self.session.StartCapture()
+    def start_or_stop(self, capture_cursor=False):
+        if self.hwnd_window.exists and self.frame_pool is None:
+            self.rtdevice = IDirect3DDevice()
+            self.dxdevice = d3d11.ID3D11Device()
+            self.immediatedc = d3d11.ID3D11DeviceContext()
+            self.create_device()
+            interop = GetActivationFactory('Windows.Graphics.Capture.GraphicsCaptureItem').astype(
+                IGraphicsCaptureItemInterop)
+            item = interop.CreateForWindow(self.hwnd_window.hwnd, IGraphicsCaptureItem.GUID)
+            self.item = item
+            self.last_size = item.Size
+            delegate = TypedEventHandler(GraphicsCaptureItem, IInspectable).delegate(
+                self.close)
+            self.evtoken = item.add_Closed(delegate)
+            self.frame_pool = Direct3D11CaptureFramePool.CreateFreeThreaded(self.rtdevice,
+                                                                            DirectXPixelFormat.B8G8R8A8UIntNormalized,
+                                                                            1, item.Size)
+            self.session = self.frame_pool.CreateCaptureSession(item)
+            pool = self.frame_pool
+            pool.add_FrameArrived(
+                TypedEventHandler(Direct3D11CaptureFramePool, IInspectable).delegate(
+                    self.frame_arrived_callback))
+            self.session.IsCursorCaptureEnabled = capture_cursor
+            if WINDOWS_BUILD_NUMBER >= WGC_NO_BORDER_MIN_BUILD:
+                print(f"Build number {WINDOWS_BUILD_NUMBER} is_border_required = False")
+                self.session.IsBorderRequired = False
+            self.session.StartCapture()
+        elif not self.hwnd_window.exists and self.frame_pool is not None:
+            if self.frame_pool is not None:
+                self.frame_pool.Close()
+                self.frame_pool = None
+            if self.session is not None:
+                self.session.Close()  # E_UNEXPECTED ???
+                self.session = None
+            self.item = None
+            self.rtdevice.Release()
+            self.dxdevice.Release()
+            if self.cputex:
+                self.cputex.Release()
+        return self.hwnd_window.exists
 
-    def _create_device(self):
+    def create_device(self):
         d3d11.D3D11CreateDevice(
             None,
             d3d11.D3D_DRIVER_TYPE_HARDWARE,
@@ -134,12 +149,12 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
             None,
             0,
             d3d11.D3D11_SDK_VERSION,
-            ctypes.byref(self._dxdevice),
+            ctypes.byref(self.dxdevice),
             None,
-            ctypes.byref(self._immediatedc)
+            ctypes.byref(self.immediatedc)
         )
-        self._rtdevice = CreateDirect3D11DeviceFromDXGIDevice(self._dxdevice)
-        self._evtoken = None
+        self.rtdevice = CreateDirect3D11DeviceFromDXGIDevice(self.dxdevice)
+        self.evtoken = None
 
     @override
     def close(self):
@@ -157,32 +172,32 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
             self.session = None
 
     def get_frame(self):
-        # print(f"WindowsGraphicsCaptureMethod:get_frame {self.hwnd_window.title_height} {self.hwnd_window.border}")
-        frame = self.last_frame
-        self.last_frame = None
-        latency = time.time() - self.last_frame_time
-        self.last_frame_time = time.time()
-        if latency > 1:
-            logger.warning(f"latency too large return None frame: {latency}")
-            return None
-        if frame is not None and self.hwnd_window.title_height != 0 and self.hwnd_window.border != 0:
-            frame = crop_image(frame, self.hwnd_window.border, self.hwnd_window.title_height)
+        if self.start_or_stop():
+            frame = self.last_frame
+            self.last_frame = None
+            latency = time.time() - self.last_frame_time
+            self.last_frame_time = time.time()
+            if latency > 1:
+                logger.warning(f"latency too large return None frame: {latency}")
+                return None
+            if frame is not None and self.hwnd_window.title_height != 0 and self.hwnd_window.border != 0:
+                frame = crop_image(frame, self.hwnd_window.border, self.hwnd_window.title_height)
 
-        if frame is not None:
-            new_height, new_width = frame.shape[:2]
-            self.width = new_width
-            self.height = new_height
-            self.hwnd_window.update_frame_size(new_width, new_height)
+            if frame is not None:
+                new_height, new_width = frame.shape[:2]
+                self.width = new_width
+                self.height = new_height
+                self.hwnd_window.update_frame_size(new_width, new_height)
 
-            if frame.shape[2] == 4:
-                frame = frame[:, :, :3]
+                if frame.shape[2] == 4:
+                    frame = frame[:, :, :3]
 
-        return frame
+            return frame
 
     def _reset_framepool(self, size, reset_device=False):
         if reset_device:
-            self._create_device()
-        self.frame_pool.Recreate(self._rtdevice,
+            self.create_device()
+        self.frame_pool.Recreate(self.rtdevice,
                                  DirectXPixelFormat.B8G8R8A8UIntNormalized, 1, size)
 
     def get_abs_cords(self, x, y):
