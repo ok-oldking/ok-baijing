@@ -17,6 +17,8 @@ class AutoPlayDialogTask(FindFeatureTask):
             if self.is_scene(DialogPlayingScene) and self.scene.button_play:
                 self.logger.info("turn on auto play")
                 self.click_box(self.scene.button_play)
+                self.sleep(1)
+                self.move_relative(0.5, 0.5)
             elif self.is_scene(DialogCloseButtonScene):
                 self.logger.info("click dialog close button")
                 self.click_box(self.scene.close_button)

@@ -3,12 +3,12 @@ from genshin.scene.DialogChoicesScene import DialogChoicesScene
 from genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene
 from genshin.scene.DialogPlayingScene import DialogPlayingScene
 from genshin.scene.MonthlyCardScene import MonthlyCardScene
+from genshin.scene.StartScence import StartScene
 from genshin.scene.WorldScene import WorldScene
 from genshin.task.AutoChooseDialogTask import AutoChooseDialogTask
 from genshin.task.AutoPickTask import AutoPickTask
 from genshin.task.AutoPlayDialogTask import AutoPlayDialogTask
 
-from scene.StartScence import StartScene
 from task.AutoLoginTask import AutoLoginTask
 
 config = {
@@ -19,7 +19,7 @@ config = {
     'capture_window_title': '原神',  # required  when using windows capture
     'default_horizontal_variance': 0,
     'default_vertical_variance': 0,
-    'default_threshold': 0.95,
+    'default_threshold': 0.9,
     'coco_feature_folder': 'assets/coco_feature',  # required if using feature detection
     'log_file': 'logs/auto_helper.log',  # Optional, auto rotating every day
     'tasks': [  # tasks to execute

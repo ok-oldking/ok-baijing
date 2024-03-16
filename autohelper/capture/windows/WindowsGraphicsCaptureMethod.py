@@ -43,7 +43,12 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
         self.hwnd_window = hwnd_window
 
     def frame_arrived_callback(self, x, y):
-        frame = self.frame_pool.TryGetNextFrame()
+        try:
+            frame = self.frame_pool.TryGetNextFrame()
+        except Exception as e:
+            logger.error(f"TryGetNextFrame error {e}")
+            self.close()
+            return
         if not frame:
             return
         self.last_frame_time = time.time()
@@ -60,6 +65,7 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
                 self.reset_framepool(frame.ContentSize)
                 return
             tex = None
+
             cputex = None
             try:
                 tex = frame.Surface.astype(IDirect3DDxgiInterfaceAccess).GetInterface(
@@ -180,10 +186,9 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
 
                 if frame.shape[2] == 4:
                     frame = frame[:, :, :3]
-
             return frame
 
-    def _reset_framepool(self, size, reset_device=False):
+    def reset_framepool(self, size, reset_device=False):
         if reset_device:
             self.create_device()
         self.frame_pool.Recreate(self.rtdevice,

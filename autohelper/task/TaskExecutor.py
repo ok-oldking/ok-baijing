@@ -1,5 +1,6 @@
 import threading
 import time
+import traceback
 
 from autohelper.capture.BaseCaptureMethod import BaseCaptureMethod
 from autohelper.gui.Communicate import communicate
@@ -131,7 +132,9 @@ class TaskExecutor:
                                 else:
                                     task.error_count += 1
                         except Exception as e:
-                            logger.error(f"{task.name} exception {e}")
+                            traceback.print_exc()
+                            stack_trace_str = traceback.format_exc()
+                            logger.error(f"{task.name} exception: {e}, traceback: {stack_trace_str}")
                             task.error_count += 1
                         task.running = False
                         communicate.tasks.emit()

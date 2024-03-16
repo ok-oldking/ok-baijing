@@ -1,15 +1,18 @@
 from typing_extensions import override
 
 from autohelper.task.FindFeatureTask import FindFeatureTask
+from genshin.matching.choice import find_choices
 from genshin.scene.WorldScene import WorldScene
 
 
 class AutoPickTask(FindFeatureTask):
+    button_f = None
+
     @override
     def run_frame(self):
         if self.is_scene(WorldScene):
-            button_f = self.find_one("button_f", 0.3, 0.3)
-            if button_f:
+            self.button_f = self.find_one("button_f", 0.3, 0.3)
+            if self.button_f:
                 if not self.has_dialogs():
                     self.logger.info("found a f")
                     self.sleep(0.1)
@@ -23,12 +26,13 @@ class AutoPickTask(FindFeatureTask):
                         self.send_key("f")
                         self.sleep(0.1)
                         self.send_key("f")
-                        self.sleep(0.1)
+                        self.sleep(1)
                         return True
 
     def has_dialogs(self):
-        dialogs = self.find("button_dialog_world", 0.4, 0.4)
-        if len(dialogs) > 0:
+        choices = find_choices(self.frame, self.button_f, horizontal=self.button_f.width * 2.3, limit=1,
+                               threshold=0.4)
+        if len(choices) > 0:
             return True
         else:
             return False

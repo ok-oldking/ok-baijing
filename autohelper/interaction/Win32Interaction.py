@@ -25,6 +25,9 @@ class Win32Interaction(BaseInteraction):
         time.sleep(down_time)
         pydirectinput.keyUp(key)
 
+    def move(self, x, y):
+        pydirectinput.moveTo(x, y)
+
     def click(self, x=-1, y=-1):
         super().click(x, y)
         if not self.capture.clickable():

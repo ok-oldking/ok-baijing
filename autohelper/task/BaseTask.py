@@ -30,6 +30,10 @@ class BaseTask:
         self.executor.reset_scene()
         self.executor.interaction.click_relative(x, y)
 
+    def move_relative(self, x, y):
+        self.executor.reset_scene()
+        self.executor.interaction.move_relative(x, y)
+
     def click_box(self, box: Box, relative_x=0.5, relative_y=0.5):
         self.executor.reset_scene()
         self.executor.interaction.click_box(box, relative_x, relative_y)

@@ -76,7 +76,9 @@ class FeatureSet:
             # Load and scale the image
             image_path = f'{self.coco_folder}/{image_map[image_id]}'
             image = cv2.imread(image_path)
+            original_width, _ = image.shape[:2]
             if image is None:
+                logger.error(f'Could not read image {image_path}')
                 continue
             scale_x, scale_y = self.width / image.shape[1], self.height / image.shape[0]
             image = cv2.resize(image, (self.width, self.height))
@@ -91,7 +93,7 @@ class FeatureSet:
             # Store in featureDict using the category name
             category_name = category_map[category_id]
             logger.debug(
-                f"loaded {category_name} self.width / image.shape {self.width} / {image.shape[1]},scale_x:{scale_x} scale_y:{scale_y}")
+                f"loaded {category_name} resized width {self.width} / original_width:{original_width},scale_x:{scale_x},scale_y:{scale_y}")
             if category_name in self.featureDict:
                 raise ValueError(f"Multiple boxes found for category {category_name}")
             self.featureDict[category_name] = Feature(cropped_image, x, y, w, h)

@@ -17,6 +17,15 @@ class FindFeature:
         return self.feature_set.find_feature(self.executor.frame, feature_name, horizontal_variance, vertical_variance,
                                              threshold)
 
+    def find_and_set(self, features, horizontal_variance=0, vertical_variance=0, threshold=0):
+        ret = True
+        for feature in features:
+            result = self.find_one(feature, horizontal_variance, vertical_variance, threshold)
+            if result is None:
+                ret = False
+            setattr(self, feature, result)
+        return ret
+
     def wait_and_click(self, feature, horizontal_variance=0, vertical_variance=0, threshold=0, relative_x=0.5,
                        relative_y=0.5,
                        time_out=0, pre_action=None, post_action=None):
