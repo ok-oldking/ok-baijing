@@ -59,6 +59,7 @@ def get_server(clsid):
         return None
 
 
+# current process's privilege must equal to the target process's privilege, can raise a error if not
 def installed_emulator():
     logger.debug('enumerating vbox targets')
     vbox_servers: list[VBoxSerever] = []
@@ -91,6 +92,7 @@ def installed_emulator():
             logger.debug(f'try OpenProcess failed for PID {server.pid}')
             continue
         CloseHandle(hproc)
+        logger.debug(f'checking hproc end {server}')
         try:
             client = win32com.client.Dispatch(server.clsid)
             for machine in client.Machines:
@@ -117,7 +119,7 @@ def installed_emulator():
                                                         preload_device_info={'emulator_hypervisor': 'vbox'}))
             logger.debug(f'try checking {server}')
         except Exception as e:
-            logger.debug(f'failed to check server :{server} {e}')
+            logger.error(f'failed to check server :{server} {e}', e)
     return results
 
 
@@ -131,6 +133,7 @@ def _main():
     logger.debug(adb.device_list())
     for device in adb.device_list():
         logger.debug(device.shell('settings get secure android_id'))
+        logger.debug(f'{device.info}')
 
 
 if __name__ == '__main__':

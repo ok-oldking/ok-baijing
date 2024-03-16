@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 from logging.handlers import TimedRotatingFileHandler
 
 from autohelper.gui.Communicate import communicate
@@ -67,8 +68,13 @@ class Logger:
     def warning(self, message):
         self.logger.warning(f"{self.name}:{message}")
 
-    def error(self, message):
-        self.logger.error(f"{self.name}:{message}")
+    def error(self, message, exception=None):
+        if exception is not None:
+            traceback.print_exc()
+            stack_trace_str = traceback.format_exc()
+        else:
+            stack_trace_str = ""
+        self.logger.error(f"{self.name}:{message} {stack_trace_str}")
 
     def critical(self, message):
         self.logger.critical(f"{self.name}:{message}")

@@ -24,15 +24,16 @@ class AutoHelper:
     def __init__(self, config: Dict[str, Any]):
         logger.config(config)
         logger.info(f"initializing {self.__class__.__name__}, config: {config}")
+        self.debug = config.get("debug", False)
         self.exit_event = threading.Event()
         if config['interaction'] == 'adb' or config['capture'] == 'adb':
             self.init_adb()
+        self.init_hwnd(config.get('capture_window_title'), self.exit_event)
         if config['capture'] == 'adb':
             from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
             self.capture = ADBCaptureMethod(self.device_manager)
         else:
             from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
-            self.init_hwnd(config['capture_window_title'], self.exit_event)
             self.capture = WindowsGraphicsCaptureMethod(self.hwnd)
         if config['interaction'] == 'adb':
             self.interaction = ADBBaseInteraction(self.device_manager, self.capture)
@@ -51,7 +52,11 @@ class AutoHelper:
                                           tasks=config['tasks'], scenes=config['scenes'], feature_set=self.feature_set)
 
         if config['use_gui']:
-            app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], self.exit_event)
+            if config.get('debug'):
+                overlay = True
+            else:
+                overlay = False
+            app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], overlay, self.exit_event)
             app.start()
         else:
             try:
@@ -76,7 +81,7 @@ class AutoHelper:
             time.sleep(1)
 
     def init_hwnd(self, window_title, exit_event):
-        if self.hwnd is None:
+        if window_title and self.hwnd is None:
             if self.device_manager is not None and self.device_manager.device is not None:
                 self.hwnd = HwndWindow(window_title, exit_event, self.device_manager.width, self.device_manager.height)
             else:

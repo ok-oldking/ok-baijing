@@ -11,12 +11,14 @@ from autohelper.gui.Communicate import communicate
 
 
 class FrameWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, draw_frame=False, parent=None):
         super(FrameWidget, self).__init__(parent)
         self.cv_image = None
         self.brush_color = QColor(255, 0, 0)
         self.uiDict = {}
         self.time_to_expire = 3
+        self.draw_frame = draw_frame
+        self.frame_width = 1
         communicate.frame.connect(self.set_image)
         communicate.draw_box.connect(self.draw_box)
 
@@ -35,16 +37,21 @@ class FrameWidget(QWidget):
 
     def set_image(self, cv_image):
         """Set the OpenCV image to be displayed."""
-        self.cv_image = cv_image
-        self.update()  # Trigger a repaint
+        self.frame_width = cv_image.shape[1]
+        if self.draw_frame:
+            self.cv_image = cv_image
+            self.update()  # Trigger a repaint
 
     def paintEvent(self, event):
-        current = time.time()
+        frame_ratio = 1
+        painter = QPainter(self)
+        x_offset = 0
+        y_offset = 0
         if self.cv_image is not None:
             frame = np.ascontiguousarray(self.cv_image)
             # frame = self.cv_image
             frame_height, frame_width = frame.shape[:2]
-            painter = QPainter(self)
+
             # Convert the OpenCV image (BGR) to QImage format (RGB)
             # h, w, ch = self.cv_image.shape
             # bytes_per_line = ch * w
@@ -68,22 +75,27 @@ class FrameWidget(QWidget):
             frame_ratio = qt_image.width() / frame_width
 
             painter.drawPixmap(x_offset, y_offset, QPixmap.fromImage(qt_image))
-            pen = QPen(self.brush_color)  # Set the brush to red color
-            pen.setWidth(2)  # Set the width of the pen (border thickness)
-            painter.setPen(pen)  # Apply the pen to the painter
-            painter.setBrush(Qt.NoBrush)  # Ensure no fill
-            painter.setFont(QFont('Arial', 12))
-            # Draw a square. Arguments are (x, y, width, height).
-            # Adjust these values according to the desired size and position.
-            self.remove_expired()
-            for key, value in self.uiDict.items():
-                boxes = value[0]
-                for box in boxes:
-                    width = box.width * frame_ratio
-                    height = box.height * frame_ratio
-                    x = x_offset + box.x * frame_ratio
-                    y = y_offset + box.y * frame_ratio
-                    painter.drawRect(x, y, width, height)
-                    # Draw text at the specified position
-                    painter.drawText(x, y + height + 12, f"{key}_{round(box.confidence * 100)}")
+        else:
+            frame_ratio = self.width() / self.frame_width
+        self.paint_boxes(frame_ratio, painter, x_offset, y_offset)
         # print(f"draw rect: {time.time() - current}")
+
+    def paint_boxes(self, frame_ratio, painter, x_offset, y_offset):
+        pen = QPen(self.brush_color)  # Set the brush to red color
+        pen.setWidth(2)  # Set the width of the pen (border thickness)
+        painter.setPen(pen)  # Apply the pen to the painter
+        painter.setBrush(Qt.NoBrush)  # Ensure no fill
+        painter.setFont(QFont('Arial', 12))
+        # Draw a square. Arguments are (x, y, width, height).
+        # Adjust these values according to the desired size and position.
+        self.remove_expired()
+        for key, value in self.uiDict.items():
+            boxes = value[0]
+            for box in boxes:
+                width = box.width * frame_ratio
+                height = box.height * frame_ratio
+                x = x_offset + box.x * frame_ratio
+                y = y_offset + box.y * frame_ratio
+                painter.drawRect(x, y, width, height)
+                # Draw text at the specified position
+                painter.drawText(x, y + height + 12, f"{key}_{round(box.confidence * 100)}")

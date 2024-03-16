@@ -13,10 +13,15 @@ class DeviceManager:
 
     def __init__(self):
         self._device = None
-        self.adb = adbutils.AdbClient(host="127.0.0.1")
+
         self.height = 0
         self.width = 0
         self.installed_emulators = installed_emulator()
+
+        self.adb = adbutils.AdbClient(host="127.0.0.1", port=5037)
+        logger.debug(f'connect adb')
+        for info in self.adb.list():
+            logger.debug(f'adb.list() {info}')
 
         for emulator in self.installed_emulators:
             self.adb.connect(emulator.adb_address)
@@ -50,5 +55,3 @@ class DeviceManager:
                 return image
             else:
                 logger.error(f"Screencap image decode error, probably disconnected")
-        else:
-            logger.error(f"Screencap returns empty, probably disconnected")

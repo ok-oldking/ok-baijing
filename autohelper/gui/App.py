@@ -5,13 +5,14 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from autohelper.gui.MainWindow import MainWindow
+from autohelper.gui.overlay.OverlayWindow import OverlayWindow
 from autohelper.logging.Logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class App:
-    def __init__(self, title="AutoUI", icon=None, tasks=None, exit_event=None):
+    def __init__(self, title="AutoUI", icon=None, tasks=None, overlay=False, exit_event=None):
         super().__init__()
         self.exit_event = exit_event
         self.app = QApplication(sys.argv)
@@ -19,6 +20,9 @@ class App:
         self.main_window.setWindowTitle(title)  # Set the window title here
         if icon is not None:
             self.main_window.setWindowIcon(QIcon(icon))
+        if overlay:
+            self.overlay_window = OverlayWindow(exit_event)
+            self.overlay_window.show()
 
     def start(self):
         self.app.setStyle(QStyleFactory.create("Fusion"))

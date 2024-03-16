@@ -1,5 +1,6 @@
 import ctypes
 import ctypes.wintypes
+from typing import Any
 
 import win32gui
 
@@ -12,7 +13,7 @@ def is_window_minimized(hWnd):
     return user32.IsIconic(hWnd) != 0
 
 
-def get_window_bounds(hwnd) -> tuple[int, int, int, int, int, int]:
+def get_window_bounds(hwnd) -> tuple[Any, Any, int, int | Any, int, int, float | Any]:
     extended_frame_bounds = ctypes.wintypes.RECT()
     ctypes.windll.dwmapi.DwmGetWindowAttribute(
         hwnd,

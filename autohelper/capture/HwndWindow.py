@@ -5,6 +5,7 @@ from typing_extensions import override
 from win32 import win32gui
 
 from autohelper.capture.windows.window import is_foreground_window, get_window_bounds
+from autohelper.gui.Communicate import communicate
 from autohelper.logging.Logger import get_logger
 
 logger = get_logger(__name__)
@@ -61,27 +62,31 @@ class HwndWindow:
         return int(self.x + (self.border + x) / self.scaling), int(self.y + (y + self.title_height) / self.scaling)
 
     def do_update_window_size(self):
+        visible, x, y, border, title_height, width, height, scaling = self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height, self.scaling
         if self.hwnd is None:
             self.hwnd = win32gui.FindWindow(None, self.title)
         if self.hwnd is not None:
             self.exists = win32gui.IsWindow(self.hwnd)
             if self.exists:
-                self.visible = is_foreground_window(self.hwnd)
-                self.x, self.y, self.border, title_height, width, height, self.scaling = get_window_bounds(
+                visible = is_foreground_window(self.hwnd)
+                x, y, border, title_height, width, height, scaling = get_window_bounds(
                     self.hwnd)
-                width = width - self.border * 2
-                height = height - self.border - title_height
+                width = width - border * 2
+                height = height - border - title_height
                 if self.frame_aspect_ratio != 0:
                     window_ratio = width / height
                     if window_ratio < self.frame_aspect_ratio:
                         cropped_window_height = int(width / self.frame_aspect_ratio)
                         title_height += height - cropped_window_height
                         height = cropped_window_height
-                self.height = height
-                self.width = width
-                self.title_height = title_height
+                height = height
+                width = width
+                title_height = title_height
             else:
                 self.hwnd = None
+        if visible != self.visible or x != self.x or y != self.y or border != self.border or title_height != self.title_height or width != self.width or height != self.height or scaling != self.scaling:
+            self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height, self.scaling = visible, x, y, border, title_height, width, height, scaling
+            communicate.window.emit(visible, x, y, border, title_height, width, height, scaling)
 
     def frame_ratio(self, size):
         if self.frame_width > 0 and self.width > 0:

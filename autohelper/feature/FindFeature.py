@@ -19,6 +19,10 @@ class FindFeature:
 
     def find_and_set(self, features, horizontal_variance=0, vertical_variance=0, threshold=0):
         ret = True
+        if features is None:
+            raise Exception("features cannot be None")
+        if isinstance(features, str):
+            features = [features]
         for feature in features:
             result = self.find_one(feature, horizontal_variance, vertical_variance, threshold)
             if result is None:

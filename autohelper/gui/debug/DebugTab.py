@@ -18,10 +18,9 @@ class DebugTab(QWidget):
         self.topSplitter.setMinimumHeight(300)
         self.info_widget = InfoWidget()
         self.info_widget.setFixedWidth(200)
-        self.frame_widget = FrameWidget()
-        self.rightTextEdit = FrameWidget()
+        self.frame_widget = FrameWidget(True)
         self.topSplitter.addWidget(self.info_widget)
-        self.topSplitter.addWidget(self.rightTextEdit)
+        self.topSplitter.addWidget(self.frame_widget)
 
         # Bottom row setup
         self.logger = LoggerWidget()
