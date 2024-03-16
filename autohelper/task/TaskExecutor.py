@@ -117,34 +117,33 @@ class TaskExecutor:
             start = time.time()
             if self.frame is not None:
                 self.detect_scene()
-                if self.current_scene is not None:
-                    task_executed = 0
-                    for task in self.tasks:
-                        if task.done:
-                            continue
-                        task.running = True
-                        communicate.tasks.emit()
-                        try:
-                            result = task.run_frame()
-                            if result is not None:
-                                if result:
-                                    task.success_count += 1
-                                else:
-                                    task.error_count += 1
-                        except Exception as e:
-                            traceback.print_exc()
-                            stack_trace_str = traceback.format_exc()
-                            logger.error(f"{task.name} exception: {e}, traceback: {stack_trace_str}")
-                            task.error_count += 1
-                        task.running = False
-                        communicate.tasks.emit()
-                        processing_time = time.time() - start
-                        task_executed += 1
-                        if processing_time > 0.2:
-                            logger.debug(
-                                f"{task.__class__.__name__} taking too long get new frame {processing_time} {task_executed} {len(self.tasks)}")
-                            self.next_frame()
-                            start = time.time()
+                task_executed = 0
+                for task in self.tasks:
+                    if task.done:
+                        continue
+                    task.running = True
+                    communicate.tasks.emit()
+                    try:
+                        result = task.run_frame()
+                        if result is not None:
+                            if result:
+                                task.success_count += 1
+                            else:
+                                task.error_count += 1
+                    except Exception as e:
+                        traceback.print_exc()
+                        stack_trace_str = traceback.format_exc()
+                        logger.error(f"{task.name} exception: {e}, traceback: {stack_trace_str}")
+                        task.error_count += 1
+                    task.running = False
+                    communicate.tasks.emit()
+                    processing_time = time.time() - start
+                    task_executed += 1
+                    if processing_time > 0.2:
+                        logger.debug(
+                            f"{task.__class__.__name__} taking too long get new frame {processing_time} {task_executed} {len(self.tasks)}")
+                        self.next_frame()
+                        start = time.time()
                 self.add_frame_stats()
             self.wait_fps(start)
 

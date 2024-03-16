@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPainter, QImage, QPixmap, QColor, QPen, QFont
+from PySide6.QtGui import QPainter, QImage, QPixmap, QColor, QPen
 from PySide6.QtWidgets import QWidget
 
 from autohelper.feature.Box import Box
@@ -19,6 +19,7 @@ class FrameWidget(QWidget):
         self.time_to_expire = 3
         self.draw_frame = draw_frame
         self.frame_width = 1
+        self._visible = True
         communicate.frame.connect(self.set_image)
         communicate.draw_box.connect(self.draw_box)
 
@@ -30,9 +31,16 @@ class FrameWidget(QWidget):
                 del self.uiDict[key]
 
     def draw_box(self, key: str, boxes: List[Box]):
+        if len(boxes) == 0:
+            return
+        timestamp = time.time()
         if key == "click":
             self.uiDict.clear()
-        self.uiDict[key] = [boxes, time.time()]
+        if key:
+            self.uiDict[key] = [boxes, timestamp]
+        else:
+            for box in boxes:
+                self.uiDict[box.name] = [[box], timestamp]
         self.update()
 
     def set_image(self, cv_image):
@@ -43,7 +51,8 @@ class FrameWidget(QWidget):
             self.update()  # Trigger a repaint
 
     def paintEvent(self, event):
-        frame_ratio = 1
+        if not self._visible:
+            return
         painter = QPainter(self)
         x_offset = 0
         y_offset = 0
@@ -77,15 +86,15 @@ class FrameWidget(QWidget):
             painter.drawPixmap(x_offset, y_offset, QPixmap.fromImage(qt_image))
         else:
             frame_ratio = self.width() / self.frame_width
+            self.paint_border(painter)
         self.paint_boxes(frame_ratio, painter, x_offset, y_offset)
-        # print(f"draw rect: {time.time() - current}")
 
     def paint_boxes(self, frame_ratio, painter, x_offset, y_offset):
         pen = QPen(self.brush_color)  # Set the brush to red color
         pen.setWidth(2)  # Set the width of the pen (border thickness)
         painter.setPen(pen)  # Apply the pen to the painter
         painter.setBrush(Qt.NoBrush)  # Ensure no fill
-        painter.setFont(QFont('Arial', 12))
+        # painter.setFont(QFont('Arial', 12))
         # Draw a square. Arguments are (x, y, width, height).
         # Adjust these values according to the desired size and position.
         self.remove_expired()
@@ -99,3 +108,11 @@ class FrameWidget(QWidget):
                 painter.drawRect(x, y, width, height)
                 # Draw text at the specified position
                 painter.drawText(x, y + height + 12, f"{key}_{round(box.confidence * 100)}")
+
+    def paint_border(self, painter):
+        pen = QPen(QColor(255, 0, 0, 255))  # Solid red color for the border
+        pen.setWidth(1)  # Set the border width
+        painter.setPen(pen)
+
+        # Draw the border around the widget
+        painter.drawRect(0, 0, self.width() - 1, self.height() - 1)

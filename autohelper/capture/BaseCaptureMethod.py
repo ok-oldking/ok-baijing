@@ -1,10 +1,10 @@
-from cv2.typing import MatLike
+import numpy as np
 
 
 class BaseCaptureMethod:
     name = "None"
     description = ""
-    last_captured_frame: MatLike
+    last_captured_frame: np.ndarray
     top_cut = 0
     bottom_cut = 0
     left_cut = 0
@@ -21,7 +21,7 @@ class BaseCaptureMethod:
         # Some capture methods don't need an initialization process
         pass
 
-    def get_frame(self) -> MatLike | None:
+    def get_frame(self) -> np.ndarray | None:
         pass
 
     def draw_rectangle(self):

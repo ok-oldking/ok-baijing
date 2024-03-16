@@ -6,7 +6,6 @@ from typing import List
 
 import cv2
 import numpy as np
-from cv2.typing import MatLike
 
 from autohelper.feature.Box import Box, sort_boxes
 from autohelper.feature.Feature import Feature
@@ -118,7 +117,8 @@ class FeatureSet:
             cv2.imwrite(file_path, image.mat)
             print(f"Saved {file_path}")
 
-    def find_one(self, mat: MatLike, category_name: str, horizontal_variance: float = 0, vertical_variance: float = 0,
+    def find_one(self, mat: np.ndarray, category_name: str, horizontal_variance: float = 0,
+                 vertical_variance: float = 0,
                  threshold=0) -> Box:
         boxes = self.find_feature(mat, category_name, horizontal_variance=horizontal_variance,
                                   vertical_variance=vertical_variance, threshold=threshold)
@@ -127,13 +127,13 @@ class FeatureSet:
         if len(boxes) >= 1:
             return boxes[0]
 
-    def find_feature(self, mat: MatLike, category_name: str, horizontal_variance: float = 0,
+    def find_feature(self, mat: np.ndarray, category_name: str, horizontal_variance: float = 0,
                      vertical_variance: float = 0, threshold: float = 0) -> List[Box]:
         """
         Find a feature within a given variance.
 
         Args:
-            mat (MatLike): The image in which to find the feature.
+            mat (np.ndarray): The image in which to find the feature.
             category_name (str): The category name of the feature to find.
             horizontal_variance (float): Allowed horizontal variance as a percentage of width.
             vertical_variance (float): Allowed vertical variance as a percentage of height.

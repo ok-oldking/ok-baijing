@@ -1,16 +1,18 @@
-from cv2.typing import MatLike
 import cv2
+import numpy as np
+
 from autohelper.save.PostProcessor import PostProcessor
 
+
 class BlackBarProcessor(PostProcessor):
-    def __init__(self,x,y,width,height, color = (1, 1, 1)):
+    def __init__(self, x, y, width, height, color=(1, 1, 1)):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.color = color
 
-    def process(self, image:MatLike):
+    def process(self, image: np.ndarray):
         height, width = image.shape[:2]
         # Calculate absolute coordinates
         x = int(self.x * width)

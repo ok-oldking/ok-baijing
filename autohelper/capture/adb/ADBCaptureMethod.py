@@ -1,6 +1,5 @@
 # original https://github.com/Toufool/AutoSplit/blob/master/src/capture_method/WindowsGraphicsCaptureMethod.py
-
-from cv2.typing import MatLike
+import numpy as np
 from typing_extensions import override
 
 from autohelper.capture.BaseCaptureMethod import BaseCaptureMethod
@@ -16,7 +15,7 @@ class ADBCaptureMethod(BaseCaptureMethod):
     def __init__(self, device_manager):
         super().__init__()
         self.device_manager = device_manager
-        print(f"ADBCaptureMethod size: {self.width}x{self.height}")
+        logger.info(f"ADBCaptureMethod size: {self.width}x{self.height}")
 
     @property
     def width(self):
@@ -27,5 +26,5 @@ class ADBCaptureMethod(BaseCaptureMethod):
         return self.device_manager.height
 
     @override
-    def get_frame(self) -> MatLike | None:
+    def get_frame(self) -> np.ndarray | None:
         return self.device_manager.screencap()

@@ -26,6 +26,9 @@ class Win32Interaction(BaseInteraction):
         pydirectinput.keyUp(key)
 
     def move(self, x, y):
+        if not self.capture.clickable():
+            return
+        x, y = self.capture.get_abs_cords(x, y)
         pydirectinput.moveTo(x, y)
 
     def click(self, x=-1, y=-1):

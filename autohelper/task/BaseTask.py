@@ -19,8 +19,8 @@ class BaseTask:
     def run_frame(self):
         pass
 
-    def is_scene(self, scene):
-        return isinstance(self.executor.current_scene, scene)
+    def is_scene(self, the_scene):
+        return isinstance(self.executor.current_scene, the_scene)
 
     def click(self, x, y):
         self.executor.reset_scene()

@@ -1,7 +1,6 @@
 import adbutils
 import cv2
 import numpy as np
-from cv2.typing import MatLike
 
 from autohelper.capture.adb.vbox import installed_emulator
 from autohelper.logging.Logger import get_logger
@@ -45,7 +44,7 @@ class DeviceManager:
             except Exception as e:
                 logger.error(f"shell_wrapper error occurred: {e}")
 
-    def screencap(self) -> MatLike | None:
+    def screencap(self) -> np.ndarray | None:
         png_bytes = self.shell("screencap -p", encoding=None)
         if png_bytes is not None and len(png_bytes) > 0:
             image_data = np.frombuffer(png_bytes, dtype=np.uint8)

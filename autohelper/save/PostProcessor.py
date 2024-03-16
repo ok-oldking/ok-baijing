@@ -1,5 +1,6 @@
-from cv2.typing import MatLike
+import numpy as np
+
 
 class PostProcessor:
-    def process(image:MatLike):
+    def process(image: np.ndarray):
         pass

@@ -10,9 +10,9 @@ from platform import version
 from threading import Thread
 from typing import TYPE_CHECKING, Any, TypeGuard, TypeVar
 
+import numpy as np
 import win32gui
 import win32ui
-from cv2.typing import MatLike
 
 if TYPE_CHECKING:
     # Source does not exist, keep this under TYPE_CHECKING
@@ -58,7 +58,7 @@ def is_digit(value: str | int | None):
         return False
 
 
-def is_valid_image(image: MatLike | None) -> TypeGuard[MatLike]:
+def is_valid_image(image: np.ndarray | None) -> TypeGuard[np.ndarray]:
     return image is not None and bool(image.size)
 
 

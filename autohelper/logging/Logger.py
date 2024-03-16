@@ -5,15 +5,6 @@ from logging.handlers import TimedRotatingFileHandler
 
 from autohelper.gui.Communicate import communicate
 
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(threadName)s %(message)s')
-
-os.makedirs("logs", exist_ok=True)
-# File handler with rotation
-file_handler = TimedRotatingFileHandler(f"logs/auto_ui.log", when="midnight", interval=1,
-                                        backupCount=7)
-file_handler.setFormatter(formatter)
-file_handler.setLevel(logging.DEBUG)  # File handler level
-
 
 class CommunicateHandler(logging.Handler):
     def __init__(self):
@@ -24,6 +15,7 @@ class CommunicateHandler(logging.Handler):
         communicate.log.emit(record.levelno, log_message)
 
 
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(threadName)s %(message)s')
 communicate_handler = CommunicateHandler()
 communicate_handler.setFormatter(formatter)
 
@@ -38,26 +30,37 @@ def get_substring_from_last_dot_exclusive(s):
     return s[last_dot_index + 1:]
 
 
+root = logging.getLogger()
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+root.addHandler(console_handler)
+
+
+def config_logger(config):
+    if config.get('debug'):
+        root.setLevel(logging.DEBUG)
+    else:
+        root.setLevel(logging.INFO)
+
+    root.addHandler(communicate_handler)
+
+    if config.get('log_file'):
+        ensure_dir_for_file(config['log_file'])
+
+        os.makedirs("logs", exist_ok=True)
+        # File handler with rotation
+        file_handler = TimedRotatingFileHandler(config['log_file'], when="midnight", interval=1,
+                                                backupCount=7)
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.DEBUG)  # File handler level
+        root.addHandler(file_handler)
+
+
 class Logger:
     def __init__(self, name):
         # Initialize the logger with the name of the subclass
-        self.logger = logging.getLogger()
+        self.logger = root
         self.name = name
-
-    def config(self, config):
-        if config.get('debug'):
-            self.logger.setLevel(logging.DEBUG)
-        else:
-            self.logger.setLevel(logging.INFO)
-
-        self.logger.addHandler(communicate_handler)
-
-        if config.get('log_file'):
-            ensure_dir_for_file(config['log_file'])
-            self.logger.addHandler(file_handler)
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
-        self.logger.addHandler(console_handler)
 
     def debug(self, message):
         self.logger.debug(f"{self.name}:{message}")

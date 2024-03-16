@@ -50,7 +50,7 @@ class FindFeature:
             return boxes[0]
 
     @staticmethod
-    def draw_boxes(boxes, feature_name):
+    def draw_boxes(feature_name, boxes):
         communicate.draw_box.emit(feature_name, boxes)
 
     def on_feature(self, boxes):

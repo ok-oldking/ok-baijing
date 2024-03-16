@@ -71,8 +71,6 @@ class HwndWindow:
                 visible = is_foreground_window(self.hwnd)
                 x, y, border, title_height, width, height, scaling = get_window_bounds(
                     self.hwnd)
-                width = width - border * 2
-                height = height - border - title_height
                 if self.frame_aspect_ratio != 0:
                     window_ratio = width / height
                     if window_ratio < self.frame_aspect_ratio:

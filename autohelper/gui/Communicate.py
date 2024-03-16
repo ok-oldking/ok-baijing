@@ -10,7 +10,7 @@ class Communicate(QObject):
     scene = Signal(str)
     draw_box = Signal(str, list)
     tasks = Signal()
-    window = Signal(int, int, int, int, int, int, int, float)
+    window = Signal(bool, int, int, int, int, int, int, float)
 
 
 communicate = Communicate()

@@ -1,12 +1,13 @@
-from cv2.typing import MatLike
+import numpy as np
+
 
 class Feature:
-    def __init__(self, mat: MatLike, x: int, y: int, width: int, height: int) -> None:
+    def __init__(self, mat: np.ndarray, x: int, y: int, width: int, height: int) -> None:
         """
         Initialize a Feature with an image (Mat) and its bounding box coordinates.
 
         Args:
-            mat (MatLike): The OpenCV Mat object representing the image.
+            mat (np.ndarray): The OpenCV Mat object representing the image.
             x (int): The x-coordinate of the top-left corner of the bounding box.
             y (int): The y-coordinate of the top-left corner of the bounding box.
             width (int): The width of the bounding box.

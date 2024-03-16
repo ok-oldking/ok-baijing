@@ -7,7 +7,7 @@ from autohelper.feature.FeatureSet import FeatureSet
 from autohelper.gui.App import App
 from autohelper.interaction.ADBInteraction import ADBBaseInteraction
 from autohelper.interaction.Win32Interaction import Win32Interaction
-from autohelper.logging.Logger import get_logger
+from autohelper.logging.Logger import get_logger, config_logger
 from autohelper.task.TaskExecutor import TaskExecutor
 
 logger = get_logger(__name__)
@@ -22,7 +22,7 @@ class AutoHelper:
     device_manager = None
 
     def __init__(self, config: Dict[str, Any]):
-        logger.config(config)
+        config_logger(config)
         logger.info(f"initializing {self.__class__.__name__}, config: {config}")
         self.debug = config.get("debug", False)
         self.exit_event = threading.Event()
@@ -41,8 +41,8 @@ class AutoHelper:
             self.init_hwnd(config['capture_window_title'], self.exit_event)
             self.interaction = Win32Interaction(self.capture)
 
-        if config['coco_feature_folder'] is not None:
-            coco_feature_folder = config['coco_feature_folder']
+        if config.get('coco_feature_folder') is not None:
+            coco_feature_folder = config.get('coco_feature_folder')
             self.feature_set = FeatureSet(coco_feature_folder,
                                           default_horizontal_variance=config.get('default_horizontal_variance', 0),
                                           default_vertical_variance=config.get('default_vertical_variance', 0),
@@ -56,7 +56,8 @@ class AutoHelper:
                 overlay = True
             else:
                 overlay = False
-            app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], overlay, self.exit_event)
+            app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], overlay, self.hwnd,
+                      self.exit_event)
             app.start()
         else:
             try:
