@@ -20,12 +20,27 @@ class AutoHelper:
     feature_set = None
     hwnd = None
     device_manager = None
+    ocr = None
 
     def __init__(self, config: Dict[str, Any]):
-        config_logger(config)
-        logger.info(f"initializing {self.__class__.__name__}, config: {config}")
         self.debug = config.get("debug", False)
         self.exit_event = threading.Event()
+        if config.get("use_gui"):
+            if self.debug:
+                overlay = True
+            else:
+                overlay = False
+            self.app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], overlay, self.hwnd,
+                           self.exit_event)
+            self.app.show_loading()
+        config_logger(config)
+        logger.info(f"initializing {self.__class__.__name__}, config: {config}")
+
+        if config.get('ocr'):
+            lang = config.get('ocr').get('lang', 'en')
+            from paddleocr import PaddleOCR
+            self.ocr = PaddleOCR(use_angle_cls=False, lang=lang)
+
         if config['interaction'] == 'adb' or config['capture'] == 'adb':
             self.init_adb()
         self.init_hwnd(config.get('capture_window_title'), self.exit_event)
@@ -49,16 +64,11 @@ class AutoHelper:
                                           default_threshold=config.get('default_threshold', 0))
 
         self.task_executor = TaskExecutor(self.capture, interaction=self.interaction, exit_event=self.exit_event,
-                                          tasks=config['tasks'], scenes=config['scenes'], feature_set=self.feature_set)
+                                          tasks=config['tasks'], scenes=config['scenes'], feature_set=self.feature_set,
+                                          ocr=self.ocr)
 
         if config['use_gui']:
-            if config.get('debug'):
-                overlay = True
-            else:
-                overlay = False
-            app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], overlay, self.hwnd,
-                      self.exit_event)
-            app.start()
+            self.app.start()
         else:
             try:
                 # Starting the task in a separate thread (optional)

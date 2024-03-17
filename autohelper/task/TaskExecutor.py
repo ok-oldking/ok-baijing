@@ -18,10 +18,11 @@ class TaskExecutor:
     frame_stats = StreamStats()
     frame = None
     paused = True
+    ocr = None
 
     def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, target_fps=10,
                  wait_until_timeout=10, wait_until_before_delay=1, wait_until_check_delay=1,
-                 exit_event=threading.Event(), tasks=[], scenes=[], feature_set=None):
+                 exit_event=threading.Event(), tasks=[], scenes=[], feature_set=None, ocr=None):
         self.interaction = interaction
         self.feature_set = feature_set
         self.wait_until_check_delay = wait_until_check_delay
@@ -30,6 +31,7 @@ class TaskExecutor:
         self.wait_scene_timeout = wait_until_timeout
         self.target_delay = 1.0 / target_fps
         self.exit_event = exit_event
+        self.ocr = ocr
         self.tasks = tasks
         self.scenes = scenes
         for scene in self.scenes:

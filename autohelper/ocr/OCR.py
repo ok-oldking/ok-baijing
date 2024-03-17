@@ -1,7 +1,5 @@
 from typing import List
 
-from paddleocr import PaddleOCR
-
 from autohelper.feature.Box import Box
 from autohelper.gui.Communicate import communicate
 
@@ -11,7 +9,7 @@ class OCR:
     def __init__(self):
         self.executor = None
 
-    def ocr(self, box: Box = None, lang="en") -> List[Box]:
+    def ocr(self, box: Box = None) -> List[Box]:
         image = self.frame
         if image is not None:
             if box is not None:
@@ -22,11 +20,9 @@ class OCR:
             # roi_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
             # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             # Initialize the OCR model
-            print(f'type(image): {type(image)}')
-            ocr = PaddleOCR(use_angle_cls=True, lang="ch")
 
             # Perform OCR on the extracted ROI
-            result = ocr.ocr(image, cls=True)
+            result = self.executor.ocr(image)
 
             detected_boxes = []
             # Process the results and create Box objects

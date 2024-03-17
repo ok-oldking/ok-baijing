@@ -30,8 +30,8 @@ class AutoPickTask(FindFeatureTask):
                         return True
 
     def has_dialogs(self):
-        choices = find_choices(self.frame, self.button_f, horizontal=self.button_f.width * 2.3, limit=1,
-                               threshold=0.4)
+        choices = find_choices(self.frame, self.button_f, horizontal=self.button_f.width * 2.35, limit=1,
+                               threshold=0.25)
         if len(choices) > 0:
             return True
         else:

@@ -20,7 +20,7 @@ class DialogChoicesScene(FindFeatureScene):
                 # print(f"AutoDialogTask: dialog_vertical_distance {self.dialog_vertical_distance}")
             if self.dialog_vertical_distance == 0:
                 self.dialog_vertical_distance = self.dialogs[0].height
-            choices = find_choices(frame, self.dialogs[0], vertical=-self.dialog_vertical_distance, threshold=0.4)
+            choices = find_choices(frame, self.dialogs[0], vertical=-self.dialog_vertical_distance, threshold=0.25)
             self.draw_boxes("choices", choices)
             above_count = len(choices)
             if above_count > 0:

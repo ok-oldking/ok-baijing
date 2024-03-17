@@ -11,6 +11,7 @@ class Communicate(QObject):
     draw_box = Signal(str, list)
     tasks = Signal()
     window = Signal(bool, int, int, int, int, int, int, float)
+    loading_progress = Signal(str)
 
 
 communicate = Communicate()
