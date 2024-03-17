@@ -14,9 +14,11 @@ logger = get_logger(__name__)
 
 
 class App:
-    def __init__(self, title="AutoUI", icon=None, tasks=None, overlay=False, hwnd_window: HwndWindow = None,
+    def __init__(self, title="AutoUI", icon=None, tasks=None,
                  exit_event=None):
         super().__init__()
+        self.overlay = False
+        self.hwnd_window = None
         self.loading_window = None
         self.overlay_window = None
         self.main_window = None
@@ -26,8 +28,6 @@ class App:
         self.tasks = tasks
         self.title = title
         self.icon = icon
-        self.hwnd_window = hwnd_window
-        self.overlay = overlay
 
     def show_loading(self):
         self.loading_window = LoadingWindow()
@@ -42,8 +42,10 @@ class App:
 
         window.move(half_screen_width / 2, half_screen_height / 2)
 
-    def start(self):
+    def start(self, overlay=False, hwnd_window: HwndWindow = None, ):
         self.loading_window.close()
+        self.hwnd_window = hwnd_window
+        self.overlay = overlay
         self.main_window = MainWindow(self.tasks, exit_event=self.exit_event)
         self.main_window.setWindowTitle(self.title)  # Set the window title here
         if self.icon is not None:

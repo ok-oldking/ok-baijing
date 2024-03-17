@@ -2,6 +2,8 @@ from autohelper.feature.Box import Box
 from autohelper.logging.Logger import get_logger
 from autohelper.task.TaskExecutor import TaskExecutor
 
+logger = get_logger(__name__)
+
 
 class BaseTask:
     executor: TaskExecutor
@@ -25,6 +27,32 @@ class BaseTask:
     def click(self, x, y):
         self.executor.reset_scene()
         self.executor.interaction.click(x, y)
+
+    def click_box_if_name_match(self, boxes, names, relative_x=0.5, relative_y=0.5):
+        """
+        Clicks on a box from a list of boxes if the box's name matches one of the specified names.
+        The box to click is selected based on the order of names provided, with priority given
+        to the earliest match in the names list.
+
+        Parameters:
+        - boxes (list): A list of box objects. Each box object must have a 'name' attribute.
+        - names (str or list): A string or a list of strings representing the name(s) to match against the boxes' names.
+        - relative_x (float, optional): The relative X coordinate within the box to click,
+                                        as a fraction of the box's width. Defaults to 0.5 (center).
+        - relative_y (float, optional): The relative Y coordinate within the box to click,
+                                        as a fraction of the box's height. Defaults to 0.5 (center).
+
+        Returns:
+        - box: the matched box
+
+        The method attempts to find and click on the highest-priority matching box. If no matches are found,
+        or if there are no boxes, the method returns False. This operation is case-sensitive.
+        """
+        to_click = find_box_by_name(boxes, names)
+        if to_click is not None:
+            logger.info(f"click_box_if_name_match found {to_click}")
+            self.click_box(to_click, relative_x, relative_y)
+            return to_click
 
     def click_relative(self, x, y):
         self.executor.reset_scene()

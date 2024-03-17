@@ -16,7 +16,7 @@ class TaskExecutor:
     current_scene: Scene | None = None
     last_scene: Scene | None = None
     frame_stats = StreamStats()
-    frame = None
+    _frame = None
     paused = True
     ocr = None
 
@@ -52,13 +52,20 @@ class TaskExecutor:
         self.reset_scene()
         start = time.time()
         while not self.exit_event.is_set():
-            self.frame = self.method.get_frame()
-            if self.frame is not None:
-                communicate.frame.emit(self.frame)
-                return self.frame
+            self._frame = self.method.get_frame()
+            if self._frame is not None:
+                communicate.frame.emit(self._frame)
+                return self._frame
             time.sleep(0.01)
             if time.time() - start > self.wait_scene_timeout:
                 return None
+
+    @property
+    def frame(self):
+        if self._frame is None:
+            return self.next_frame()
+        else:
+            return self._frame
 
     def sleep(self, timeout):
         """
@@ -89,8 +96,8 @@ class TaskExecutor:
         while not self.exit_event.is_set():
             if pre_action is not None:
                 pre_action()
-            self.frame = self.next_frame()
-            if self.frame is not None:
+            self._frame = self.next_frame()
+            if self._frame is not None:
                 result = condition()
                 self.add_frame_stats()
                 # logger.debug(f"TaskExecutor: wait_until {result}")
@@ -108,16 +115,16 @@ class TaskExecutor:
         return None
 
     def reset_scene(self):
-        self.frame = None
+        self._frame = None
         self.last_scene = self.current_scene
         self.current_scene = None
 
     def execute(self):
         logger.info(f"start execute")
         while not self.exit_event.is_set():
-            self.frame = self.next_frame()
+            self._frame = self.next_frame()
             start = time.time()
-            if self.frame is not None:
+            if self._frame is not None:
                 self.detect_scene()
                 task_executed = 0
                 for task in self.tasks:
@@ -167,14 +174,14 @@ class TaskExecutor:
         latest_scene = self.latest_scene()
         if latest_scene is not None:
             # detect the last scene optimistically
-            if latest_scene.detect(self.frame):
+            if latest_scene.detect(self._frame):
                 self.current_scene = latest_scene
                 return latest_scene
         for scene in self.scenes:
             if scene_type is not None and not isinstance(scene, scene_type):
                 continue
             if scene != latest_scene:
-                if scene.detect(self.frame):
+                if scene.detect(self._frame):
                     self.current_scene = scene
                     logger.debug(f"TaskExecutor: scene changed {scene.__class__.__name__}")
                     return scene

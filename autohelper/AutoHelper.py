@@ -1,3 +1,4 @@
+import logging
 import threading
 import time
 from typing import Dict, Any
@@ -26,21 +27,19 @@ class AutoHelper:
         self.debug = config.get("debug", False)
         self.exit_event = threading.Event()
         if config.get("use_gui"):
-            if self.debug:
-                overlay = True
-            else:
-                overlay = False
-            self.app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'], overlay, self.hwnd,
+            self.app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'],
                            self.exit_event)
             self.app.show_loading()
-        config_logger(config)
+
         logger.info(f"initializing {self.__class__.__name__}, config: {config}")
 
         if config.get('ocr'):
             lang = config.get('ocr').get('lang', 'en')
             from paddleocr import PaddleOCR
-            self.ocr = PaddleOCR(use_angle_cls=False, lang=lang)
+            self.ocr = PaddleOCR(use_angle_cls=False, lang=lang, show_log=False)
+            logging.getLogger('ppocr').setLevel(logging.ERROR)
 
+        config_logger(config)
         if config['interaction'] == 'adb' or config['capture'] == 'adb':
             self.init_adb()
         self.init_hwnd(config.get('capture_window_title'), self.exit_event)
@@ -68,7 +67,7 @@ class AutoHelper:
                                           ocr=self.ocr)
 
         if config['use_gui']:
-            self.app.start()
+            self.app.start(self.debug, self.hwnd)
         else:
             try:
                 # Starting the task in a separate thread (optional)

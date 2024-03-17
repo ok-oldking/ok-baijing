@@ -30,19 +30,21 @@ def get_substring_from_last_dot_exclusive(s):
     return s[last_dot_index + 1:]
 
 
-root = logging.getLogger()
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-root.addHandler(console_handler)
+auto_helper_logger = logging.getLogger("autohelper")
 
 
 def config_logger(config):
     if config.get('debug'):
-        root.setLevel(logging.DEBUG)
+        auto_helper_logger.setLevel(logging.DEBUG)
     else:
-        root.setLevel(logging.INFO)
+        auto_helper_logger.setLevel(logging.INFO)
 
-    root.addHandler(communicate_handler)
+    auto_helper_logger.handlers = []
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    auto_helper_logger.addHandler(console_handler)
+    auto_helper_logger.addHandler(communicate_handler)
+    logging.getLogger().handlers = []
 
     if config.get('log_file'):
         ensure_dir_for_file(config['log_file'])
@@ -50,16 +52,27 @@ def config_logger(config):
         os.makedirs("logs", exist_ok=True)
         # File handler with rotation
         file_handler = TimedRotatingFileHandler(config['log_file'], when="midnight", interval=1,
-                                                backupCount=7)
+                                                backupCount=7, encoding='utf-8')
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.DEBUG)  # File handler level
-        root.addHandler(file_handler)
+        auto_helper_logger.addHandler(file_handler)
+
+    if config.get('error_log_file'):
+        ensure_dir_for_file(config['error_log_file'])
+
+        os.makedirs("logs", exist_ok=True)
+        # File handler with rotation
+        file_handler = TimedRotatingFileHandler(config['error_log_file'], when="midnight", interval=1,
+                                                backupCount=7, encoding='utf-8')
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.ERROR)  # File handler level
+        auto_helper_logger.addHandler(file_handler)
 
 
 class Logger:
     def __init__(self, name):
         # Initialize the logger with the name of the subclass
-        self.logger = root
+        self.logger = auto_helper_logger
         self.name = name
 
     def debug(self, message):
