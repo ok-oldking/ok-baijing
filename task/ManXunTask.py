@@ -1,3 +1,5 @@
+import time
+
 from typing_extensions import override
 
 from autohelper.logging.Logger import get_logger
@@ -11,8 +13,8 @@ class ManXunTask(BaseTask, OCR):
 
     @override
     def run_frame(self):
-        print('1')
         logger.debug('ManXunTask.run_frame ocr')
+        start = time.time()
         boxes = self.ocr()
-        logger.debug(f'ManXunTask.run_frame ocr {len(boxes)} boxes')
-        self.sleep(10)
+        logger.debug(f'ManXunTask.run_frame ocr {len(boxes)} boxes {time.time() - start}')
+        self.sleep(1)

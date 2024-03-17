@@ -4,6 +4,9 @@ from show_case_baijing.task.ManXunTask import ManXunTask
 config = {
     'debug': True,  # Optional, default: False
     'use_gui': True,
+    'ocr': {
+        'lang': 'ch'
+    },
     'gui_icon': 'icon.png',  # Optional
     'gui_title': 'BJ Helper',  # Optional, default: False
     'capture': 'adb',  # adb/windows, see #autohelper.capture
