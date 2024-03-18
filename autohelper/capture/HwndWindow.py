@@ -1,4 +1,5 @@
 # original https://github.com/dantmnf & https://github.com/hakaboom/winAuto
+import re
 import threading
 
 from typing_extensions import override
@@ -64,7 +65,7 @@ class HwndWindow:
     def do_update_window_size(self):
         visible, x, y, border, title_height, width, height, scaling = self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height, self.scaling
         if self.hwnd is None:
-            self.hwnd = win32gui.FindWindow(None, self.title)
+            self.hwnd = find_hwnds_by_title(self.title)
         if self.hwnd is not None:
             self.exists = win32gui.IsWindow(self.hwnd)
             if self.exists:
@@ -91,3 +92,19 @@ class HwndWindow:
             return int(size / self.frame_width * self.width)
         else:
             return size
+
+
+def find_hwnds_by_title(title):
+    if isinstance(title, re.Pattern):
+        hwnds = []
+
+        def enum_windows_proc(hwnd, lParam):
+            if win32gui.IsWindowVisible(hwnd) and win32gui.GetWindowText(hwnd):
+                if re.search(title, win32gui.GetWindowText(hwnd)):
+                    hwnds.append(hwnd)
+
+        win32gui.EnumWindows(enum_windows_proc, None)
+        if len(hwnds) > 0:
+            return hwnds[0]
+    else:
+        return win32gui.FindWindow(None, title)

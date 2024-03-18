@@ -32,6 +32,36 @@ class Box:
             return f"Box(name='{self.name}', x={self.x}, y={self.y}, width={self.width}, height={self.height}, confidence={round(self.confidence * 100)})"
         return f"Box(x={self.x}, y={self.y}, width={self.width}, height={self.height}, confidence={round(self.confidence * 100)})"
 
+    def closest_distance(self, other):
+        # Calculate the sides of the boxes
+        left1, right1 = self.x, self.x + self.width
+        top1, bottom1 = self.y, self.y + self.height
+        left2, right2 = other.x, other.x + other.width
+        top2, bottom2 = other.y, other.y + other.height
+
+        # Horizontal distance
+        if right1 < left2:
+            horizontal_distance = left2 - right1
+        elif right2 < left1:
+            horizontal_distance = left1 - right2
+        else:
+            horizontal_distance = 0
+
+        # Vertical distance
+        if bottom1 < top2:
+            vertical_distance = top2 - bottom1
+        elif bottom2 < top1:
+            vertical_distance = top1 - bottom2
+        else:
+            vertical_distance = 0
+
+        # If boxes overlap or touch, the closest distance is 0
+        if horizontal_distance == 0 or vertical_distance == 0:
+            return 0
+
+        # If boxes are diagonally aligned, calculate diagonal distance
+        return math.sqrt(horizontal_distance ** 2 + vertical_distance ** 2)
+
     def relative_with_variance(self, relative_x=0.5, relative_y=0.5):
         # Calculate the center of the box
         center_x = self.x + self.width * relative_x
@@ -62,21 +92,20 @@ class Box:
             distance = math.sqrt(dx ** 2 + dy ** 2)
             if box == self:
                 return float('inf')
-            elif direction == 'up' and dy < 0:
+            elif direction == 'up' and self.y - (box.y + box.height) >= 0:
                 return distance
-            elif direction == 'down' and dy > 0:
+            elif direction == 'down' and box.y - (self.y + self.height) >= 0:
                 return distance
-            elif direction == 'left' and dx < 0:
+            elif direction == 'left' and self.x - (box.x + box.width) >= 0:
                 return distance
-            elif direction == 'right' and dx > 0:
+            elif direction == 'right' and box.x - (self.x + self.width) >= 0:
                 return distance
             else:
                 return float('inf')
-                # Filter boxes that are in the specified direction and sort by distance
 
         filtered_boxes = sorted(boxes, key=distance_criteria)
+        # Removed debug print statement for cleanliness
 
-        # Return the first box in the list, which is the closest, if any are found
         for box in filtered_boxes:
             if distance_criteria(box) != float('inf'):
                 return box
@@ -129,6 +158,23 @@ def find_boxes_within_boundary(boxes, boundary_box):
             within_boundary.append(box)
 
     return within_boundary
+
+
+def crop_image(image, box=None):
+    if box is not None:
+        if (box.x >= 0 and box.y >= 0 and
+                box.x + box.width <= image.shape[1] and  # image.shape[1] is the width of the image
+                box.y + box.height <= image.shape[0]):  # image.shape[0] is the height of the image
+
+            # Extract the region of interest (ROI) using slicing
+
+            return image[box.y:box.y + box.height, box.x:box.x + box.width, :3]
+        else:
+            # Return some error value or raise an exception
+            # For example, return 0 or None
+            return image  # or None, or raise an exception
+    else:
+        return image
 
 
 def find_boxes_by_name(boxes, names) -> list[Box]:

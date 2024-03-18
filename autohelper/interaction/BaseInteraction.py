@@ -29,5 +29,5 @@ class BaseInteraction:
 
     def click(self, x=-1, y=-1):
         logger.info(f"click {x, y}")
-        communicate.draw_box.emit("click", [Box(min(0, x - 10), min(0, y - 10), 20, 20, name="click")], "green")
+        communicate.draw_box.emit("click", [Box(max(0, x - 10), max(0, y - 10), 20, 20, name="click")], "green")
         pass
