@@ -1,4 +1,4 @@
-from autohelper.feature.Box import Box
+from autohelper.feature.Box import Box, find_box_by_name
 from autohelper.logging.Logger import get_logger
 from autohelper.task.TaskExecutor import TaskExecutor
 
@@ -19,6 +19,10 @@ class BaseTask:
         self.config = {}
 
     def run_frame(self):
+        pass
+
+    def reset(self):
+        self._done = False
         pass
 
     def is_scene(self, the_scene):
@@ -54,6 +58,11 @@ class BaseTask:
             self.click_box(to_click, relative_x, relative_y)
             return to_click
 
+    def box_of_screen(self, x, y, width, height):
+        return Box(int(x * self.executor.method.width), int(y * self.executor.method.height),
+                   int(width * self.executor.method.width), int(height * self.executor.method.height),
+                   name=f"{x} {y} {width} {height}")
+
     def click_relative(self, x, y):
         self.executor.reset_scene()
         self.executor.interaction.click_relative(x, y)
@@ -62,8 +71,16 @@ class BaseTask:
         self.executor.reset_scene()
         self.executor.interaction.move_relative(x, y)
 
-    def click_box(self, box: Box, relative_x=0.5, relative_y=0.5):
+    def click_box(self, box, relative_x=0.5, relative_y=0.5):
         self.executor.reset_scene()
+        if isinstance(box, list):
+            if len(box) > 0:
+                box = box[0]
+            else:
+                logger.error(f"No box")
+        if box is None:
+            logger.error(f"click_box box is None")
+            return
         self.executor.interaction.click_box(box, relative_x, relative_y)
 
     def wait_scene(self, scene_type=None, time_out=0, pre_action=None, post_action=None):

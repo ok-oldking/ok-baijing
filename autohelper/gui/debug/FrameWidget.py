@@ -1,5 +1,4 @@
 import time
-from typing import List
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -30,12 +29,14 @@ class FrameWidget(QWidget):
             if current_time - self.uiDict[key][1] > self.time_to_expire:
                 del self.uiDict[key]
 
-    def draw_box(self, key: str, boxes: List[Box]):
+    def draw_box(self, key: str, boxes):
+        if boxes is None:
+            return
+        if isinstance(boxes, Box):
+            boxes = [boxes]
         if len(boxes) == 0:
             return
         timestamp = time.time()
-        if key == "click":
-            self.uiDict.clear()
         if key:
             self.uiDict[key] = [boxes, timestamp]
         else:

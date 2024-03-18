@@ -1,7 +1,11 @@
+import time
 from typing import List
 
-from autohelper.feature.Box import Box
+from autohelper.feature.Box import Box, sort_boxes
 from autohelper.gui.Communicate import communicate
+from autohelper.logging.Logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class OCR:
@@ -13,18 +17,13 @@ class OCR:
     def ocr(self, box: Box = None, threshold=0) -> List[Box]:
         if threshold == 0:
             threshold = 0.9
+        start = time.time()
         image = self.frame
         if image is not None:
             if box is not None:
                 x, y, w, h = box.x, box.y, box.width, box.height
                 image = image[y:y + h, x:x + w]
 
-            # Convert the ROI to a format PaddleOCR can work with
-            # roi_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-            # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            # Initialize the OCR model
-
-            # Perform OCR on the extracted ROI
             result = self.executor.ocr.ocr(image)
 
             detected_boxes = []
@@ -38,9 +37,14 @@ class OCR:
                             detected_box = Box(int(pos[0][0]), int(pos[0][1]), int(pos[2][0] - pos[0][0]),
                                                int(pos[2][1] - pos[0][1]),
                                                confidence, text)
+                            if box is not None:
+                                detected_box.x += box.x
+                                detected_box.y += box.y
                             detected_boxes.append(detected_box)
             communicate.draw_box.emit("", detected_boxes)
-            return detected_boxes
+            communicate.draw_box.emit("ocr_zone", box)
+            logger.debug(f"ocr_zone {box} found result: {len(detected_boxes)}) time: {time.time() - start}")
+            return sort_boxes(detected_boxes)
 
     def find_text(self, text, box: Box = None, confidence=0):
         for result in self.ocr(box, confidence):
