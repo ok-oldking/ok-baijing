@@ -1,0 +1,35 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [ created ]
+
+jobs:
+  build:
+    name: Build exe with PyInstaller
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout code
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Use the version of Python you need
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller  # Add other dependencies if needed
+
+      - name: Build Executable
+        run: pyinstaller --onefile main.py  # Replace main.py with your script's name
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-executable
+          path: dist/*.exe
