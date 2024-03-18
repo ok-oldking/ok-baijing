@@ -184,7 +184,7 @@ class FeatureSet:
             # cv2.imwrite("images/test.jpg", mat)
 
         result = sort_boxes(boxes)
-        communicate.draw_box.emit(category_name, result)
+        communicate.draw_box.emit(category_name, result, "red")
         return result
 
 

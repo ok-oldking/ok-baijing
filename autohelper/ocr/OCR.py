@@ -1,7 +1,6 @@
 import time
-from typing import List
 
-from autohelper.feature.Box import Box, sort_boxes
+from autohelper.feature.Box import Box, sort_boxes, find_boxes_by_name
 from autohelper.gui.Communicate import communicate
 from autohelper.logging.Logger import get_logger
 
@@ -14,7 +13,7 @@ class OCR:
         self.executor = None
         self.default_threshold = 0.9
 
-    def ocr(self, box: Box = None, threshold=0) -> List[Box]:
+    def ocr(self, box: Box = None, match=None, threshold=0):
         if threshold == 0:
             threshold = 0.9
         start = time.time()
@@ -41,8 +40,10 @@ class OCR:
                                 detected_box.x += box.x
                                 detected_box.y += box.y
                             detected_boxes.append(detected_box)
-            communicate.draw_box.emit("", detected_boxes)
-            communicate.draw_box.emit("ocr_zone", box)
+            if match is not None:
+                detected_boxes = find_boxes_by_name(detected_boxes, match)
+            communicate.draw_box.emit("ocr", detected_boxes, "red")
+            communicate.draw_box.emit("ocr_zone", box, "blue")
             logger.debug(f"ocr_zone {box} found result: {len(detected_boxes)}) time: {time.time() - start}")
             return sort_boxes(detected_boxes)
 

@@ -43,8 +43,9 @@ class Box:
         center_y_with_variance = center_y + variance
         return round(center_x_with_variance), round(center_y_with_variance)
 
-    def copy(self, x_offset=0, y_offset=0, name=None):
-        return Box(self.x + x_offset, self.y + y_offset, self.width, self.height, self.confidence, name or self.name)
+    def copy(self, x_offset=0, y_offset=0, width_offset=0, height_offset=0, name=None):
+        return Box(self.x + x_offset, self.y + y_offset, self.width + width_offset, self.height + height_offset,
+                   self.confidence, name or self.name)
 
     def center(self):
         return self.x + self.width / 2, self.y + self.height / 2
@@ -59,8 +60,9 @@ class Box:
             dx = box_center_x - orig_center_x
             dy = box_center_y - orig_center_y
             distance = math.sqrt(dx ** 2 + dy ** 2)
-
-            if direction == 'up' and dy < 0:
+            if box == self:
+                return float('inf')
+            elif direction == 'up' and dy < 0:
                 return distance
             elif direction == 'down' and dy > 0:
                 return distance
@@ -103,6 +105,30 @@ def find_box_by_name(boxes, names) -> Box:
                         break
 
     return result
+
+
+def find_boxes_within_boundary(boxes, boundary_box):
+    """
+    Find all boxes that are entirely within the specified boundary box.
+
+    Parameters:
+    - boxes (list[Box]): List of Box objects to check.
+    - boundary_box (Box): The boundary Box object.
+
+    Returns:
+    - list[Box]: Boxes found within the boundary box.
+    """
+    within_boundary = []
+
+    for box in boxes:
+        # Check if box is within boundary_box
+        if (box.x >= boundary_box.x and
+                box.y >= boundary_box.y and
+                box.x + box.width <= boundary_box.x + boundary_box.width and
+                box.y + box.height <= boundary_box.y + boundary_box.height):
+            within_boundary.append(box)
+
+    return within_boundary
 
 
 def find_boxes_by_name(boxes, names) -> list[Box]:

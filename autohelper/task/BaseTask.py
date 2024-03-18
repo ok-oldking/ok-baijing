@@ -1,4 +1,5 @@
 from autohelper.feature.Box import Box, find_box_by_name
+from autohelper.gui.Communicate import communicate
 from autohelper.logging.Logger import get_logger
 from autohelper.task.TaskExecutor import TaskExecutor
 
@@ -24,6 +25,15 @@ class BaseTask:
     def reset(self):
         self._done = False
         pass
+
+    def box_in_horizontal_center(self, box, off_percent=0.02):
+        center = self.executor.method.width / 2
+        left = center - box.x
+        right = box.x + box.width - center
+        if left > 0 and right > 0 and abs(left - right) / box.width < off_percent:
+            return True
+        else:
+            return False
 
     def is_scene(self, the_scene):
         return isinstance(self.executor.current_scene, the_scene)
@@ -67,11 +77,19 @@ class BaseTask:
         self.executor.reset_scene()
         self.executor.interaction.click_relative(x, y)
 
+    @property
+    def height(self):
+        return self.executor.method.height
+
+    @property
+    def width(self):
+        return self.executor.method.width
+
     def move_relative(self, x, y):
         self.executor.reset_scene()
         self.executor.interaction.move_relative(x, y)
 
-    def click_box(self, box, relative_x=0.5, relative_y=0.5):
+    def click_box(self, box, relative_x=0.5, relative_y=0.5, raise_if_not_found=True):
         self.executor.reset_scene()
         if isinstance(box, list):
             if len(box) > 0:
@@ -80,6 +98,8 @@ class BaseTask:
                 logger.error(f"No box")
         if box is None:
             logger.error(f"click_box box is None")
+            if raise_if_not_found:
+                raise Exception(f"click_box box is None")
             return
         self.executor.interaction.click_box(box, relative_x, relative_y)
 
@@ -102,6 +122,10 @@ class BaseTask:
     def wait_until(self, condition, time_out=0, pre_action=None, post_action=None):
         return self.executor.wait_condition(condition, time_out, pre_action, post_action)
 
+    def wait_click_box(self, condition, time_out=0, pre_action=None, post_action=None, raise_if_not_found=True):
+        target = self.wait_until(condition, time_out, pre_action, post_action)
+        self.click_box(target, raise_if_not_found=raise_if_not_found)
+
     def next_frame(self):
         return self.executor.next_frame()
 
@@ -112,3 +136,7 @@ class BaseTask:
     @property
     def frame(self):
         return self.executor.frame
+
+    @staticmethod
+    def draw_boxes(feature_name, boxes, color="red"):
+        communicate.draw_box.emit(feature_name, boxes, color)

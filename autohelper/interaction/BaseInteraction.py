@@ -24,11 +24,10 @@ class BaseInteraction:
 
     def click_box(self, box: Box, relative_x=0.5, relative_y=0.5):
         logger.info(f"click_box {box}")
-        box.name = "click"
-        communicate.draw_box.emit("click", [box])
         x, y = box.relative_with_variance(relative_x, relative_y)
         self.click(x, y)
 
     def click(self, x=-1, y=-1):
         logger.info(f"click {x, y}")
+        communicate.draw_box.emit("click", [Box(min(0, x - 10), min(0, y - 10), 20, 20, name="click")], "green")
         pass

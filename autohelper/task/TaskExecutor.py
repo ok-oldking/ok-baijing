@@ -88,21 +88,20 @@ class TaskExecutor:
         return self.wait_condition(lambda: self.detect_scene(scene_type), time_out, pre_action, post_action)
 
     def wait_condition(self, condition, time_out, pre_action, post_action):
-        self.reset_scene()
         self.sleep(self.wait_until_before_delay)
         start = time.time()
         if time_out == 0:
             time_out = self.wait_scene_timeout
         while not self.exit_event.is_set():
+            self.reset_scene()
             if pre_action is not None:
                 pre_action()
             self._frame = self.next_frame()
             if self._frame is not None:
                 result = condition()
                 self.add_frame_stats()
-                # logger.debug(f"TaskExecutor: wait_until {result}")
                 result_str = list_or_obj_to_str(result)
-                if result_str is not None:
+                if result:
                     logger.debug(f"found result {result_str}")
                     self.sleep(self.wait_until_check_delay)
                     return result

@@ -13,7 +13,11 @@ class FrameWidget(QWidget):
     def __init__(self, draw_frame=False, parent=None):
         super(FrameWidget, self).__init__(parent)
         self.cv_image = None
-        self.brush_color = QColor(255, 0, 0)
+        self.color_map = {
+            "red": QColor(255, 0, 0),  # RGB for red
+            "green": QColor(0, 255, 0),  # RGB for green
+            "blue": QColor(0, 0, 255)  # RGB for blue
+        }
         self.uiDict = {}
         self.time_to_expire = 3
         self.draw_frame = draw_frame
@@ -29,7 +33,7 @@ class FrameWidget(QWidget):
             if current_time - self.uiDict[key][1] > self.time_to_expire:
                 del self.uiDict[key]
 
-    def draw_box(self, key: str, boxes):
+    def draw_box(self, key: str, boxes, color=None):
         if boxes is None:
             return
         if isinstance(boxes, Box):
@@ -37,11 +41,12 @@ class FrameWidget(QWidget):
         if len(boxes) == 0:
             return
         timestamp = time.time()
+        brush = self.color_map.get(color, self.color_map.get("red"))
         if key:
-            self.uiDict[key] = [boxes, timestamp]
+            self.uiDict[key] = [boxes, timestamp, brush]
         else:
             for box in boxes:
-                self.uiDict[box.name] = [[box], timestamp]
+                self.uiDict[box.name] = [[box], timestamp, brush]
         self.update()
 
     def set_image(self, cv_image):
@@ -91,7 +96,7 @@ class FrameWidget(QWidget):
         self.paint_boxes(frame_ratio, painter, x_offset, y_offset)
 
     def paint_boxes(self, frame_ratio, painter, x_offset, y_offset):
-        pen = QPen(self.brush_color)  # Set the brush to red color
+        pen = QPen()  # Set the brush to red color
         pen.setWidth(2)  # Set the width of the pen (border thickness)
         painter.setPen(pen)  # Apply the pen to the painter
         painter.setBrush(Qt.NoBrush)  # Ensure no fill
@@ -101,14 +106,15 @@ class FrameWidget(QWidget):
         self.remove_expired()
         for key, value in self.uiDict.items():
             boxes = value[0]
+            pen.setColor(value[2])
+            painter.setPen(pen)
             for box in boxes:
                 width = box.width * frame_ratio
                 height = box.height * frame_ratio
                 x = x_offset + box.x * frame_ratio
                 y = y_offset + box.y * frame_ratio
                 painter.drawRect(x, y, width, height)
-                # Draw text at the specified position
-                painter.drawText(x, y + height + 12, f"{key}_{round(box.confidence * 100)}")
+                painter.drawText(x, y + height + 12, f"{box.name or key}_{round(box.confidence * 100)}")
 
     def paint_border(self, painter):
         pen = QPen(QColor(255, 0, 0, 255))  # Solid red color for the border

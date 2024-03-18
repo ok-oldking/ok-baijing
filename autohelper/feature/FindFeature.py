@@ -2,7 +2,6 @@ import sys
 from typing import List
 
 from autohelper.feature.Box import Box
-from autohelper.gui.Communicate import communicate
 
 
 class FindFeature:
@@ -48,10 +47,6 @@ class FindFeature:
             if len(boxes) > 1:
                 print(f"find_one:found {feature_name} too many {len(boxes)}", file=sys.stderr)
             return boxes[0]
-
-    @staticmethod
-    def draw_boxes(feature_name, boxes):
-        communicate.draw_box.emit(feature_name, boxes)
 
     def on_feature(self, boxes):
         pass

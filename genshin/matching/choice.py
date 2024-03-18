@@ -47,5 +47,5 @@ def find_choices(frame, box, horizontal=0, vertical=0, limit=1000, threshold=0.6
                 break
         else:
             break
-    communicate.draw_box.emit("choices", result)
+    communicate.draw_box.emit("choices", result, "red")
     return result
