@@ -7,21 +7,18 @@ from show_case_baijing.task.BJTask import BJTask
 
 
 class ManXunTask(BJTask):
-    name = "自动漫巡任务"
-    description = """自动漫巡
-    """
 
     def __init__(self):
         super().__init__()
+        self.name = "自动漫巡任务"
+        self.description = """自动漫巡
+    """
         self.click_no_brainer = ["直接胜利", "属性提升", "前进", "通过", "继续", "收下", "跳过", "开始强化",
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
         self.choice_priority_list = ["风险区", "暗礁", "烙痕唤醒", "记忆强化", "获取刻印属性", "研习区", "休整区"]
-        self.stats_priority_list = ["终端"]
-        self.config = {}
-        self.config["skip_battles"] = ["鱼叉将军-日光浅滩E"]
+        self.stats_priority_list = ["终端", "生命", "专精", "攻击", "防御"]
+        self.config = {"skip_battles": ["鱼叉将军-日光浅滩E"]}
         self.destination = None
-        self.keyin_counter = 0
-        self.keyin_to_skip = 5  # 五次 不检查刻印提升弹窗提示
         self.skill_counter = {}
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
 
@@ -65,7 +62,7 @@ class ManXunTask(BJTask):
     def check_is_manxun_ui(self):
         choices = self.find_choices()
 
-        if len(choices) == 0:
+        if not choices:
             self.logger.debug("找不到选项")
             return False
 
@@ -93,7 +90,7 @@ class ManXunTask(BJTask):
         self.logger.debug(f"检测对话框区域 {boxes} ")
         if find_box_by_name(boxes, "提升攻击"):
             box = self.find_highest_gaowei_number(boxes)
-            self.click_box(box)
+            # self.click_box(box)
             self.logger.info(f"高位同调 点击最高 {box}")
         elif confirm := find_box_by_name(boxes, "完成漫巡"):
             self.click_box(confirm)
@@ -147,11 +144,23 @@ class ManXunTask(BJTask):
                 raise RuntimeError("未开启自动战斗, 无法继续漫巡, 结束")
         elif no_brain_box := self.click_box_if_name_match(boxes, self.click_no_brainer):
             self.logger.info(f"点击固定对话框: {no_brain_box.name}")
-        elif stats_up_choices := find_boxes_by_name(boxes, self.stats_up_re):
+        elif stats_up_choices := self.find_stats_up(boxes):
             self.handle_stats_up(stats_up_choices)
         else:
             return False
         return True
+
+    def find_stats_up(self, boxes):
+        for box in boxes:
+            if re.search(r"^[\u4e00-\u9fa5]{2}$", box.name):
+                closest = box.find_closest_box("right", boxes)
+                if closest is not None:
+                    match = re.search(r"^\+(\d+)(?:~(\d+))?", closest.name)
+                    distance = closest.closest_distance(box)
+                    if match and distance < box.width:
+                        box.name += closest.name
+                    self.logger.debug(f"合并距离较近的属性值 {box.name} {closest} {distance}")
+        return find_boxes_by_name(boxes, self.stats_up_re)
 
     def auto_combat(self):
         start_combat = self.wait_until(lambda: self.ocr(self.star_combat_zone, "开始战斗"), time_out=30)
@@ -204,7 +213,6 @@ class ManXunTask(BJTask):
     def do_find_choices(self):
         boxes = self.ocr(self.choice_zone)
         choices = find_boxes_by_name(boxes, re.compile(r"^通往"))
-        self.logger.debug(f"检测选项区域结果: {boxes} 选项为: {choices}")
         if len(choices) == 0:
             choices = find_boxes_by_name(boxes, r"风险区")
         else:
@@ -220,6 +228,7 @@ class ManXunTask(BJTask):
                 right_text_box = choices[i].find_closest_box("right", boxes)
                 if right_text_box is not None:
                     choices[i].name = right_text_box.name
+        self.logger.debug(f"检测选项区域结果: {choices}")
         return choices
 
     def find_choices(self):
@@ -290,7 +299,7 @@ class ManXunTask(BJTask):
         for item in current_list:
             if item not in merged_list:
                 merged_list.append(item)
-        self.logger.debug(f"查找最高优先级提升属性 {stats_up_parsed} {current_stats}")
+        self.logger.debug(f"查找最高优先级提升属性 {stats_up_parsed} {merged_list} {current_stats}")
         # Find the lowest stat(s) in current_stats
         for stat in reversed(merged_list):
             if stat in stats_up_parsed:
