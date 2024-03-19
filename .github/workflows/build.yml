@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v2.1.4
         with:
           name: app
-          path: dist/
+          path: dist/*.exe
           token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Release
