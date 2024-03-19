@@ -3,7 +3,7 @@ import re
 from typing_extensions import override
 
 from autohelper.feature.Box import find_box_by_name, find_boxes_by_name, find_boxes_within_boundary
-from show_case_baijing.task.BJTask import BJTask
+from task.BJTask import BJTask
 
 
 class ManXunTask(BJTask):
@@ -15,9 +15,9 @@ class ManXunTask(BJTask):
     """
         self.click_no_brainer = ["直接胜利", "属性提升", "前进", "通过", "继续", "收下", "跳过", "开始强化",
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
-        self.choice_priority_list = ["风险区", "暗礁", "烙痕唤醒", "记忆强化", "获取刻印属性", "研习区", "休整区"]
         self.stats_priority_list = ["终端", "生命", "专精", "攻击", "防御"]
-        self.config = {"skip_battles": ["鱼叉将军-日光浅滩E"]}
+        self.config = {"skip_battles": ["鱼叉将军-日光浅滩E"],
+                       "choice_priority_list": ["风险区", "暗礁", "烙痕唤醒", "获取刻印属性", "记忆强化",  "研习区", "休整区"]}
         self.destination = None
         self.skill_counter = {}
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
@@ -31,20 +31,20 @@ class ManXunTask(BJTask):
 
     @property
     def choice_zone(self):
-        return self.box_of_screen(0.7, 0.25, 0.3, 0.5)
+        return self.box_of_screen(0.7, 0.25, 0.3, 0.5, "选项检测区域")
 
     @property
     def dialog_zone(self):
-        return self.box_of_screen(0.25, 0.2, 0.5, 0.7)
+        return self.box_of_screen(0.25, 0.2, 0.5, 0.7, "弹窗检测区域")
 
     @property
     def stats_zone(self):
-        return self.box_of_screen(0.3, 0.8, 0.4, 0.2)
+        return self.box_of_screen(0.3, 0.8, 0.4, 0.2, "属性检测区域,PC端虚化效果无法检测")
 
     @override
     def run_frame(self):
         if not self.check_is_manxun_ui():
-            self.logger.error("必须从漫巡选项界面开始")
+            self.logger.error("必须从漫巡选项界面开始, 并且开启路线追踪")
             self.set_done()
             return False
 
@@ -52,7 +52,7 @@ class ManXunTask(BJTask):
             while self.loop():
                 pass
         except Exception as e:
-            self.logger.error(f"运行异常: {e}")
+            self.logger.error(f"运行异常:", e)
             pass
 
         self.logger.info("漫巡完成")
@@ -90,7 +90,7 @@ class ManXunTask(BJTask):
         self.logger.debug(f"检测对话框区域 {boxes} ")
         if find_box_by_name(boxes, "提升攻击"):
             box = self.find_highest_gaowei_number(boxes)
-            # self.click_box(box)
+            self.click_box(box)
             self.logger.info(f"高位同调 点击最高 {box}")
         elif confirm := find_box_by_name(boxes, "完成漫巡"):
             self.click_box(confirm)
@@ -213,9 +213,7 @@ class ManXunTask(BJTask):
     def do_find_choices(self):
         boxes = self.ocr(self.choice_zone)
         choices = find_boxes_by_name(boxes, re.compile(r"^通往"))
-        if len(choices) == 0:
-            choices = find_boxes_by_name(boxes, r"风险区")
-        else:
+        if len(choices) > 0:
             for i in range(len(choices) - 1, -1, -1):
                 if self.destination is None:
                     self.logger.debug(f"检测到追踪目标: {choices[i].name}")

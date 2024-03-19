@@ -28,25 +28,29 @@ jobs:
 
       - name: Build Executable
         run: |
-          pyinstaller --onefile main_adb.py  # Replace main_adb.py with your script's name
+          pyinstaller --onefile main_adb.py  
           pyinstaller --onefile main_pc.py
       - name: Upload artifact
         uses: actions/upload-artifact@v2.1.4
         with:
           name: app
           path: dist/
-          token: "${{ secrets.release }}"
+          token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Release
         uses: "actions/create-release@v1"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          token: "${{ secrets.release }}"
-          name: "Bootstrapper for Windows"
-          tag_name: "bootstrapper-release"
-          prerelease: false
+          name: "Windows exe"
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          prerelease: true
+          draft: true
           body: |
             main_adb.exe 模拟器手机adb连接
             main_pc.exe PC版
+            自动构建main分支
 
           files: |
             dist/main_adb.exe
