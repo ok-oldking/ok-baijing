@@ -35,6 +35,7 @@ jobs:
         with:
           name: app
           path: dist/
+          token: "${{ secrets.release }}"
 
       - name: Release
         uses: "actions/create-release@v1"
