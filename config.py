@@ -1,4 +1,4 @@
-from show_case_baijing.task.ManXunTask import ManXunTask
+from task.ManXunTask import ManXunTask
 
 config = {
     'debug': True,  # Optional, default: False
