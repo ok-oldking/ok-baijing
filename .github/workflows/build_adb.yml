@@ -29,8 +29,23 @@ jobs:
       - name: Build Executable
         run: pyinstaller --onefile main_adb.py  # Replace main_adb.py with your script's name
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: windows-executable
-          path: dist/*.exe
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.sha }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/main_adb.exe  # Replace main.exe with the name of your built executable
+          asset_name: bj_adb.exe  # The name of the asset as it will appear in the release
+          asset_content_type: application/octet-stream
