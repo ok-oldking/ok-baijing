@@ -28,8 +28,9 @@ jobs:
 
       - name: Build Executable
         run: |
-          pyinstaller --onefile main_adb.py  
-          pyinstaller --onefile main_pc.py
+#          pyinstaller --onefile main_adb.py
+#          pyinstaller --onefile main_pc.py
+           echo ${{ github.sha }} > Release.txt
       - name: Upload artifact
         uses: actions/upload-artifact@v2.1.4
         with:
@@ -38,7 +39,7 @@ jobs:
           token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Release
-        uses: "actions/create-release@v1"
+        uses: "softprops/action-gh-release@v2"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -53,5 +54,6 @@ jobs:
             自动构建main分支
 
           files: |
-            dist/main_adb.exe
-            dist/main_pc.exe
+#            dist/main_adb.exe
+#            dist/main_pc.exe
+             Release.txt
