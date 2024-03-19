@@ -58,5 +58,5 @@ jobs:
             main_pc.exe PC版
 
           files: |
-            ./dist/main_adb.exe
-            ./dist/main_pc.exe
+            dist/main_adb.exe
+            dist/main_pc.exe
