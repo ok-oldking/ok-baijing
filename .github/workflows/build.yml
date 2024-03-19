@@ -39,11 +39,10 @@ jobs:
       - name: Release
         uses: "softprops/action-gh-release@v2"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.release }}
         with:
-          name: "Windows exe"
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          name: Release ${{ github.ref }}
           prerelease: true
           draft: true
           body: |
