@@ -30,7 +30,6 @@ jobs:
         run: |
           pyinstaller --onefile main_adb.py  # Replace main_adb.py with your script's name
           pyinstaller --onefile main_pc.py
-          
       - name: Upload artifact
         uses: actions/upload-artifact@v2.1.4
         with:
@@ -50,7 +49,7 @@ jobs:
       - name: Release
         uses: "softprops/action-gh-release@v1"
         with:
-          token: "${{ secrets.GITHUB_TOKEN }}"
+          token: "${{ secrets.release }}"
           name: "Bootstrapper for Windows"
           tag_name: "bootstrapper-release"
           prerelease: false
