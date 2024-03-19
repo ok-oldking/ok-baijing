@@ -1,9 +1,9 @@
 from typing_extensions import override
 
 from autohelper.task.FindFeatureTask import FindFeatureTask
-from genshin.scene.BlackDialogScene import BlackDialogScene
-from genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene
-from genshin.scene.DialogPlayingScene import DialogPlayingScene
+from show_case_genshin.scene.BlackDialogScene import BlackDialogScene
+from show_case_genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene
+from show_case_genshin.scene.DialogPlayingScene import DialogPlayingScene
 
 
 class AutoPlayDialogTask(FindFeatureTask):

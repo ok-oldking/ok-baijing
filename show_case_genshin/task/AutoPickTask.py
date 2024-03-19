@@ -1,8 +1,8 @@
 from typing_extensions import override
 
 from autohelper.task.FindFeatureTask import FindFeatureTask
-from genshin.matching.choice import find_choices
-from genshin.scene.WorldScene import WorldScene
+from show_case_genshin.matching.choice import find_choices
+from show_case_genshin.scene.WorldScene import WorldScene
 
 
 class AutoPickTask(FindFeatureTask):

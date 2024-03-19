@@ -1,15 +1,14 @@
-from genshin.scene.BlackDialogScene import BlackDialogScene
-from genshin.scene.DialogChoicesScene import DialogChoicesScene
-from genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene
-from genshin.scene.DialogPlayingScene import DialogPlayingScene
-from genshin.scene.MonthlyCardScene import MonthlyCardScene
-from genshin.scene.StartScence import StartScene
-from genshin.scene.WorldScene import WorldScene
-from genshin.task.AutoChooseDialogTask import AutoChooseDialogTask
-from genshin.task.AutoPickTask import AutoPickTask
-from genshin.task.AutoPlayDialogTask import AutoPlayDialogTask
-
-from task.AutoLoginTask import AutoLoginTask
+from show_case_genshin.scene.BlackDialogScene import BlackDialogScene
+from show_case_genshin.scene.DialogChoicesScene import DialogChoicesScene
+from show_case_genshin.scene.DialogCloseButtonScene import DialogCloseButtonScene
+from show_case_genshin.scene.DialogPlayingScene import DialogPlayingScene
+from show_case_genshin.scene.MonthlyCardScene import MonthlyCardScene
+from show_case_genshin.scene.StartScence import StartScene
+from show_case_genshin.scene.WorldScene import WorldScene
+from show_case_genshin.task.AutoChooseDialogTask import AutoChooseDialogTask
+from show_case_genshin.task.AutoLoginTask import AutoLoginTask
+from show_case_genshin.task.AutoPickTask import AutoPickTask
+from show_case_genshin.task.AutoPlayDialogTask import AutoPlayDialogTask
 
 config = {
     'debug': True,  # Optional, default: False

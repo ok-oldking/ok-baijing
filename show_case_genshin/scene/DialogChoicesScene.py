@@ -2,7 +2,7 @@ from typing import List
 
 from autohelper.feature.Box import Box
 from autohelper.scene.FeatureScene import FindFeatureScene
-from genshin.matching.choice import find_choices
+from show_case_genshin.matching.choice import find_choices
 
 
 class DialogChoicesScene(FindFeatureScene):

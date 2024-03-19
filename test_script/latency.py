@@ -4,7 +4,7 @@ from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraph
 from autohelper.feature.FeatureSet import FeatureSet
 from autohelper.interaction.Win32Interaction import Win32Interaction
 from autohelper.task.TaskExecutor import TaskExecutor
-from genshin.task.AutoPlayDialogTask import AutoDialogTask
+from show_case_genshin.task.AutoPlayDialogTask import AutoDialogTask
 
 # Example usage
 capture = WindowsGraphicsCaptureMethod("Genshin Impact")

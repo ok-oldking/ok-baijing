@@ -1,8 +1,8 @@
 from typing_extensions import override
 
 from autohelper.task.FindFeatureTask import FindFeatureTask
-from genshin.scene.MonthlyCardScene import MonthlyCardScene
-from genshin.scene.StartScence import StartScene
+from show_case_genshin.scene.MonthlyCardScene import MonthlyCardScene
+from show_case_genshin.scene.StartScence import StartScene
 
 
 class AutoLoginTask(FindFeatureTask):
