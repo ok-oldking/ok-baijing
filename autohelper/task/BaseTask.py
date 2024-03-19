@@ -68,10 +68,12 @@ class BaseTask:
             self.click_box(to_click, relative_x, relative_y)
             return to_click
 
-    def box_of_screen(self, x, y, width, height):
+    def box_of_screen(self, x, y, width, height, name=None):
+        if name is None:
+            name = f"{x} {y} {width} {height}"
         return Box(int(x * self.executor.method.width), int(y * self.executor.method.height),
                    int(width * self.executor.method.width), int(height * self.executor.method.height),
-                   name=f"{x} {y} {width} {height}")
+                   name=name)
 
     def click_relative(self, x, y):
         self.executor.reset_scene()
