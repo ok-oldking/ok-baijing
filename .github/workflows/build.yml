@@ -27,8 +27,15 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build Executable
-        run: pyinstaller --onefile main_pc.py  # Replace main_adb.py with your script's name
-
+        run: |
+          pyinstaller --onefile main_adb.py  # Replace main_adb.py with your script's name
+          pyinstaller --onefile main_pc.py
+          
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2.1.4
+        with:
+          name: app
+          path: dist/
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -40,12 +47,17 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: "softprops/action-gh-release@v1"
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/main_pc.exe  # Replace main.exe with the name of your built executable
-          asset_name: bj_pc.exe  # The name of the asset as it will appear in the release
-          asset_content_type: application/octet-stream
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          name: "Bootstrapper for Windows"
+          tag_name: "bootstrapper-release"
+          prerelease: false
+          body: |
+            main_adb.exe 模拟器手机adb连接
+            main_pc.exe PC版
+
+          files: |
+            ./dist/main_adb.exe
+            ./dist/main_pc.exe
