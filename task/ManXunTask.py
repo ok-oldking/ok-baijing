@@ -16,8 +16,11 @@ class ManXunTask(BJTask):
         self.click_no_brainer = ["直接胜利", "属性提升", "前进", "通过", "继续", "收下", "跳过", "开始强化",
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
         self.stats_priority_list = ["终端", "生命", "专精", "攻击", "防御"]
-        self.config = {"skip_battles": ["鱼叉将军-日光浅滩E"],
-                       "choice_priority_list": ["风险区", "暗礁", "烙痕唤醒", "获取刻印属性", "记忆强化",  "研习区", "休整区"]}
+        self.config = {"跳过战斗": ["鱼叉将军-日光浅滩E"],
+                       "选项优先级": ["风险区", "暗礁", "烙痕唤醒", "获取刻印属性", "记忆强化", "研习区",
+                                      "休整区"],
+                       "无法直接胜利, 自动投降跳过": False
+                       }
         self.destination = None
         self.skill_counter = {}
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
@@ -25,9 +28,6 @@ class ManXunTask(BJTask):
     def end(self, message, result=False):
         self.logger.info(f"执行结束:{message}")
         return result
-
-    def reset(self):
-        self.keyin_counter = 0
 
     @property
     def choice_zone(self):
@@ -66,7 +66,7 @@ class ManXunTask(BJTask):
             self.logger.debug("找不到选项")
             return False
 
-        if not self.find_depth():
+        if self.find_depth() == 0:
             self.logger.debug("找不到深度")
             return False
 
@@ -80,13 +80,13 @@ class ManXunTask(BJTask):
         dialog_handled = self.wait_until(lambda: self.do_handle_dialog(choice, choices, choice_clicked))
         if not dialog_handled:
             raise RuntimeError(f"未知弹窗 无法处理")
-        if self.wait_until(self.do_handle_pop_up, time_out=30):
-            return True
-        else:
-            raise RuntimeError(f"无法检测到弹窗关闭")
+        return dialog_handled
 
     def do_handle_dialog(self, choice, choices, choice_clicked):
         boxes = self.ocr(self.dialog_zone)
+        if self.find_depth() > 0:
+            self.logger.info(f"没有弹窗, 进行下一步")
+            return True
         self.logger.debug(f"检测对话框区域 {boxes} ")
         if find_box_by_name(boxes, "提升攻击"):
             box = self.find_highest_gaowei_number(boxes)
@@ -96,18 +96,6 @@ class ManXunTask(BJTask):
             self.click_box(confirm)
             self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="确认"))
             return False
-        elif confirm := find_box_by_name(boxes, "提升深度"):
-            level_text = find_box_by_name(boxes, "风险区强度")
-            level_box = level_text.find_closest_box("down", boxes)
-            level_number = int(level_box.name)
-            self.logger.info(f"提升深度弹窗,{int(level_number)} 目前是第{abs(choice)}个选项, 共有{len(choices)}选项")
-            if level_number < 12 or abs(choice) == len(choices):
-                self.logger.info(f"提升深度,当前深度{int(level_number)}")
-                self.click_box(confirm)
-            else:
-                self.logger.info(f"不提升深度,当前深度{int(level_number)}")
-                self.click_cancel()
-                return self.loop(choice=choice - 1)
         elif confirm := find_box_by_name(boxes, "解锁技能和区域"):
             self.handle_skill_dialog(boxes, confirm)
         elif find_box_by_name(boxes, "获得了一些技能点"):
@@ -120,7 +108,7 @@ class ManXunTask(BJTask):
             self.sleep(0.5)
             self.click_box(confirm)
         elif stat_combat := find_box_by_name(boxes, "开始战斗"):
-            skip_battle = find_box_by_name(boxes, self.config.get("skip_battles"))
+            skip_battle = find_box_by_name(boxes, self.config.get("跳过战斗"))
             self.logger.debug(
                 f"开始战斗 跳过战斗查询结果:{skip_battle} abs(choice):{abs(choice)} len(choices) {len(choices)}")
             if skip_battle and abs(choice) < len(choices):
@@ -162,7 +150,7 @@ class ManXunTask(BJTask):
                     self.logger.debug(f"合并距离较近的属性值 {box.name} {closest} {distance}")
         return find_boxes_by_name(boxes, self.stats_up_re)
 
-    def auto_combat(self):
+    def auto_skip_combat(self):
         start_combat = self.wait_until(lambda: self.ocr(self.star_combat_zone, "开始战斗"), time_out=30)
         if not start_combat:
             raise RuntimeError("无法找到开始战斗按钮")
@@ -206,6 +194,14 @@ class ManXunTask(BJTask):
         if abs(index) > len(choices):
             raise ValueError(f"click_choice out of bonds")
         else:
+            if choices[index].name == "深度等级提升":
+                depth = self.find_depth()
+                self.logger.info(f"提升深度, {depth} 目前是第{abs(index)}个选项, 共有{len(choices)}选项")
+                if depth < 12 or abs(index) == len(choices):
+                    self.logger.info(f"提升深度,当前深度{depth}")
+                else:
+                    self.logger.info(f"不提升深度,当前深度{depth}")
+                    index -= - 1
             self.click_box(choices[index])
         self.logger.info(f"点击选项:{choices[index]}")
         return choices, choices[index]
@@ -232,38 +228,27 @@ class ManXunTask(BJTask):
     def find_choices(self):
         return self.wait_until(self.do_find_choices, time_out=10)
 
-    def do_handle_pop_up(self):
-        boxes = self.ocr(self.dialog_zone)
-        keyin_plus = find_box_by_name(boxes, "刻印评级提升")
-        if keyin_plus:
-            self.logger.info("刻印评级提升")
-            self.sleep(1)
-            self.click_cancel()
-            self.sleep(1)
-            self.click_cancel()
-            self.sleep(1)
-            boxes = self.ocr(self.dialog_zone)
-        depth = self.find_depth(boxes)
-        if depth is not None:
-            self.logger.info(f"当前深度 {depth.name}, 弹窗消失, 进行下个选项")
-            return True
-
     def find_depth(self, boxes=None):
         if boxes is None:
             boxes = self.ocr(self.dialog_zone)
-        depth = None
+        depth_box = None
+        depth = 0
         numbers = find_boxes_by_name(boxes, re.compile(r"^[01D][0-9]$"))
         for number in numbers:
             # 居中大字深度
             if self.box_in_horizontal_center(number, off_percent=0.1) and number.height / self.height > 0.07:
-                depth = number
+                depth_box = number
                 break
+        if depth_box is not None:
+            depth_box.name = depth_box.name.replace("D", "2")
+            depth = int(depth_box.name)
         return depth
 
     def click_cancel(self):
         self.click_relative(0.5, 0.1)
 
-    def find_highest_gaowei_number(self, boxes):
+    @staticmethod
+    def find_highest_gaowei_number(boxes):
         highest_gaowei_number = 0
         highest_gaowei_box = None
         for box in boxes:
