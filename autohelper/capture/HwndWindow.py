@@ -60,7 +60,7 @@ class HwndWindow:
             self.exit_event.wait(0.1)
 
     def get_abs_cords(self, x, y):
-        return int(self.x + (self.border + x) / self.scaling), int(self.y + (y + self.title_height) / self.scaling)
+        return int(self.x + (self.border + x)), int(self.y + (y + self.title_height))
 
     def do_update_window_size(self):
         visible, x, y, border, title_height, width, height, scaling = self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height, self.scaling
@@ -83,9 +83,21 @@ class HwndWindow:
                 title_height = title_height
             else:
                 self.hwnd = None
-        if visible != self.visible or x != self.x or y != self.y or border != self.border or title_height != self.title_height or width != self.width or height != self.height or scaling != self.scaling:
-            self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height, self.scaling = visible, x, y, border, title_height, width, height, scaling
-            communicate.window.emit(visible, x, y, border, title_height, width, height, scaling)
+            changed = False
+            if visible != self.visible or self.scaling != scaling:
+                self.visible = visible
+                self.scaling = scaling
+                changed = True
+            if (
+                    x != self.x or y != self.y or border != self.border or title_height != self.title_height or width != self.width or height != self.height or scaling != self.scaling) and (
+                    x >= 0 and y >= 0):
+                self.x, self.y, self.border, self.title_height, self.width, self.height = x, y, border, title_height, width, height
+                changed = True
+            if changed:
+                logger.debug(
+                    f"{self.visible} {self.x} {self.y} {self.border} {self.width} {self.height} {self.scaling}")
+                communicate.window.emit(self.visible, self.x, self.y, self.border, self.title_height, self.width,
+                                        self.height, self.scaling)
 
     def frame_ratio(self, size):
         if self.frame_width > 0 and self.width > 0:

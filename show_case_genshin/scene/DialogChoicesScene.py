@@ -24,7 +24,7 @@ class DialogChoicesScene(FindFeatureScene):
             self.draw_boxes("choices", choices)
             above_count = len(choices)
             if above_count > 0:
-                print(
+                self.logger.info(
                     f"AutoDialogTask: Found {above_count} choices above dialog, won't click {self.dialog_vertical_distance} {self.dialogs[0].height}")
                 return False
             return True

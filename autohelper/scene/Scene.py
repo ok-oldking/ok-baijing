@@ -1,6 +1,7 @@
 from abc import abstractmethod
 
 from autohelper.gui.Communicate import communicate
+from autohelper.logging.Logger import get_logger
 
 
 class Scene:
@@ -8,7 +9,7 @@ class Scene:
     executor = None
 
     def __init__(self):
-        pass
+        self.logger = get_logger(self.__class__.__name__)
 
     @abstractmethod
     def detect(self, frame):

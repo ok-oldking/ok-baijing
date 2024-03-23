@@ -38,6 +38,8 @@ def find_choices(frame, box, horizontal=0, vertical=0, limit=1000, threshold=0.6
         to_find.confidence = percentage_grey + percentage_white * 2
         if percentage_white < 0.03:
             to_find.confidence = 0
+        if percentage_grey < 0.03:
+            to_find.confidence = 0
         if to_find.confidence > threshold:
             count = count + 1
             result.append(to_find)

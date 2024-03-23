@@ -19,6 +19,18 @@ class BaseTask:
         self.running = False
         self.config = {}
 
+    def get_status(self):
+        if self.running:
+            return "Running"
+        elif not self.enabled:
+            return "Disabled"
+        elif self.done:
+            return "Done"
+        elif self.enabled and self.executor.paused:
+            return "Paused"
+        else:
+            return "In Queue"
+
     def run_frame(self):
         pass
 

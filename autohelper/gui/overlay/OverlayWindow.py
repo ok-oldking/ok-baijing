@@ -26,7 +26,8 @@ class OverlayWindow(FrameWidget):
 
     def update_overlay(self, visible, x, y, border, title_height, width, height, scaling):
         logger.debug(f'update_overlay: {visible}, {x}, {y}, {border}, {title_height} {width}, {height}, {scaling}')
-        self.setGeometry(x + border, y + title_height, width, height)
+        if visible:
+            self.setGeometry(x + border, y + title_height, width, height)
         if visible:
             self.show()
         else:

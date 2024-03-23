@@ -147,7 +147,7 @@ class TaskExecutor:
                     communicate.tasks.emit()
                     processing_time = time.time() - start
                     task_executed += 1
-                    if processing_time > 0.2:
+                    if processing_time > 0.5:
                         logger.debug(
                             f"{task.__class__.__name__} taking too long get new frame {processing_time} {task_executed} {len(self.tasks)}")
                         self.next_frame()

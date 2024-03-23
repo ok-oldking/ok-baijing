@@ -181,11 +181,14 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
 
             if frame is not None:
                 new_height, new_width = frame.shape[:2]
-                self.width = new_width
-                self.height = new_height
-
-                if frame.shape[2] == 4:
-                    frame = frame[:, :, :3]
+                if new_width <= 0 or new_width <= 0:
+                    logger.warning(f"get_frame size <=0 {new_width}x{new_height}")
+                    frame = None
+                else:
+                    self.width = new_width
+                    self.height = new_height
+                    if frame.shape[2] == 4:
+                        frame = frame[:, :, :3]
             return frame
 
     def reset_framepool(self, size, reset_device=False):

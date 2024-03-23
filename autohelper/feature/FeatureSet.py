@@ -43,7 +43,7 @@ class FeatureSet:
     def check_size(self, frame):
         height, width = frame.shape[:2]
         if self.width != width or self.height != height:
-            print(f"FeatureSet: Width and height changed from {self.width}x{self.height} to {width}x{height}")
+            logger.info(f"FeatureSet: Width and height changed from {self.width}x{self.height} to {width}x{height}")
             self.width = width
             self.height = height
             self.process_data()
