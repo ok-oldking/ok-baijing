@@ -56,7 +56,7 @@ class Box:
             vertical_distance = 0
 
         # If boxes overlap or touch, the closest distance is 0
-        if horizontal_distance == 0 or vertical_distance == 0:
+        if horizontal_distance == 0 and vertical_distance == 0:
             return 0
 
         # If boxes are diagonally aligned, calculate diagonal distance
@@ -92,13 +92,13 @@ class Box:
             distance = math.sqrt(dx ** 2 + dy ** 2)
             if box == self:
                 return float('inf')
-            elif direction == 'up' and self.y - (box.y + box.height/2) >= 0:
+            elif direction == 'up' and self.y - (box.y + box.height / 2) >= 0:
                 return distance
-            elif direction == 'down' and box.y - (self.y + self.height/2) >= 0:
+            elif direction == 'down' and box.y - (self.y + self.height / 2) >= 0:
                 return distance
-            elif direction == 'left' and self.x - (box.x + box.width/2) >= 0:
+            elif direction == 'left' and self.x - (box.x + box.width / 2) >= 0:
                 return distance
-            elif direction == 'right' and box.x - (self.x + self.width/2) >= 0:
+            elif direction == 'right' and box.x - (self.x + self.width / 2) >= 0:
                 return distance
             else:
                 return float('inf')

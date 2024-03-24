@@ -90,7 +90,7 @@ class HwndWindow:
                 changed = True
             if (
                     x != self.x or y != self.y or border != self.border or title_height != self.title_height or width != self.width or height != self.height or scaling != self.scaling) and (
-                    x >= 0 and y >= 0):
+                    (x >= 0 and y >= 0) or self.visible):
                 self.x, self.y, self.border, self.title_height, self.width, self.height = x, y, border, title_height, width, height
                 changed = True
             if changed:
