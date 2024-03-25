@@ -55,7 +55,7 @@ class App:
 
         locale = QLocale.system().name()
         translator = QTranslator(self.app)
-        if translator.load(f"your_application_{locale}", "path/to/translations"):
+        if translator.load(QLocale(), "myapp", "_", ":/i18n"):
             self.app.installTranslator(translator)
         else:
             logger.debug(f"No translation available for {locale}, falling back to English/default.")
