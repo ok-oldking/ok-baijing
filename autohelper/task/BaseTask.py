@@ -1,3 +1,4 @@
+from autohelper.config.Config import Config
 from autohelper.feature.Box import Box, find_box_by_name
 from autohelper.gui.Communicate import communicate
 from autohelper.logging.Logger import get_logger
@@ -17,7 +18,11 @@ class BaseTask:
         self.error_count = 0
         self.enabled = True
         self.running = False
-        self.config = {}
+        self.config = None
+        self.default_config = {}
+
+    def load_config(self, folder):
+        self.config = Config(self.default_config, folder, f"{self.__class__.__name__}.json")
 
     def get_status(self):
         if self.running:

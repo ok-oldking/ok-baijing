@@ -22,7 +22,7 @@ class TaskExecutor:
 
     def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, target_fps=10,
                  wait_until_timeout=10, wait_until_before_delay=1, wait_until_check_delay=1,
-                 exit_event=threading.Event(), tasks=[], scenes=[], feature_set=None, ocr=None):
+                 exit_event=threading.Event(), tasks=[], scenes=[], feature_set=None, ocr=None, config_folder="config"):
         self.interaction = interaction
         self.feature_set = feature_set
         self.wait_until_check_delay = wait_until_check_delay
@@ -34,13 +34,15 @@ class TaskExecutor:
         self.ocr = ocr
         self.tasks = tasks
         self.scenes = scenes
+        self.config_folder = config_folder
         for scene in self.scenes:
             scene.executor = self
             scene.feature_set = self.feature_set
         for task in self.tasks:
             task.executor = self
             task.feature_set = self.feature_set
-        self.thread = threading.Thread(target=self.execute)
+            task.load_config(self.config_folder)
+        self.thread = threading.Thread(target=self.execute, name="TaskExecutor")
         self.thread.start()
 
     def wait_fps(self, start):

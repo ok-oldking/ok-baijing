@@ -12,6 +12,8 @@ class Communicate(QObject):
     tasks = Signal()
     window = Signal(bool, int, int, int, int, int, int, float)
     loading_progress = Signal(str)
+    init = Signal(bool, str)
+    notification = Signal(str, str)
 
 
 communicate = Communicate()

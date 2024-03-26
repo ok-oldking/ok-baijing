@@ -4,6 +4,7 @@ import traceback
 from logging.handlers import TimedRotatingFileHandler
 
 from autohelper.gui.Communicate import communicate
+from autohelper.util.path import get_path_relative_to_exe, ensure_dir_for_file
 
 
 class CommunicateHandler(logging.Handler):
@@ -47,22 +48,24 @@ def config_logger(config):
     logging.getLogger().handlers = []
 
     if config.get('log_file'):
-        ensure_dir_for_file(config['log_file'])
+        logger_file = get_path_relative_to_exe(config.get('log_file'))
+        ensure_dir_for_file(logger_file)
 
         os.makedirs("logs", exist_ok=True)
         # File handler with rotation
-        file_handler = TimedRotatingFileHandler(config['log_file'], when="midnight", interval=1,
+        file_handler = TimedRotatingFileHandler(logger_file, when="midnight", interval=1,
                                                 backupCount=7, encoding='utf-8')
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.DEBUG)  # File handler level
         auto_helper_logger.addHandler(file_handler)
 
     if config.get('error_log_file'):
-        ensure_dir_for_file(config['error_log_file'])
+        error_log_file = get_path_relative_to_exe(config.get('error_log_file'))
+        ensure_dir_for_file(error_log_file)
 
         os.makedirs("logs", exist_ok=True)
         # File handler with rotation
-        file_handler = TimedRotatingFileHandler(config['error_log_file'], when="midnight", interval=1,
+        file_handler = TimedRotatingFileHandler(error_log_file, when="midnight", interval=1,
                                                 backupCount=7, encoding='utf-8')
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.ERROR)  # File handler level
@@ -98,16 +101,3 @@ class Logger:
 
 def get_logger(name):
     return Logger(name)
-
-
-def ensure_dir_for_file(file_path):
-    # Extract the directory from the file path
-    directory = os.path.dirname(file_path)
-
-    # Check if the directory exists
-    if not os.path.exists(directory):
-        # If the directory does not exist, create it (including any intermediate directories)
-        os.makedirs(directory)
-        print(f"Directory created: {directory}")
-    else:
-        print(f"Directory already exists: {directory}")

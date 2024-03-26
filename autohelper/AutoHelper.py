@@ -6,6 +6,8 @@ from typing import Dict, Any
 from autohelper.capture.HwndWindow import HwndWindow
 from autohelper.feature.FeatureSet import FeatureSet
 from autohelper.gui.App import App
+from autohelper.gui.Communicate import communicate
+from autohelper.gui.util.InitWorker import InitWorker
 from autohelper.interaction.ADBInteraction import ADBBaseInteraction
 from autohelper.interaction.Win32Interaction import Win32Interaction
 from autohelper.logging.Logger import get_logger, config_logger
@@ -24,51 +26,18 @@ class AutoHelper:
     ocr = None
 
     def __init__(self, config: Dict[str, Any]):
+        print(f"AutoHelper init, config: {config}")
         self.debug = config.get("debug", False)
         self.exit_event = threading.Event()
+        self.config = config
         if config.get("use_gui"):
-            self.app = App(config.get('gui_title'), config.get('gui_icon'), config['tasks'],
-                           self.exit_event)
+            self.app = App(self.exit_event)
             self.app.show_loading()
-
-        logger.info(f"initializing {self.__class__.__name__}, config: {config}")
-
-        if config.get('ocr'):
-            lang = config.get('ocr').get('lang', 'en')
-            from paddleocr import PaddleOCR
-            self.ocr = PaddleOCR(use_angle_cls=False, lang=lang, show_log=False)
-            logging.getLogger('ppocr').setLevel(logging.ERROR)
-
-        config_logger(config)
-        if config['interaction'] == 'adb' or config['capture'] == 'adb':
-            self.init_adb()
-        self.init_hwnd(config.get('capture_window_title'), self.exit_event)
-        if config['capture'] == 'adb':
-            from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
-            self.capture = ADBCaptureMethod(self.device_manager)
+            self.worker = InitWorker(self.do_init)
+            self.worker.start()
+            self.app.exec()
         else:
-            from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
-            self.capture = WindowsGraphicsCaptureMethod(self.hwnd)
-        if config['interaction'] == 'adb':
-            self.interaction = ADBBaseInteraction(self.device_manager, self.capture)
-        else:
-            self.init_hwnd(config['capture_window_title'], self.exit_event)
-            self.interaction = Win32Interaction(self.capture)
-
-        if config.get('coco_feature_folder') is not None:
-            coco_feature_folder = config.get('coco_feature_folder')
-            self.feature_set = FeatureSet(coco_feature_folder,
-                                          default_horizontal_variance=config.get('default_horizontal_variance', 0),
-                                          default_vertical_variance=config.get('default_vertical_variance', 0),
-                                          default_threshold=config.get('default_threshold', 0))
-
-        self.task_executor = TaskExecutor(self.capture, interaction=self.interaction, exit_event=self.exit_event,
-                                          tasks=config['tasks'], scenes=config['scenes'], feature_set=self.feature_set,
-                                          ocr=self.ocr)
-
-        if config['use_gui']:
-            self.app.start(self.debug, self.hwnd)
-        else:
+            self.do_init()
             try:
                 # Starting the task in a separate thread (optional)
                 # This allows the main thread to remain responsive to keyboard interrupts
@@ -85,6 +54,63 @@ class AutoHelper:
                 # This block ensures that the script terminates gracefully,
                 # releasing resources or performing necessary clean-up operations.
                 logger.info("Script has terminated.")
+
+    def init_message(self, message: str, done=False):
+        communicate.init.emit(done, message)
+        if self.exit_event.is_set():
+            self.worker.quit()
+
+    def do_init(self):
+        logger.info(f"initializing {self.__class__.__name__}, config: {self.config}")
+        if self.config.get('ocr'):
+            self.init_message("PaddleOCR init Start")
+            lang = self.config.get('ocr').get('lang', 'en')
+            from paddleocr import PaddleOCR
+            self.ocr = PaddleOCR(use_angle_cls=False, lang=lang, show_log=False)
+            logging.getLogger('ppocr').setLevel(logging.ERROR)
+            self.init_message("PaddleOCR init Complete")
+
+        config_logger(self.config)
+        if self.config['interaction'] == 'adb' or self.config['capture'] == 'adb':
+            self.init_message("ADB init Start")
+            self.init_adb()
+            self.init_message("ADB init Complete")
+        self.init_hwnd(self.config.get('capture_window_title'), self.exit_event)
+        if self.config['capture'] == 'adb':
+            self.init_message("ADBCapture init Start")
+            from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
+            self.capture = ADBCaptureMethod(self.device_manager)
+            self.init_message("ADBCapture init Complete")
+        else:
+            from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
+            self.init_message("WindowsCapture init Start")
+            self.capture = WindowsGraphicsCaptureMethod(self.hwnd)
+            self.init_message("WindowsCapture init Complete")
+        if self.config['interaction'] == 'adb':
+            self.interaction = ADBBaseInteraction(self.device_manager, self.capture)
+        else:
+            self.init_hwnd(self.config['capture_window_title'], self.exit_event)
+            self.interaction = Win32Interaction(self.capture)
+
+        if self.config.get('coco_feature_folder') is not None:
+            self.init_message("FeatureSet init Start")
+            coco_feature_folder = self.config.get('coco_feature_folder')
+            self.feature_set = FeatureSet(coco_feature_folder,
+                                          default_horizontal_variance=self.config.get('default_horizontal_variance', 0),
+                                          default_vertical_variance=self.config.get('default_vertical_variance', 0),
+                                          default_threshold=self.config.get('default_threshold', 0))
+            self.init_message("FeatureSet init Complete")
+
+        self.init_message("TaskExecutor init Start")
+        self.task_executor = TaskExecutor(self.capture, interaction=self.interaction, exit_event=self.exit_event,
+                                          tasks=self.config['tasks'], scenes=self.config['scenes'],
+                                          feature_set=self.feature_set,
+                                          ocr=self.ocr, config_folder=self.config.get("config_folder"))
+        self.init_message("TaskExecutor init Start")
+
+        if self.app:
+            self.app.set(self.debug, self.hwnd, self.config.get('gui_title'), self.config.get('gui_icon'),
+                         self.config['tasks'])
 
     def wait_task(self):
         while not self.exit_event.is_set():

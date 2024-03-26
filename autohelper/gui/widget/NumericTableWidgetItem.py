@@ -25,9 +25,9 @@ class NumericTableWidgetItem(UpdateConfigWidgetItem, QTableWidgetItem):
             state, _, _ = self.validator.validate(str(value), 0)
             if state != QIntValidator.Acceptable:
                 return
-        if isinstance(self.value, int):
-            value = int(value)
-        else:
-            value = float(value)
-        self.set_value(value)
+            if isinstance(self.value, int):
+                value = int(value)
+            else:
+                value = float(value)
+            self.set_value(value)
         super().setData(role, value)
