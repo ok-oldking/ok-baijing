@@ -2,11 +2,12 @@ import sys
 
 from PySide6.QtCore import QTranslator, QLocale, QSize
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QStyleFactory
+from PySide6.QtWidgets import QApplication, QStyleFactory, QMenu, QSystemTrayIcon
 
 from autohelper.capture.HwndWindow import HwndWindow
 from autohelper.gui.Communicate import communicate
 from autohelper.gui.MainWindow import MainWindow
+from autohelper.gui.icon.icon import icon_path
 from autohelper.gui.loading.LoadingWindow import LoadingWindow
 from autohelper.gui.overlay.OverlayWindow import OverlayWindow
 from autohelper.logging.Logger import get_logger
@@ -15,7 +16,7 @@ logger = get_logger(__name__)
 
 
 class App:
-    def __init__(self,
+    def __init__(self, icon=None,
                  exit_event=None):
         super().__init__()
         self.app = QApplication(sys.argv)
@@ -26,7 +27,22 @@ class App:
         self.overlay_window = None
         self.main_window = None
         self.exit_event = exit_event
+        self.icon = QIcon(icon or icon_path)
+        self.tray = QSystemTrayIcon(self.icon)
+
+        # Create a context menu for the tray
+        menu = QMenu()
+        exit_action = menu.addAction("Exit")
+        exit_action.triggered.connect(self.quit)
+
+        # Set the context menu and show the tray icon
+        self.tray.setContextMenu(menu)
+        self.tray.show()
+
         communicate.init.connect(self.on_init)
+
+    def show_notification(self, title, message):
+        self.tray.showMessage("Title", "Message")
 
     def show_loading(self):
         self.loading_window = LoadingWindow(self, self.exit_event)
@@ -45,10 +61,9 @@ class App:
 
         window.move(half_screen_width / 2, half_screen_height / 2)
 
-    def set(self, overlay=False, hwnd_window: HwndWindow = None, title="AutoUI", icon=None, tasks=None):
+    def set(self, overlay=False, hwnd_window: HwndWindow = None, title="AutoUI", tasks=None):
         self.tasks = tasks
         self.title = title
-        self.icon = icon
         self.hwnd_window = hwnd_window
         self.overlay = overlay
 
@@ -62,8 +77,7 @@ class App:
         self.loading_window.close()
         self.main_window = MainWindow(self.tasks, exit_event=self.exit_event)
         self.main_window.setWindowTitle(self.title)  # Set the window title here
-        if self.icon is not None:
-            self.main_window.setWindowIcon(QIcon(self.icon))
+        self.main_window.setWindowIcon(self.icon)
         if self.overlay and self.hwnd_window is not None:
             self.overlay_window = OverlayWindow(self.hwnd_window)
 
@@ -96,4 +110,5 @@ class App:
         sys.exit(self.app.exec())
 
     def quit(self):
+        self.exit_event.set()
         self.app.quit()

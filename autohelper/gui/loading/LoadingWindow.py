@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox
 
 from autohelper.gui.Communicate import communicate
@@ -12,13 +12,16 @@ class LoadingWindow(QWidget):
         super().__init__()
         self.app = app
         self.exit_event = exit_event
+        self.dot_count = 0
         self.initUI()
         self.closed_by_finish_loading = False
+        self.message = "Loading"
 
     def initUI(self):
         self.setWindowTitle('Loading...')
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowFlag(Qt.Tool)
+        self.setWindowIcon(self.app.icon)
         layout = QVBoxLayout()
 
         self.label = QLabel('Loading, please wait...')
@@ -27,15 +30,24 @@ class LoadingWindow(QWidget):
         communicate.loading_progress.connect(self.update_progress)
         self.setLayout(layout)
         self.update_progress("Loading, please wait...")
+        # Start the timer for the loading animation
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_loading_animation)
+        self.timer.start(1000)  # Update every 500 ms
 
     def update_progress(self, message):
-        self.label.setText(message)
+        self.message = message
+
+    def update_loading_animation(self):
+        self.dot_count = (self.dot_count % 3) + 1  # Cycle through 1, 2, 3
+        self.label.setText(f"{self.message}{'.' * self.dot_count}")
 
     def close(self):
         self.closed_by_finish_loading = True
         super().close()
 
     def closeEvent(self, event):
+        self.timer.stop()
         if self.closed_by_finish_loading:
             super().closeEvent(event)
         else:

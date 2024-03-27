@@ -31,7 +31,7 @@ class AutoHelper:
         self.exit_event = threading.Event()
         self.config = config
         if config.get("use_gui"):
-            self.app = App(self.exit_event)
+            self.app = App(self.config.get('gui_icon'), self.exit_event)
             self.app.show_loading()
             self.worker = InitWorker(self.do_init)
             self.worker.start()
@@ -109,7 +109,7 @@ class AutoHelper:
         self.init_message("TaskExecutor init Start")
 
         if self.app:
-            self.app.set(self.debug, self.hwnd, self.config.get('gui_title'), self.config.get('gui_icon'),
+            self.app.set(self.debug, self.hwnd, self.config.get('gui_title'),
                          self.config['tasks'])
 
     def wait_task(self):
