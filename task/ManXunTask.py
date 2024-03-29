@@ -10,17 +10,22 @@ class ManXunTask(BJTask):
 
     def __init__(self):
         super().__init__()
+        self.level = 0
         self.name = "自动漫巡任务"
         self.description = """自动漫巡
     """
         self.click_no_brainer = ["直接胜利", "属性提升", "前进", "通过", "继续", "收下", "跳过", "开始强化",
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
-        self.stats_priority_list = ["终端", "生命", "专精", "攻击", "防御"]
-        self.config = {"跳过战斗": ["鱼叉将军-日光浅滩E"],
-                       "选项优先级": ["风险区", "暗礁", "烙痕唤醒", "获取刻印属性", "记忆强化", "研习区",
-                                      "休整区"],
-                       "无法直接胜利, 自动投降跳过": False
-                       }
+        self.default_config = {"跳过战斗": ["鱼叉将军-日光浅滩E"],
+                               "低深度选项优先级": ["烙痕唤醒", "记忆强化", "获取刻印属性", "研习区",
+                                                    "休整区"],
+                               "高深度选项优先级": ["烙痕唤醒", "获取刻印属性", "记忆强化", "研习区",
+                                                    "休整区"],
+                               "高低深度分界": 10,
+                               "无法直接胜利, 自动投降跳过": False,
+                               "唤醒属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
+                               "深度等级最多提升到": 12
+                               }
         self.destination = None
         self.skill_counter = {}
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
@@ -36,10 +41,6 @@ class ManXunTask(BJTask):
     @property
     def dialog_zone(self):
         return self.box_of_screen(0.25, 0.2, 0.5, 0.7, "弹窗检测区域")
-
-    @property
-    def stats_zone(self):
-        return self.box_of_screen(0.3, 0.8, 0.4, 0.2, "属性测区域,PC端虚化效果无法检测")
 
     @override
     def run_frame(self):
@@ -79,6 +80,7 @@ class ManXunTask(BJTask):
         self.wait_until(lambda: self.do_handle_dialog(choice, choices, choice_clicked))
         if self.done:
             return False
+        return True
 
     def do_handle_dialog(self, choice, choices, choice_clicked):
         boxes = self.ocr(self.dialog_zone)
@@ -93,8 +95,8 @@ class ManXunTask(BJTask):
         elif confirm := find_box_by_name(boxes, "完成漫巡"):
             self.click_box(confirm)
             self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="确认"))
-            self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="跳过漫巡回顾"))
-            self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="点击屏幕确认结算"))
+            self.wait_click_box(lambda: self.ocr(self.star_combat_zone, match="跳过漫巡回顾"))
+            self.wait_click_box(lambda: self.ocr(self.star_combat_zone, match="点击屏幕确认结算"))
             self.set_done()
         elif confirm := find_box_by_name(boxes, "解锁技能和区域"):
             self.handle_skill_dialog(boxes, confirm)
@@ -168,17 +170,18 @@ class ManXunTask(BJTask):
 
     def handle_stats_up(self, stats_up_choices):
         stats_up_parsed = self.parse_stats_choices(stats_up_choices)
-        stats_boxes = self.ocr(self.stats_zone)
-        current_stats = {}
-        for box in stats_boxes:
-            if re.search(r"[\u4e00-\u9fa5]{2}", box.name):
-                number = box.find_closest_box("down", stats_boxes)
-                number = int(number.name)
-                current_stats[box.name] = number
-        target = self.find_highest_increase_for_lowest_stat(stats_up_parsed, current_stats)
-        self.click_box(target)
+        target = list(stats_up_parsed.values())[0][0][1]
+        for stat in self.config['唤醒属性优先级']:
+            if stat in stats_up_parsed:
+                # Assuming stats_up_parsed[stat] is a list of tuples (value, box)
+                # and we want the one with the highest 'value'
+                value, box = max(stats_up_parsed[stat], key=lambda x: x[0])
+                self.logger.info(f"查找最高优先级提升属性结果 {box.name}")
+                target = box
+                break
         self.logger.info(
-            f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} current_stats:{current_stats} target:{target.name}")
+            f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target}")
+        self.click_box(target)
 
     def handle_skill_dialog(self, boxes, confirm):
         search_skill_name_box = confirm.copy(-confirm.width / 2, -confirm.height * 2, confirm.width,
@@ -197,14 +200,17 @@ class ManXunTask(BJTask):
             if choices[index].name == "深度等级提升":
                 depth = self.find_depth()
                 self.logger.info(f"提升深度, {depth} 目前是第{abs(index)}个选项, 共有{len(choices)}选项")
-                if depth < 12 or abs(index) == len(choices):
+                if depth < self.config['深度等级最多提升到'] or abs(index) == len(choices):
                     self.logger.info(f"提升深度,当前深度{depth}")
                 else:
                     self.logger.info(f"不提升深度,当前深度{depth}")
                     index -= - 1
+            priority = self.config['低深度选项优先级'] if self.level < self.config['高低深度分界'] else self.config[
+                '高深度选项优先级']
+            index = find_priority_string(choices, priority, index)
             self.click_box(choices[index])
             self.sleep(3)  # 等待动画
-        self.logger.info(f"点击选项:{choices[index]}")
+            self.logger.info(f"点击选项:{choices[index]}, 使用优先级 {priority}, index {index}")
         return choices, choices[index]
 
     def do_find_choices(self):
@@ -239,12 +245,13 @@ class ManXunTask(BJTask):
         numbers = find_boxes_by_name(boxes, re.compile(r"^[01D][0-9]$"))
         for number in numbers:
             # 居中大字深度
-            if self.box_in_horizontal_center(number, off_percent=0.1) and number.height / self.height > 0.07:
+            if self.box_in_horizontal_center(number, off_percent=0.8) and number.height / self.height > 0.07:
                 depth_box = number
                 break
         if depth_box is not None:
             depth_box.name = depth_box.name.replace("D", "2")
             depth = int(depth_box.name)
+            self.level = depth
         return depth
 
     def click_cancel(self):
@@ -255,7 +262,8 @@ class ManXunTask(BJTask):
         highest_gaowei_box = None
         for box in boxes:
             if isinstance(box.name, str) and box.name[0] == '+' and all(
-                    char.isdigit() or char == '+' or char == ' ' for char in box.name):
+                    char.isdigit() or char == '-' or char == '+' or char == ' ' for char in box.name):
+                box.name = box.name.replace('-', '')
                 # Split the string by '+' and sum the numbers
                 numbers = box.name.split('+')
                 sum_gaowei = sum(int(number) for number in numbers if number)
@@ -281,18 +289,13 @@ class ManXunTask(BJTask):
 
         return attributes
 
-    def find_highest_increase_for_lowest_stat(self, stats_up_parsed, current_stats):
-        current_list = sorted(current_stats, key=current_stats.get, reverse=True)
-        merged_list = self.stats_priority_list[:]  # Start with a copy of the first list to maintain its order
-        for item in current_list:
-            if item not in merged_list:
-                merged_list.append(item)
-        self.logger.debug(f"查找最高优先级提升属性 {stats_up_parsed} {merged_list} {current_stats}")
-        # Find the lowest stat(s) in current_stats
-        for stat in reversed(merged_list):
-            if stat in stats_up_parsed:
-                # Assuming stats_up_parsed[stat] is a list of tuples (value, box)
-                # and we want the one with the highest 'value'
-                value, box = max(stats_up_parsed[stat], key=lambda x: x[0])
-                self.logger.info(f"查找最高优先级提升属性结果 {box.name}")
-                return box  # Return the box associated with the highest increase
+
+def find_priority_string(input_list, priority_list, start_index=-1):
+    # Iterate over the input list from the start_index to the start
+    for priority in priority_list:
+        for i in range(start_index, -len(input_list) - 1, -1):
+            # If the current string is in the priority list
+            if priority == input_list[i].name:
+                # Return the negative index of the string in the input list
+                return i
+    return start_index

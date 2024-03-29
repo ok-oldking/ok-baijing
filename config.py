@@ -6,7 +6,8 @@ config = {
     'ocr': {
         'lang': 'ch'
     },
-    'gui_icon': 'icon.png',  # Optional
+    'config_folder': 'configs',
+    # 'gui_icon': 'icon.png',  # Optional
     'gui_title': 'BJ Helper',  # Optional, default: False
     'capture': 'adb',  # adb/windows, see #autohelper.capture
     'capture_window_title': 'Mumu Player 12',  # required  when using windows capture

@@ -1,0 +1,9 @@
+adbutils
+numpy
+PyDirectInput
+pywin32
+typing-extensions
+opencv-python
+PySide6
+
+rapidocr_onnxruntime
