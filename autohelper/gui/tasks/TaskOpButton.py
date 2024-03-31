@@ -1,6 +1,7 @@
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QPushButton
 
+from autohelper.gui.Communicate import communicate
 from autohelper.logging.Logger import get_logger
 from autohelper.task.BaseTask import BaseTask
 
@@ -16,9 +17,15 @@ class TaskOpButton(QPushButton):
 
     def update_task(self, task: BaseTask):
         if task.enabled:
-            self.setText("Enable")
+            if task.done:
+                self.setText("Rerun")
+                self.setEnabled(True)
+            else:
+                self.setText("N/A")
+                self.setEnabled(False)
         else:
-            self.setText("Disable")
+            self.setText("Enable")
+            self.setEnabled(False)
 
     @Slot()
     def toggle_text(self):

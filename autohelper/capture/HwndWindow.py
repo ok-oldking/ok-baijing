@@ -60,7 +60,8 @@ class HwndWindow:
             self.exit_event.wait(0.1)
 
     def get_abs_cords(self, x, y):
-        return int(self.x + (self.border + x)), int(self.y + (y + self.title_height))
+        return int(self.x * self.scaling + (self.border * self.scaling + x)), int(
+            self.y * self.scaling + (y + self.title_height * self.scaling))
 
     def do_update_window_size(self):
         visible, x, y, border, title_height, width, height, scaling = self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height, self.scaling
@@ -95,7 +96,7 @@ class HwndWindow:
                 changed = True
             if changed:
                 logger.debug(
-                    f"{self.visible} {self.x} {self.y} {self.border} {self.width} {self.height} {self.scaling}")
+                    f"do_update_window_size changed: {self.visible} {self.x} {self.y} {self.border} {self.width} {self.height} {self.scaling}")
                 communicate.window.emit(self.visible, self.x, self.y, self.border, self.title_height, self.width,
                                         self.height, self.scaling)
 

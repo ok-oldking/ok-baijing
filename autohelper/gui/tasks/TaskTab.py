@@ -1,6 +1,6 @@
 from typing import List
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QHBoxLayout
 
@@ -44,6 +44,9 @@ class TaskTab(QWidget):
         self.mainLayout.addWidget(self.task_config_container)
 
         communicate.tasks.connect(self.update_table)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_table)
+        self.timer.start(1000)
 
     def update_config_table(self):
         task = self.tasks[self.task_table.selectedIndexes()[0].row()]

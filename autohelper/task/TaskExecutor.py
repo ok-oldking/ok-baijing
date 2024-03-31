@@ -87,7 +87,7 @@ class TaskExecutor:
         self.paused = True
         self.pause_start = time.time()
         communicate.executor_paused.emit(self.paused)
-        communicate.task.emit(self.tasks)
+        communicate.tasks.emit()
 
     def start(self):
         can_run = False
@@ -100,6 +100,7 @@ class TaskExecutor:
         self.pause_end_time += self.pause_start - time.time()
         self.paused = False
         communicate.executor_paused.emit(self.paused)
+        communicate.tasks.emit()
         return True
 
     def wait_scene(self, scene_type, time_out, pre_action, post_action):
@@ -148,8 +149,7 @@ class TaskExecutor:
                     if task.done:
                         continue
                     task.running = True
-                    # if time.time() - start > 1:
-                    communicate.tasks.emit()
+                    task.last_execute_time = start
                     try:
                         result = task.run_frame()
                         if result is not None:
