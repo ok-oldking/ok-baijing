@@ -1,8 +1,8 @@
-import logging
 import threading
 import time
 from typing import Dict, Any
 
+import autohelper
 from autohelper.capture.HwndWindow import HwndWindow
 from autohelper.feature.FeatureSet import FeatureSet
 from autohelper.gui.App import App
@@ -32,6 +32,7 @@ class AutoHelper:
         self.config = config
         if config.get("use_gui"):
             self.app = App(self.config.get('gui_icon'), self.exit_event)
+            autohelper.gui.app = self.app
             self.app.show_loading()
             self.worker = InitWorker(self.do_init)
             self.worker.start()
@@ -63,12 +64,10 @@ class AutoHelper:
     def do_init(self):
         logger.info(f"initializing {self.__class__.__name__}, config: {self.config}")
         if self.config.get('ocr'):
-            self.init_message("PaddleOCR init Start")
-            lang = self.config.get('ocr').get('lang', 'en')
-            from paddleocr import PaddleOCR
-            self.ocr = PaddleOCR(use_angle_cls=False, lang=lang, show_log=False)
-            logging.getLogger('ppocr').setLevel(logging.ERROR)
-            self.init_message("PaddleOCR init Complete")
+            self.init_message("RapidOCR init Start")
+            from rapidocr_onnxruntime import RapidOCR
+            self.ocr = RapidOCR()
+            self.init_message("RapidOCR init Complete")
 
         config_logger(self.config)
         if self.config['interaction'] == 'adb' or self.config['capture'] == 'adb':
@@ -109,6 +108,7 @@ class AutoHelper:
         self.init_message("TaskExecutor init Start")
 
         if self.app:
+            autohelper.gui.executor = self.task_executor
             self.app.set(self.debug, self.hwnd, self.config.get('gui_title'),
                          self.config['tasks'])
 

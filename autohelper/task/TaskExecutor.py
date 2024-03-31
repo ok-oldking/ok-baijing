@@ -19,22 +19,23 @@ class TaskExecutor:
     _frame = None
     paused = True
     ocr = None
+    pause_start = time.time()
+    pause_end_time = time.time()
 
-    def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction, target_fps=10,
+    def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction,
                  wait_until_timeout=10, wait_until_before_delay=1, wait_until_check_delay=1,
-                 exit_event=threading.Event(), tasks=[], scenes=[], feature_set=None, ocr=None, config_folder="config"):
+                 exit_event=threading.Event(), tasks=[], scenes=[], feature_set=None, ocr=None, config_folder=None):
         self.interaction = interaction
         self.feature_set = feature_set
         self.wait_until_check_delay = wait_until_check_delay
         self.wait_until_before_delay = wait_until_before_delay
         self.method = method
         self.wait_scene_timeout = wait_until_timeout
-        self.target_delay = 1.0 / target_fps
         self.exit_event = exit_event
         self.ocr = ocr
         self.tasks = tasks
         self.scenes = scenes
-        self.config_folder = config_folder
+        self.config_folder = config_folder or "config"
         for scene in self.scenes:
             scene.executor = self
             scene.feature_set = self.feature_set
@@ -45,11 +46,6 @@ class TaskExecutor:
         self.thread = threading.Thread(target=self.execute, name="TaskExecutor")
         self.thread.start()
 
-    def wait_fps(self, start):
-        cost = time.time() - start
-        if cost < self.target_delay:
-            self.sleep(self.target_delay - cost)
-
     def next_frame(self):
         self.reset_scene()
         start = time.time()
@@ -58,7 +54,7 @@ class TaskExecutor:
             if self._frame is not None:
                 communicate.frame.emit(self._frame)
                 return self._frame
-            time.sleep(0.01)
+            self.sleep(0.01)
             if time.time() - start > self.wait_scene_timeout:
                 return None
 
@@ -76,15 +72,36 @@ class TaskExecutor:
         :param timeout: The total time to sleep in seconds.
         """
         self.frame_stats.add_sleep(timeout)
-        end_time = time.time() + timeout
+        self.pause_end_time = time.time() + timeout
         while True:
             if self.exit_event.is_set():
                 logger.info("Exit event set. Exiting early.")
                 return
-            remaining = end_time - time.time()
-            if remaining <= 0:
-                return
-            time.sleep(min(0.1, remaining))  # Sleep for 100ms or the remaining time, whichever is smaller
+            if not self.paused:
+                to_sleep = self.pause_end_time - time.time()
+                if to_sleep <= 0:
+                    return
+            time.sleep(0.01)  # Sleep for 100ms or the remaining time, whichever is smaller
+
+    def pause(self):
+        self.paused = True
+        self.pause_start = time.time()
+        communicate.executor_paused.emit(self.paused)
+        for row, task in enumerate(self.tasks):
+            communicate.task.emit(row, task)
+
+    def start(self):
+        can_run = False
+        for task in self.tasks:
+            if task.can_run():
+                can_run = True
+                break
+        if not can_run:
+            return False
+        self.pause_end_time += self.pause_start - time.time()
+        self.paused = False
+        communicate.executor_paused.emit(self.paused)
+        return True
 
     def wait_scene(self, scene_type, time_out, pre_action, post_action):
         return self.wait_condition(lambda: self.detect_scene(scene_type), time_out, pre_action, post_action)
@@ -109,10 +126,10 @@ class TaskExecutor:
                     return result
             if post_action is not None:
                 post_action()
-            self.wait_fps(start)
             if time.time() - start > time_out:
                 logger.info(f"wait_until timeout {condition} {time_out} seconds")
                 break
+            self.sleep(0.01)
         return None
 
     def reset_scene(self):
@@ -123,16 +140,17 @@ class TaskExecutor:
     def execute(self):
         logger.info(f"start execute")
         while not self.exit_event.is_set():
+            self.sleep(0.01)
             self._frame = self.next_frame()
             start = time.time()
             if self._frame is not None:
                 self.detect_scene()
                 task_executed = 0
-                for task in self.tasks:
+                for index, task in enumerate(self.tasks):
                     if task.done:
                         continue
                     task.running = True
-                    communicate.tasks.emit()
+                    communicate.task.emit(index, task)
                     try:
                         result = task.run_frame()
                         if result is not None:
@@ -146,7 +164,7 @@ class TaskExecutor:
                         logger.error(f"{task.name} exception: {e}, traceback: {stack_trace_str}")
                         task.error_count += 1
                     task.running = False
-                    communicate.tasks.emit()
+                    communicate.task.emit(index, task)
                     processing_time = time.time() - start
                     task_executed += 1
                     if processing_time > 0.5:
@@ -154,8 +172,10 @@ class TaskExecutor:
                             f"{task.__class__.__name__} taking too long get new frame {processing_time} {task_executed} {len(self.tasks)}")
                         self.next_frame()
                         start = time.time()
+                    self.sleep(0.01)
+                if task_executed == 0:
+                    self.pause()
                 self.add_frame_stats()
-            self.wait_fps(start)
 
     def add_frame_stats(self):
         self.frame_stats.add_frame()

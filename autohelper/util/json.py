@@ -28,4 +28,4 @@ def write_json_file(file_path, data):
 
 
 def async_write_yaml_file(file_path, data):
-    asyncio.run(write_yaml_file(file_path, data))
+    asyncio.start(write_yaml_file(file_path, data))

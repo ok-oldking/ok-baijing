@@ -9,11 +9,12 @@ class Communicate(QObject):
     frame_time = Signal(int)
     scene = Signal(str)
     draw_box = Signal(str, object, str)
-    tasks = Signal()
+    task = Signal(int, object)
     window = Signal(bool, int, int, int, int, int, int, float)
     loading_progress = Signal(str)
     init = Signal(bool, str)
     notification = Signal(str, str)
+    executor_paused: Signal = Signal(bool)
 
 
 communicate = Communicate()

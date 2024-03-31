@@ -8,14 +8,12 @@ logger = get_logger(__name__)
 
 
 class OCR:
-
-    def __init__(self):
-        self.executor = None
-        self.default_threshold = 0.9
+    executor = None
+    default_threshold = 0.6
 
     def ocr(self, box: Box = None, match=None, threshold=0):
         if threshold == 0:
-            threshold = 0.9
+            threshold = self.default_threshold
         start = time.time()
         image = self.frame
         if image is not None:
@@ -23,23 +21,21 @@ class OCR:
                 x, y, w, h = box.x, box.y, box.width, box.height
                 image = image[y:y + h, x:x + w]
 
-            result = self.executor.ocr.ocr(image)
-
+            result, _ = self.executor.ocr(image, use_det=True, use_cls=False, use_rec=True)
             detected_boxes = []
             # Process the results and create Box objects
             for res in result:
-                if res is not None:
-                    for line in res:
-                        pos = line[0]
-                        text, confidence = line[1]
-                        if confidence >= threshold:
-                            detected_box = Box(int(pos[0][0]), int(pos[0][1]), int(pos[2][0] - pos[0][0]),
-                                               int(pos[2][1] - pos[0][1]),
-                                               confidence, text)
-                            if box is not None:
-                                detected_box.x += box.x
-                                detected_box.y += box.y
-                            detected_boxes.append(detected_box)
+                pos = res[0]
+                text = res[1]
+                confidence = res[2]
+                if confidence >= threshold:
+                    detected_box = Box(int(pos[0][0]), int(pos[0][1]), int(pos[2][0] - pos[0][0]),
+                                       int(pos[2][1] - pos[0][1]),
+                                       confidence, text)
+                    if box is not None:
+                        detected_box.x += box.x
+                        detected_box.y += box.y
+                    detected_boxes.append(detected_box)
             if match is not None:
                 detected_boxes = find_boxes_by_name(detected_boxes, match)
             communicate.draw_box.emit("ocr", detected_boxes, "red")

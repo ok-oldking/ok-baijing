@@ -95,6 +95,8 @@ class App:
         # Optional: Move the window to the center of the screen
 
         self.main_window.show()
+        self.main_window.raise_()
+        self.main_window.activateWindow()
 
     def size_relative_to_screen(self, width, height):
         screen = self.app.primaryScreen()
