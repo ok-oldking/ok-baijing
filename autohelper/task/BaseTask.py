@@ -32,6 +32,7 @@ class BaseTask:
 
     def enable(self):
         self.enabled = True
+        self.set_done(False)
 
     def disable(self):
         self.enabled = False

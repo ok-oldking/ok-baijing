@@ -87,8 +87,7 @@ class TaskExecutor:
         self.paused = True
         self.pause_start = time.time()
         communicate.executor_paused.emit(self.paused)
-        for row, task in enumerate(self.tasks):
-            communicate.task.emit(row, task)
+        communicate.task.emit(self.tasks)
 
     def start(self):
         can_run = False
@@ -140,7 +139,6 @@ class TaskExecutor:
     def execute(self):
         logger.info(f"start execute")
         while not self.exit_event.is_set():
-            self.sleep(0.01)
             self._frame = self.next_frame()
             start = time.time()
             if self._frame is not None:
@@ -150,7 +148,8 @@ class TaskExecutor:
                     if task.done:
                         continue
                     task.running = True
-                    communicate.task.emit(index, task)
+                    # if time.time() - start > 1:
+                    communicate.tasks.emit()
                     try:
                         result = task.run_frame()
                         if result is not None:
@@ -164,7 +163,6 @@ class TaskExecutor:
                         logger.error(f"{task.name} exception: {e}, traceback: {stack_trace_str}")
                         task.error_count += 1
                     task.running = False
-                    communicate.task.emit(index, task)
                     processing_time = time.time() - start
                     task_executed += 1
                     if processing_time > 0.5:
@@ -172,10 +170,11 @@ class TaskExecutor:
                             f"{task.__class__.__name__} taking too long get new frame {processing_time} {task_executed} {len(self.tasks)}")
                         self.next_frame()
                         start = time.time()
-                    self.sleep(0.01)
-                if task_executed == 0:
-                    self.pause()
+
+                # if task_executed == 0:
+                #     self.pause()
                 self.add_frame_stats()
+                self.sleep(0.0001)
 
     def add_frame_stats(self):
         self.frame_stats.add_frame()

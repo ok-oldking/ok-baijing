@@ -43,7 +43,7 @@ class TaskTab(QWidget):
         self.update_config_table()
         self.mainLayout.addWidget(self.task_config_container)
 
-        communicate.task.connect(self.update_table)
+        communicate.tasks.connect(self.update_table)
 
     def update_config_table(self):
         task = self.tasks[self.task_table.selectedIndexes()[0].row()]
@@ -69,22 +69,24 @@ class TaskTab(QWidget):
             for i in range(2):
                 item = self.uneditable_item()
                 self.task_table.setItem(row, i, item)
-            op_button = TaskOpButton(row, task)
+            op_button = TaskOpButton(task)
             self.task_table.setCellWidget(row, 2, op_button)
-            self.update_table(row, task)
+        self.update_table()
 
     def uneditable_item(self):
         item = QTableWidgetItem()
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         return item
 
-    def update_table(self, row, task):
-        self.task_table.item(row, 0).setText(task.name)
-        status = task.get_status()
-        self.task_table.item(row, 1).setText(status)
-        if status == "Running":
-            self.task_table.item(row, 1).setBackground(QColor("green"))
-        elif status == "Disabled":
-            self.task_table.item(row, 1).setBackground(QColor("red"))
-        else:
-            self.task_table.item(row, 1).setBackground(QColor(0, 0, 0, 0))
+    def update_table(self):
+        for row, task in enumerate(self.tasks):
+            self.task_table.item(row, 0).setText(task.name)
+            status = task.get_status()
+            self.task_table.item(row, 1).setText(status)
+            if status == "Running":
+                self.task_table.item(row, 1).setBackground(QColor("green"))
+            elif status == "Disabled":
+                self.task_table.item(row, 1).setBackground(QColor("red"))
+            else:
+                self.task_table.item(row, 1).setBackground(QColor(0, 0, 0, 0))
+            self.task_table.cellWidget(row, 2).update_task(task)
