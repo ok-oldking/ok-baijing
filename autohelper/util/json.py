@@ -25,7 +25,3 @@ def write_json_file(file_path, data):
     except Exception as e:
         print(f"Error writing to JSON file: {e}")
         return False
-
-
-def async_write_yaml_file(file_path, data):
-    asyncio.start(write_yaml_file(file_path, data))

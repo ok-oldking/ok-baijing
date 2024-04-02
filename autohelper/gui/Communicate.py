@@ -15,6 +15,7 @@ class Communicate(QObject):
     init = Signal(bool, str)
     notification = Signal(str, str)
     executor_paused: Signal = Signal(bool)
+    adb_devices: Signal = Signal()
 
 
 communicate = Communicate()

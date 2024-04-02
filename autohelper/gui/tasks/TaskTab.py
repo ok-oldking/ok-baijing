@@ -28,7 +28,7 @@ class TaskTab(QWidget):
         self.task_table = TooltipTableWidget([0.7, 0.15, 0.15])
         self.task_container = RoundCornerContainer("Tasks", self.task_table)
         self.start_button = StartButton()
-        self.task_container.add_widget(self.start_button)
+        self.task_container.add_top_widget(self.start_button)
 
         self.top_layout.addWidget(self.task_container)
         self.task_labels = ['Name', 'Status', 'Operation']

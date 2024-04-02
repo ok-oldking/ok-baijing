@@ -5,7 +5,7 @@ from autohelper.util.path import get_path_relative_to_exe
 class Config:
     def __init__(self, default, folder, name):
         super().__init__()
-        self.config_file = get_path_relative_to_exe(folder, name)
+        self.config_file = get_path_relative_to_exe(folder, f"{name}.json")
         self.config = read_json_file(self.config_file)
         if self.config is None:
             self.config = default

@@ -3,13 +3,10 @@ import time
 from typing import Dict, Any
 
 import autohelper
-from autohelper.capture.HwndWindow import HwndWindow
 from autohelper.feature.FeatureSet import FeatureSet
 from autohelper.gui.App import App
 from autohelper.gui.Communicate import communicate
 from autohelper.gui.util.InitWorker import InitWorker
-from autohelper.interaction.ADBInteraction import ADBBaseInteraction
-from autohelper.interaction.Win32Interaction import Win32Interaction
 from autohelper.logging.Logger import get_logger, config_logger
 from autohelper.task.TaskExecutor import TaskExecutor
 
@@ -30,8 +27,10 @@ class AutoHelper:
         self.debug = config.get("debug", False)
         self.exit_event = threading.Event()
         self.config = config
+        self.init_adb()
         if config.get("use_gui"):
-            self.app = App(self.config.get('gui_icon'), self.exit_event)
+            self.app = App(self.config.get('gui_icon'), self.debug, self.config.get('gui_title'),
+                           self.config['tasks'], self.exit_event)
             autohelper.gui.app = self.app
             self.app.show_loading()
             self.worker = InitWorker(self.do_init)
@@ -70,26 +69,6 @@ class AutoHelper:
             self.init_message("RapidOCR init Complete")
 
         config_logger(self.config)
-        if self.config['interaction'] == 'adb' or self.config['capture'] == 'adb':
-            self.init_message("ADB init Start")
-            self.init_adb()
-            self.init_message("ADB init Complete")
-        self.init_hwnd(self.config.get('capture_window_title'), self.exit_event)
-        if self.config['capture'] == 'adb':
-            self.init_message("ADBCapture init Start")
-            from autohelper.capture.adb.ADBCaptureMethod import ADBCaptureMethod
-            self.capture = ADBCaptureMethod(self.device_manager)
-            self.init_message("ADBCapture init Complete")
-        else:
-            from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
-            self.init_message("WindowsCapture init Start")
-            self.capture = WindowsGraphicsCaptureMethod(self.hwnd)
-            self.init_message("WindowsCapture init Complete")
-        if self.config['interaction'] == 'adb':
-            self.interaction = ADBBaseInteraction(self.device_manager, self.capture)
-        else:
-            self.init_hwnd(self.config['capture_window_title'], self.exit_event)
-            self.interaction = Win32Interaction(self.capture)
 
         if self.config.get('coco_feature_folder') is not None:
             self.init_message("FeatureSet init Start")
@@ -101,29 +80,22 @@ class AutoHelper:
             self.init_message("FeatureSet init Complete")
 
         self.init_message("TaskExecutor init Start")
-        self.task_executor = TaskExecutor(self.capture, interaction=self.interaction, exit_event=self.exit_event,
+        self.task_executor = TaskExecutor(self.device_manager, exit_event=self.exit_event,
                                           tasks=self.config['tasks'], scenes=self.config['scenes'],
                                           feature_set=self.feature_set,
                                           ocr=self.ocr, config_folder=self.config.get("config_folder"))
-        self.init_message("TaskExecutor init Start")
+        self.init_message("TaskExecutor init Done")
 
         if self.app:
             autohelper.gui.executor = self.task_executor
-            self.app.set(self.debug, self.hwnd, self.config.get('gui_title'),
-                         self.config['tasks'])
 
     def wait_task(self):
         while not self.exit_event.is_set():
             time.sleep(1)
 
-    def init_hwnd(self, window_title, exit_event):
-        if window_title and self.hwnd is None:
-            if self.device_manager is not None and self.device_manager.device is not None:
-                self.hwnd = HwndWindow(window_title, exit_event, self.device_manager.width, self.device_manager.height)
-            else:
-                self.hwnd = HwndWindow(window_title, exit_event)
-
     def init_adb(self):
         if self.device_manager is None:
             from autohelper.capture.adb.DeviceManager import DeviceManager
-            self.device_manager = DeviceManager()
+            self.device_manager = DeviceManager(self.config.get("config_folder"),
+                                                self.config.get('capture_window_title'), self.exit_event)
+            autohelper.gui.device_manager = self.device_manager

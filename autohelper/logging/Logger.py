@@ -76,7 +76,7 @@ class Logger:
     def __init__(self, name):
         # Initialize the logger with the name of the subclass
         self.logger = auto_helper_logger
-        self.name = name
+        self.name = name.split('.')[-1]
 
     def debug(self, message):
         self.logger.debug(f"{self.name}:{message}")

@@ -1,7 +1,9 @@
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QMessageBox, QHBoxLayout, QListWidget, QPushButton
 
+import autohelper
 from autohelper.gui.Communicate import communicate
+from autohelper.gui.widget.RoundCornerContainer import RoundCornerContainer
 from autohelper.logging.Logger import get_logger
 
 logger = get_logger(__name__)
@@ -14,21 +16,80 @@ class LoadingWindow(QWidget):
         self.exit_event = exit_event
         self.dot_count = 0
         self.initUI()
+        layout = QVBoxLayout()
+        top_layout = QHBoxLayout()
+        layout.addLayout(top_layout)
+        self.setLayout(layout)
+        self.capture_list = QListWidget()
+        self.capture_list.itemSelectionChanged.connect(self.capture_index_changed)
+        self.capture_list_data = []
+        capture_container = RoundCornerContainer(self.tr("Capture"), self.capture_list)
+
+        self.refresh_button = QPushButton(self.tr("Refresh"))
+        self.refresh_button.clicked.connect(self.refresh_clicked)
+        capture_container.add_top_widget(self.refresh_button)
+        communicate.adb_devices.connect(self.update_capture)
+
+        self.interaction_list = QListWidget()
+        self.interaction_list.addItem(self.tr("ADB (Supports Background, Recommended for Android)"))
+        self.interaction_list.addItem(self.tr("Windows Direct (Does Not Support Background)"))
+        interaction_container = RoundCornerContainer(self.tr("Keyboard/Mouse Interaction"), self.interaction_list)
+
+        top_layout.addWidget(capture_container)
+        top_layout.addWidget(interaction_container)
+        # self.start_button = StartButton()
         self.closed_by_finish_loading = False
         self.message = "Loading"
 
-    def initUI(self):
-        self.setWindowTitle('Loading...')
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowFlag(Qt.Tool)
-        self.setWindowIcon(self.app.icon)
-        layout = QVBoxLayout()
+        self.start_button = QPushButton(self.tr("Start"))
+        self.start_button.setEnabled(False)
+        self.start_button.clicked.connect(self.on_start_clicked)
+        layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
+        self.update_capture()
 
-        self.label = QLabel('Loading, please wait...')
-        self.label.setAlignment(Qt.AlignCenter)  # Center the label
-        layout.addWidget(self.label)
+    def refresh_clicked(self):
+        autohelper.gui.device_manager.refresh()
+        self.refresh_button.setDisabled(True)
+        self.refresh_button.setText(self.tr("Refreshing"))
+
+    def on_start_clicked(self):
+        self.app.show_main_window()
+
+    def capture_index_changed(self):  # i is an index
+        i = self.capture_list.currentRow()
+        method = self.capture_list_data[i]["method"]
+        id = self.capture_list_data[i]["imei"]
+        if method == "adb":
+            autohelper.gui.device_manager.set_preferred_device(id)
+
+    def update_capture(self):
+        devices = autohelper.gui.device_manager.get_devices()
+        selected = self.capture_list.currentRow()
+        self.capture_list.clear()
+        self.capture_list_data.clear()
+        if len(devices) > 0:
+            for row, device in enumerate(devices):
+                connected = self.tr("Connected") if device['connected'] else self.tr("Disconnected")
+                self.capture_list.addItem(
+                    f"{connected}: {device['nick']} {device['address']} {device.get('resolution') or ''}")
+                item = self.capture_list.item(row)
+                if not device['connected']:
+                    item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
+                self.capture_list_data.append(({"method": "adb", "imei": device['imei']}))
+            if selected == -1:
+                selected = 0
+            self.capture_list.setCurrentRow(selected)
+        self.refresh_button.setDisabled(False)
+        self.refresh_button.setText(self.tr("Refresh"))
+
+    def initUI(self):
+        self.setWindowTitle(self.app.title)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+        self.setWindowIcon(self.app.icon)
+
         communicate.loading_progress.connect(self.update_progress)
-        self.setLayout(layout)
+        # self.setLayout(layout)
         self.update_progress("Loading, please wait...")
         # Start the timer for the loading animation
         self.timer = QTimer()
@@ -38,9 +99,14 @@ class LoadingWindow(QWidget):
     def update_progress(self, message):
         self.message = message
 
+    def loading_done(self):
+        self.start_button.setEnabled(True)
+        self.timer.stop()
+        self.start_button.setText(self.tr("Start"))
+
     def update_loading_animation(self):
         self.dot_count = (self.dot_count % 3) + 1  # Cycle through 1, 2, 3
-        self.label.setText(f"{self.message}{'.' * self.dot_count}")
+        self.start_button.setText(f"{self.message}{'.' * self.dot_count}")
 
     def close(self):
         self.closed_by_finish_loading = True

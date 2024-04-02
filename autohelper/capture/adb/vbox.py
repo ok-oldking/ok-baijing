@@ -114,7 +114,7 @@ def installed_emulator():
                                 logger.debug(
                                     f'adb_server, None, {server.vendor}: {machine_name}, {address}, 2, 1, override_identifier={identifier}')
                                 results.append(
-                                    ADBControllerTarget(None, f'{server.vendor}: {machine_name}',
+                                    ADBControllerTarget(None, f'{server.vendor}',
                                                         address, 2, 1, override_identifier=identifier,
                                                         preload_device_info={'emulator_hypervisor': 'vbox'}))
             logger.debug(f'try checking {server}')

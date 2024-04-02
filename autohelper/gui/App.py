@@ -5,7 +5,7 @@ from PySide6.QtCore import QSize, QCoreApplication, QLocale, QTranslator
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QStyleFactory, QMenu, QSystemTrayIcon
 
-from autohelper.capture.HwndWindow import HwndWindow
+import autohelper
 from autohelper.gui.Communicate import communicate
 from autohelper.gui.MainWindow import MainWindow
 from autohelper.gui.i18n.path import i18n_path
@@ -18,13 +18,14 @@ logger = get_logger(__name__)
 
 
 class App:
-    def __init__(self, icon=None,
+    def __init__(self, icon=None, overlay=False, title="AutoUI", tasks=None,
                  exit_event=None):
         super().__init__()
         self.app = QApplication(sys.argv)
         self.app.setStyle(QStyleFactory.create("Fusion"))
-        self.overlay = False
-        self.hwnd_window = None
+        self.tasks = tasks
+        self.title = title
+        self.overlay = overlay
         self.loading_window = None
         self.overlay_window = None
         self.main_window = None
@@ -59,7 +60,7 @@ class App:
 
     def show_loading(self):
         self.loading_window = LoadingWindow(self, self.exit_event)
-        size = self.size_relative_to_screen(width=0.2, height=0.2)
+        size = self.size_relative_to_screen(width=0.4, height=0.4)
         self.loading_window.resize(size)
         self.loading_window.setMinimumSize(size)
         self.center_window(self.loading_window)
@@ -74,15 +75,9 @@ class App:
 
         window.move(half_screen_width / 2, half_screen_height / 2)
 
-    def set(self, overlay=False, hwnd_window: HwndWindow = None, title="AutoUI", tasks=None):
-        self.tasks = tasks
-        self.title = title
-        self.hwnd_window = hwnd_window
-        self.overlay = overlay
-
     def on_init(self, done, message):
         if done:
-            self.show_main_window()
+            self.loading_window.loading_done()
         else:
             self.loading_window.update_progress(message)
 
@@ -91,8 +86,8 @@ class App:
         self.main_window = MainWindow(self.tasks, exit_event=self.exit_event)
         self.main_window.setWindowTitle(self.title)  # Set the window title here
         self.main_window.setWindowIcon(self.icon)
-        if self.overlay and self.hwnd_window is not None:
-            self.overlay_window = OverlayWindow(self.hwnd_window)
+        if self.overlay and autohelper.gui.device_manager.hwnd is not None:
+            self.overlay_window = OverlayWindow(autohelper.gui.device_manager.hwnd)
 
         size = self.size_relative_to_screen(width=0.5, height=0.5)
         self.main_window.resize(size)

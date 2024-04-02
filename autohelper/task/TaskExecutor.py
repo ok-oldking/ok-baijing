@@ -2,9 +2,8 @@ import threading
 import time
 import traceback
 
-from autohelper.capture.BaseCaptureMethod import BaseCaptureMethod
+from autohelper.capture.adb.DeviceManager import DeviceManager
 from autohelper.gui.Communicate import communicate
-from autohelper.interaction.BaseInteraction import BaseInteraction
 from autohelper.logging.Logger import get_logger
 from autohelper.scene.Scene import Scene
 from autohelper.stats.StreamStats import StreamStats
@@ -22,14 +21,13 @@ class TaskExecutor:
     pause_start = time.time()
     pause_end_time = time.time()
 
-    def __init__(self, method: BaseCaptureMethod, interaction: BaseInteraction,
+    def __init__(self, device_manager: DeviceManager,
                  wait_until_timeout=10, wait_until_before_delay=1, wait_until_check_delay=1,
                  exit_event=threading.Event(), tasks=[], scenes=[], feature_set=None, ocr=None, config_folder=None):
-        self.interaction = interaction
+        self.device_manager = device_manager
         self.feature_set = feature_set
         self.wait_until_check_delay = wait_until_check_delay
         self.wait_until_before_delay = wait_until_before_delay
-        self.method = method
         self.wait_scene_timeout = wait_until_timeout
         self.exit_event = exit_event
         self.ocr = ocr
@@ -45,6 +43,14 @@ class TaskExecutor:
             task.load_config(self.config_folder)
         self.thread = threading.Thread(target=self.execute, name="TaskExecutor")
         self.thread.start()
+
+    @property
+    def interaction(self):
+        return self.device_manager.interaction
+
+    @property
+    def method(self):
+        return self.device_manager.capture_method
 
     def next_frame(self):
         self.reset_scene()

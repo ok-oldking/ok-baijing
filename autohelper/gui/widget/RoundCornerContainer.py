@@ -31,7 +31,7 @@ class RoundCornerContainer(QFrame):
         color = self.get_palette_color(QPalette.Base)
         self.setStyleSheet(f"background-color:{color};")
 
-    def add_widget(self, widget):
+    def add_top_widget(self, widget):
         self.top_layout.addWidget(widget)
 
     def get_palette_color(self, palette_color):

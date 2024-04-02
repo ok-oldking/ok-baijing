@@ -28,7 +28,7 @@ class BaseTask:
         return self.enabled and not self._done
 
     def load_config(self, folder):
-        self.config = Config(self.default_config, folder, f"{self.__class__.__name__}.json")
+        self.config = Config(self.default_config, folder, self.__class__.__name__)
 
     def enable(self):
         self.enabled = True

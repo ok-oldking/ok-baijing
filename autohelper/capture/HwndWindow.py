@@ -34,7 +34,7 @@ class HwndWindow:
 
     def __init__(self, title="", exit_event=threading.Event(), frame_width=0, frame_height=0):
         super().__init__()
-        self.title = title
+        self.title = re.compile(title)
         self.visible = False
         self.update_frame_size(frame_width, frame_height)
         self.do_update_window_size()
@@ -106,18 +106,22 @@ class HwndWindow:
         else:
             return size
 
+    def title_text(self):
+        if self.hwnd:
+            return win32gui.GetWindowText(self.hwnd)
+        return ""
+
 
 def find_hwnds_by_title(title):
-    if isinstance(title, re.Pattern):
-        hwnds = []
+    hwnds = []
 
-        def enum_windows_proc(hwnd, lParam):
-            if win32gui.IsWindowVisible(hwnd) and win32gui.GetWindowText(hwnd):
-                if re.search(title, win32gui.GetWindowText(hwnd)):
-                    hwnds.append(hwnd)
+    def enum_windows_proc(hwnd, lParam):
+        if win32gui.IsWindowVisible(hwnd) and win32gui.GetWindowText(hwnd):
+            if re.search(title, win32gui.GetWindowText(hwnd)):
+                hwnds.append(hwnd)
 
-        win32gui.EnumWindows(enum_windows_proc, None)
-        if len(hwnds) > 0:
-            return hwnds[0]
-    else:
-        return win32gui.FindWindow(None, title)
+    win32gui.EnumWindows(enum_windows_proc, None)
+    if len(hwnds) > 0:
+        if len(hwnds) > 1:
+            logger.warning(f"Found multiple hwnds {len(hwnds)}")
+        return hwnds[0]
