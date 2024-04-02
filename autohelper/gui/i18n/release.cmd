@@ -1,0 +1,1 @@
+pyside6-lrelease zh_CN.ts

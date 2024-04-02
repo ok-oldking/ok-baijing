@@ -1,0 +1,1 @@
+pyside6-lupdate ../MainWindow.py -ts zh_CN.ts

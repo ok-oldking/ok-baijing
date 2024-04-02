@@ -1,12 +1,14 @@
+import os
 import sys
 
-from PySide6.QtCore import QTranslator, QLocale, QSize
+from PySide6.QtCore import QSize, QCoreApplication, QLocale, QTranslator
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QStyleFactory, QMenu, QSystemTrayIcon
 
 from autohelper.capture.HwndWindow import HwndWindow
 from autohelper.gui.Communicate import communicate
 from autohelper.gui.MainWindow import MainWindow
+from autohelper.gui.i18n.path import i18n_path
 from autohelper.gui.icon.icon import icon_path
 from autohelper.gui.loading.LoadingWindow import LoadingWindow
 from autohelper.gui.overlay.OverlayWindow import OverlayWindow
@@ -29,6 +31,17 @@ class App:
         self.exit_event = exit_event
         self.icon = QIcon(icon or icon_path)
         self.tray = QSystemTrayIcon(self.icon)
+
+        locale = QLocale.system().name()
+        translator = QTranslator(self.app)
+        full_path = os.path.join(i18n_path, f"{QLocale().name()}")
+        if translator.load(QLocale().name(), i18n_path):
+            translator.setParent(self.app)
+            self.app.installTranslator(translator)
+            QCoreApplication.installTranslator(translator)
+            logger.debug(f"translator install success {QCoreApplication.translate('MainWindow', 'Debug')}")
+        else:
+            logger.debug(f"No translation available for {locale}, falling back to English/default. {full_path}")
 
         # Create a context menu for the tray
         menu = QMenu()
@@ -80,13 +93,6 @@ class App:
         self.main_window.setWindowIcon(self.icon)
         if self.overlay and self.hwnd_window is not None:
             self.overlay_window = OverlayWindow(self.hwnd_window)
-
-        locale = QLocale.system().name()
-        translator = QTranslator(self.app)
-        if translator.load(QLocale(), "myapp", "_", ":/i18n"):
-            self.app.installTranslator(translator)
-        else:
-            logger.debug(f"No translation available for {locale}, falling back to English/default.")
 
         size = self.size_relative_to_screen(width=0.5, height=0.5)
         self.main_window.resize(size)

@@ -18,8 +18,8 @@ class MainWindow(QTabWidget):
         self.exit_event = exit_event
         debug_tab = DebugTab()
         task_tab = TaskTab(tasks)
-        self.addTab(task_tab, "Task")
-        self.addTab(debug_tab, "Debug")
+        self.addTab(task_tab, self.tr("Task"))
+        self.addTab(debug_tab, self.tr("Debug"))
         # ... Add other tabs similarly
 
         # Styling the tabs and content if needed, for example:
