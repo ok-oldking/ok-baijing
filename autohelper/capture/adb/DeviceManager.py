@@ -100,6 +100,7 @@ class DeviceManager:
         logger.debug(f'refresh {self.device_dict}')
 
     def set_preferred_device(self, imei=None):
+        logger.debug(f"set_preferred_device {imei}")
         preferred = None
         if imei is None:
             for device in self.device_dict.values():

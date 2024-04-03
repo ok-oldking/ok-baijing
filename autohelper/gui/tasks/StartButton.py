@@ -21,11 +21,11 @@ class StartButton(QPushButton):
 
     def update_paused(self, paused):
         if paused:
-            self.setText("Start")
+            self.setText(self.tr("Start All"))
             self.setChecked(False)
             self.animation.stop()
         else:
-            self.setText("Pause")
+            self.setText(self.tr("Pause All"))
             self.setChecked(True)
             self.start_animation()
 

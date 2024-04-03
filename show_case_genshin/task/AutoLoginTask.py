@@ -11,6 +11,6 @@ class AutoLoginTask(FindFeatureTask):
     def run_frame(self):
         if self.is_scene(StartScene) or self.is_scene(MonthlyCardScene):
             self.logger.info(f"AutoLoginTask click")
-            self.click_relative(0.5, 0.5)
+            self.click_relative(0.5, 0.7)
             self.sleep(1)
             return True

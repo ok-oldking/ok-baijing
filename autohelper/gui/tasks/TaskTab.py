@@ -26,18 +26,18 @@ class TaskTab(QWidget):
         # Top row setup with horizontal splitter
         self.top_layout = QHBoxLayout()
         self.task_table = TooltipTableWidget([0.7, 0.15, 0.15])
-        self.task_container = RoundCornerContainer("Tasks", self.task_table)
+        self.task_container = RoundCornerContainer(self.tr('Tasks'), self.task_table)
         self.start_button = StartButton()
         self.task_container.add_top_widget(self.start_button)
 
         self.top_layout.addWidget(self.task_container)
-        self.task_labels = ['Name', 'Status', 'Operation']
+        self.task_labels = [self.tr('Name'), self.tr('Status'), self.tr('Operation')]
         self.create_table()
         self.mainLayout.addLayout(self.top_layout)
 
         self.task_config_table = TooltipTableWidget([0.3, 0.7])
-        self.task_config_container = RoundCornerContainer(f"Tasks", self.task_config_table)
-        self.task_config_labels = ['Config', 'Value']
+        self.task_config_container = RoundCornerContainer(self.tr('Tasks Config'), self.task_config_table)
+        self.task_config_labels = [self.tr('Config'), self.tr('Value')]
         self.task_config_table.setColumnCount(len(self.task_config_labels))  # Name and Value
         self.task_config_table.setHorizontalHeaderLabels(self.task_config_labels)
         self.update_config_table()
@@ -51,7 +51,7 @@ class TaskTab(QWidget):
     def update_config_table(self):
         task = self.tasks[self.task_table.selectedIndexes()[0].row()]
         config = task.config
-        self.task_config_container.title_label.setText(f"Config: {task.name}")
+        self.task_config_container.title_label.setText(f"{self.tr('Config')}: {task.name}")
         self.task_config_table.setRowCount(len(config))
         for row, (key, value) in enumerate(config.items()):
             if not self.task_config_table.item(row, 0):

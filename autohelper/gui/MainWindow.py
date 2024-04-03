@@ -13,13 +13,14 @@ class Communicate(QObject):
 
 
 class MainWindow(QTabWidget):
-    def __init__(self, tasks, exit_event):
+    def __init__(self, tasks, debug=False, exit_event=None):
         super().__init__()
         self.exit_event = exit_event
-        debug_tab = DebugTab()
         task_tab = TaskTab(tasks)
         self.addTab(task_tab, self.tr("Task"))
-        self.addTab(debug_tab, self.tr("Debug"))
+        if debug:
+            debug_tab = DebugTab()
+            self.addTab(debug_tab, self.tr("Debug"))
         # ... Add other tabs similarly
 
         # Styling the tabs and content if needed, for example:

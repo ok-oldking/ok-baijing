@@ -56,11 +56,16 @@ class TaskExecutor:
         self.reset_scene()
         start = time.time()
         while not self.exit_event.is_set():
-            self._frame = self.method.get_frame()
-            if self._frame is not None:
-                communicate.frame.emit(self._frame)
-                return self._frame
-            self.sleep(0.01)
+            if self.method and self.interaction.should_capture():
+                self._frame = self.method.get_frame()
+                if self._frame is not None:
+                    height, width = self._frame.shape[:2]
+                    if height <= 0 or width <= 0:
+                        logger.warning(f"captured wrong size frame: {width}x{height}")
+                        self._frame = None
+                    communicate.frame.emit(self._frame)
+                    return self._frame
+            self.sleep(0.001)
             if time.time() - start > self.wait_scene_timeout:
                 return None
 
@@ -83,7 +88,7 @@ class TaskExecutor:
             if self.exit_event.is_set():
                 logger.info("Exit event set. Exiting early.")
                 return
-            if not self.paused:
+            if not (self.paused or not self.interaction.should_capture()):
                 to_sleep = self.pause_end_time - time.time()
                 if to_sleep <= 0:
                     return

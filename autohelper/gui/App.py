@@ -83,7 +83,7 @@ class App:
 
     def show_main_window(self):
         self.loading_window.close()
-        self.main_window = MainWindow(self.tasks, exit_event=self.exit_event)
+        self.main_window = MainWindow(self.tasks, self.overlay, exit_event=self.exit_event)
         self.main_window.setWindowTitle(self.title)  # Set the window title here
         self.main_window.setWindowIcon(self.icon)
         if self.overlay and autohelper.gui.device_manager.hwnd is not None:

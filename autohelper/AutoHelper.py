@@ -83,7 +83,7 @@ class AutoHelper:
         self.task_executor = TaskExecutor(self.device_manager, exit_event=self.exit_event,
                                           tasks=self.config['tasks'], scenes=self.config['scenes'],
                                           feature_set=self.feature_set,
-                                          ocr=self.ocr, config_folder=self.config.get("config_folder"))
+                                          ocr=self.ocr, config_folder=self.config.get("config_folder") or "config")
         self.init_message("TaskExecutor init Done")
 
         if self.app:
@@ -96,6 +96,6 @@ class AutoHelper:
     def init_adb(self):
         if self.device_manager is None:
             from autohelper.capture.adb.DeviceManager import DeviceManager
-            self.device_manager = DeviceManager(self.config.get("config_folder"),
+            self.device_manager = DeviceManager(self.config.get("config_folder") or "config",
                                                 self.config.get('capture_window_title'), self.exit_event)
             autohelper.gui.device_manager = self.device_manager

@@ -15,7 +15,7 @@ config = {
     'use_gui': True,  # Optional, default: False
     'capture': 'windows',  # adb/windows, see #autohelper.capture
     'interaction': 'windows',  # adb/windows, see #autohelper.interaction
-    'capture_window_title': '原神',  # required  when using windows capture
+    'capture_window_title': r"^(原神|Genshin Impact)$",  # required  when using windows capture
     'default_horizontal_variance': 0,
     'default_vertical_variance': 0,
     'default_threshold': 0.9,

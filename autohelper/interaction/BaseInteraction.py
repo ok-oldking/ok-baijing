@@ -10,6 +10,9 @@ class BaseInteraction:
     def __init__(self, capture):
         self.capture = capture
 
+    def should_capture(self):
+        return True
+    
     def send_key(self, key, down_time=0.02):
         pass
 

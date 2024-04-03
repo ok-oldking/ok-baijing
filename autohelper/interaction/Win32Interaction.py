@@ -44,6 +44,9 @@ class Win32Interaction(BaseInteraction):
             pydirectinput.moveTo(x, y)
         pydirectinput.click()
 
+    def should_capture(self):
+        return self.capture.clickable()
+
 
 def is_admin():
     try:

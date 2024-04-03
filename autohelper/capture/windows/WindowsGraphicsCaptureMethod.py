@@ -176,8 +176,10 @@ class WindowsGraphicsCaptureMethod(BaseCaptureMethod):
             if latency > 1:
                 logger.warning(f"latency too large return None frame: {latency}")
                 return None
-            if frame is not None and (self.hwnd_window.title_height != 0 or self.hwnd_window.border != 0):
-                frame = crop_image(frame, self.hwnd_window.border, self.hwnd_window.title_height)
+            if frame is not None:
+                x, y = self.hwnd_window.get_top_left_frame_offset()
+                if x > 0 or y > 0:
+                    frame = crop_image(frame, x, y)
 
             if frame is not None:
                 new_height, new_width = frame.shape[:2]

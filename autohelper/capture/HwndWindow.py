@@ -63,6 +63,10 @@ class HwndWindow:
         return int(self.x * self.scaling + (self.border * self.scaling + x)), int(
             self.y * self.scaling + (y + self.title_height * self.scaling))
 
+    def get_top_left_frame_offset(self):
+        return int(self.border * self.scaling), int(
+            self.title_height * self.scaling)
+
     def do_update_window_size(self):
         visible, x, y, border, title_height, width, height, scaling = self.visible, self.x, self.y, self.border, self.title_height, self.width, self.height, self.scaling
         if self.hwnd is None:

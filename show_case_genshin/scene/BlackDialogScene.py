@@ -5,4 +5,8 @@ from autohelper.scene.FeatureScene import FindFeatureScene
 class BlackDialogScene(FindFeatureScene):
 
     def detect(self, frame):
-        return calculate_color_percentage(frame, black_color) > 0.9
+        if calculate_color_percentage(frame, black_color) > 0.9:
+            self.sleep(3)
+            frame = self.next_frame()
+            if calculate_color_percentage(frame, black_color) > 0.9:
+                return True

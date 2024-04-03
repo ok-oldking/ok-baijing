@@ -13,6 +13,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+config/
+showcase_genshin/config/
 logs/
 build/
 develop-eggs/
