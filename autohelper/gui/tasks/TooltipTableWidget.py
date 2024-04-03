@@ -1,5 +1,5 @@
 from PySide6.QtCore import QEvent
-from PySide6.QtWidgets import QTableWidget, QToolTip
+from PySide6.QtWidgets import QTableWidget, QToolTip, QHeaderView
 
 
 class TooltipTableWidget(QTableWidget):
@@ -8,6 +8,13 @@ class TooltipTableWidget(QTableWidget):
         super().__init__()
         self.verticalHeader().setVisible(False)
         self.width_percentages = width_percentages
+
+        # Set the QTableWidget to fill the width of its parent
+        self.horizontalHeader().setStretchLastSection(True)
+
+        # Set the columns to resize to fill the width of the QTableWidget
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.setWordWrap(True)
 
     def setItem(self, row, column, item):
         super().setItem(row, column, item)

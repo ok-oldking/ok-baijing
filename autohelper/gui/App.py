@@ -54,9 +54,12 @@ class App:
         self.tray.show()
 
         communicate.init.connect(self.on_init)
+        communicate.notification.connect(self.show_notification)
 
     def show_notification(self, title, message):
-        self.tray.showMessage("Title", "Message")
+        if title is None:
+            title = self.title
+        self.tray.showMessage(title, message)
 
     def show_loading(self):
         self.loading_window = LoadingWindow(self, self.exit_event)
@@ -89,7 +92,7 @@ class App:
         if self.overlay and autohelper.gui.device_manager.hwnd is not None:
             self.overlay_window = OverlayWindow(autohelper.gui.device_manager.hwnd)
 
-        size = self.size_relative_to_screen(width=0.5, height=0.5)
+        size = self.size_relative_to_screen(width=0.5, height=0.6)
         self.main_window.resize(size)
         self.main_window.setMinimumSize(size)
 

@@ -69,9 +69,12 @@ class LoadingWindow(QWidget):
         self.capture_list_data.clear()
         if len(devices) > 0:
             for row, device in enumerate(devices):
+                if device["preferred"]:
+                    selected = row
+                method = self.tr("PC") if device['method'] == "windows" else self.tr("Android")
                 connected = self.tr("Connected") if device['connected'] else self.tr("Disconnected")
                 self.capture_list.addItem(
-                    f"{connected}: {device['nick']} {device['address']} {device.get('resolution') or ''}")
+                    f"{method} {connected}: {device['nick']} {device['address']} {device.get('resolution') or ''}")
                 item = self.capture_list.item(row)
                 if not device['connected']:
                     item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
@@ -118,7 +121,7 @@ class LoadingWindow(QWidget):
             super().closeEvent(event)
         else:
             # Create a message box that asks the user if they really want to close the window
-            reply = QMessageBox.question(self, 'Window Close', 'Are you sure you want to close the window?',
+            reply = QMessageBox.question(self, self.tr('Exit'), self.tr('Are you sure you want to exit the app?'),
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.Yes:

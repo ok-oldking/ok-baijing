@@ -10,6 +10,7 @@ from autohelper.gui.tasks.StartButton import StartButton
 from autohelper.gui.tasks.TaskOpButton import TaskOpButton
 from autohelper.gui.tasks.TooltipTableWidget import TooltipTableWidget
 from autohelper.gui.widget.RoundCornerContainer import RoundCornerContainer
+from autohelper.gui.widget.UpdateConfigWidgetItem import value_to_string
 from autohelper.logging.Logger import get_logger
 from autohelper.task.BaseTask import BaseTask
 
@@ -43,8 +44,18 @@ class TaskTab(QWidget):
         self.update_config_table()
         self.mainLayout.addWidget(self.task_config_container)
 
+        self.task_info_table = TooltipTableWidget([0.3, 0.7])
+        self.task_info_container = RoundCornerContainer(self.tr('Tasks Info'), self.task_info_table)
+        self.top_layout.addWidget(self.task_info_container)
+        self.task_info_labels = [self.tr('Info'), self.tr('Value')]
+        self.task_info_table.setColumnCount(len(self.task_info_labels))  # Name and Value
+        self.task_info_table.setHorizontalHeaderLabels(self.task_config_labels)
+        self.update_info_table()
+
         communicate.tasks.connect(self.update_table)
+        communicate.task_info.connect(self.update_info_table)
         self.timer = QTimer()
+        self.timer.timeout.connect(self.update_info_table)
         self.timer.timeout.connect(self.update_table)
         self.timer.start(1000)
 
@@ -59,6 +70,21 @@ class TaskTab(QWidget):
                 self.task_config_table.setItem(row, 0, item0)
             self.task_config_table.item(row, 0).setText(key)
             config_widget_item(self.task_config_table, row, 1, config, key, value)
+
+    def update_info_table(self):
+        task = self.tasks[self.task_table.selectedIndexes()[0].row()]
+        info = task.info
+        self.task_info_container.title_label.setText(f"{self.tr('Info')}: {task.name}")
+        self.task_info_table.setRowCount(len(info))
+        for row, (key, value) in enumerate(info.items()):
+            if not self.task_info_table.item(row, 0):
+                item0 = self.uneditable_item()
+                self.task_info_table.setItem(row, 0, item0)
+            self.task_info_table.item(row, 0).setText(key)
+            if not self.task_info_table.item(row, 1):
+                item1 = self.uneditable_item()
+                self.task_info_table.setItem(row, 1, item1)
+            self.task_info_table.item(row, 1).setText(value_to_string(value))
 
     def create_table(self):
         self.task_table.setRowCount(len(self.tasks))  # Adjust the row count to match the number of attributes
@@ -85,7 +111,7 @@ class TaskTab(QWidget):
         for row, task in enumerate(self.tasks):
             self.task_table.item(row, 0).setText(task.name)
             status = task.get_status()
-            self.task_table.item(row, 1).setText(status)
+            self.task_table.item(row, 1).setText(self.tr(status))
             if status == "Running":
                 self.task_table.item(row, 1).setBackground(QColor("green"))
             elif status == "Disabled":

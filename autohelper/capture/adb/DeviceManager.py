@@ -106,8 +106,12 @@ class DeviceManager:
             for device in self.device_dict.values():
                 if device.get('preferred'):
                     preferred = device
+                    imei = preferred['imei']
         else:
             preferred = self.device_dict.get(imei)
+        for key in self.device_dict.keys():
+            if imei == key:
+                self.device_dict[imei]["preferred"] = False
         if preferred is None and len(self.device_dict) > 0:
             preferred = next(iter(self.device_dict.values()))
         if preferred is not None:
@@ -131,8 +135,6 @@ class DeviceManager:
     def device(self):
         if self._device is None:
             self.set_preferred_device()
-            if self._device is not None:
-                self.screencap()
         return self._device
 
     @property

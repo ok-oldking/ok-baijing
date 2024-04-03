@@ -1,6 +1,8 @@
 import time
 
 from autohelper.config.Config import Config
+from autohelper.config.InfoDict import InfoDict
+from autohelper.gui.Communicate import communicate
 from autohelper.logging.Logger import get_logger
 from autohelper.task.ExecutorOperation import ExecutorOperation
 
@@ -18,8 +20,51 @@ class BaseTask(ExecutorOperation):
         self.enabled = True
         self.running = False
         self.config = None
+        self.info = InfoDict()
         self.default_config = {}
         self.last_execute_time = 0
+
+    def log_info(self, message, notify=False):
+        self.logger.info(message)
+        self.info_set("Log", message)
+        if notify:
+            self.notification(message)
+        communicate.task_info.emit()
+
+    def log_error(self, message, exception=None, notify=False):
+        self.logger.error(message, exception)
+        if exception is not None:
+            message += exception.args[0]
+        self.info_set("Error", message)
+        if notify:
+            self.notification(message)
+        communicate.task_info.emit()
+
+    @staticmethod
+    def notification(message, title=None):
+        communicate.notification.emit(title, message)
+
+    def info_clear(self):
+        self.info.clear()
+
+    def info_incr(self, key, by=1):
+        # If the key is in the dictionary, get its value. If not, return 0.
+        value = self.info.get(key, 0)
+        # Increment the value
+        value += by
+        # Store the incremented value back in the dictionary
+        self.info[key] = value
+
+    def info_add_to_list(self, key, item):
+        value = self.info.get(key, [])
+        if isinstance(item, list):
+            value += item
+        else:
+            value.append(item)
+        self.info[key] = value
+
+    def info_set(self, key, value):
+        self.info[key] = value
 
     def can_run(self):
         return self.enabled and not self._done
@@ -29,10 +74,13 @@ class BaseTask(ExecutorOperation):
 
     def enable(self):
         self.enabled = True
+        self.info_clear()
         self.set_done(False)
+        communicate.tasks.emit()
 
     def disable(self):
         self.enabled = False
+        communicate.tasks.emit()
 
     def get_status(self):
         if not self.enabled:

@@ -11,6 +11,10 @@ from autohelper.stats.StreamStats import StreamStats
 logger = get_logger(__name__)
 
 
+class TaskDisabledException(Exception):
+    pass
+
+
 class TaskExecutor:
     current_scene: Scene | None = None
     last_scene: Scene | None = None
@@ -31,6 +35,7 @@ class TaskExecutor:
         self.wait_scene_timeout = wait_until_timeout
         self.exit_event = exit_event
         self.ocr = ocr
+        self.current_task = None
         self.tasks = tasks
         self.scenes = scenes
         self.config_folder = config_folder or "config"
@@ -88,6 +93,8 @@ class TaskExecutor:
             if self.exit_event.is_set():
                 logger.info("Exit event set. Exiting early.")
                 return
+            if self.current_task and not self.current_task.enabled:
+                raise TaskDisabledException()
             if not (self.paused or not self.interaction.should_capture()):
                 to_sleep = self.pause_end_time - time.time()
                 if to_sleep <= 0:
@@ -157,8 +164,9 @@ class TaskExecutor:
                 self.detect_scene()
                 task_executed = 0
                 for index, task in enumerate(self.tasks):
-                    if task.done:
+                    if task.done or not task.enabled:
                         continue
+                    self.current_task = task
                     task.running = True
                     task.last_execute_time = start
                     try:
@@ -168,11 +176,14 @@ class TaskExecutor:
                                 task.success_count += 1
                             else:
                                 task.error_count += 1
+                    except TaskDisabledException:
+                        logger.info(f"{task.name} is disabled, breaking")
                     except Exception as e:
                         traceback.print_exc()
                         stack_trace_str = traceback.format_exc()
                         logger.error(f"{task.name} exception: {e}, traceback: {stack_trace_str}")
                         task.error_count += 1
+                    self.current_task = None
                     task.running = False
                     processing_time = time.time() - start
                     task_executed += 1
@@ -185,7 +196,7 @@ class TaskExecutor:
                 # if task_executed == 0:
                 #     self.pause()
                 self.add_frame_stats()
-                self.sleep(0.0001)
+                self.sleep(0.001)
 
     def add_frame_stats(self):
         self.frame_stats.add_frame()
