@@ -3,7 +3,9 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QMessageBox, QHBoxLayout, QL
 
 import autohelper
 from autohelper.gui.Communicate import communicate
+from autohelper.gui.util.Alert import show_alert
 from autohelper.gui.widget.RoundCornerContainer import RoundCornerContainer
+from autohelper.interaction.Win32Interaction import is_admin
 from autohelper.logging.Logger import get_logger
 
 logger = get_logger(__name__)
@@ -23,20 +25,20 @@ class LoadingWindow(QWidget):
         self.capture_list = QListWidget()
         self.capture_list.itemSelectionChanged.connect(self.capture_index_changed)
         self.capture_list_data = []
-        capture_container = RoundCornerContainer(self.tr("Capture"), self.capture_list)
+        capture_container = RoundCornerContainer(self.tr("Choose Window"), self.capture_list)
 
         self.refresh_button = QPushButton(self.tr("Refresh"))
         self.refresh_button.clicked.connect(self.refresh_clicked)
         capture_container.add_top_widget(self.refresh_button)
         communicate.adb_devices.connect(self.update_capture)
 
-        self.interaction_list = QListWidget()
-        self.interaction_list.addItem(self.tr("ADB (Supports Background, Recommended for Android)"))
-        self.interaction_list.addItem(self.tr("Windows Direct (Does Not Support Background)"))
-        interaction_container = RoundCornerContainer(self.tr("Keyboard/Mouse Interaction"), self.interaction_list)
+        # self.interaction_list = QListWidget()
+        # self.interaction_list.addItem(self.tr("ADB (Supports Background, Recommended for Android)"))
+        # self.interaction_list.addItem(self.tr("Windows Direct (Does Not Support Background)"))
+        # interaction_container = RoundCornerContainer(self.tr("Keyboard/Mouse Interaction"), self.interaction_list)
+        # top_layout.addWidget(interaction_container)
 
         top_layout.addWidget(capture_container)
-        top_layout.addWidget(interaction_container)
         # self.start_button = StartButton()
         self.closed_by_finish_loading = False
         self.message = "Loading"
@@ -53,14 +55,22 @@ class LoadingWindow(QWidget):
         self.refresh_button.setText(self.tr("Refreshing"))
 
     def on_start_clicked(self):
+        i = self.capture_list.currentRow()
+        connected = self.capture_list_data[i]["connected"]
+        if not connected:
+            show_alert(self.tr("Error"), self.tr("Game Window is not detected, Please open game and refresh!"))
+            return
+        method = self.capture_list_data[i]["method"]
+        if method == "windows" and not is_admin():
+            show_alert(self.tr("Error"),
+                       self.tr(f"PC version requires admin privileges, Please restart this app with admin privileges!"))
+            return
         self.app.show_main_window()
 
     def capture_index_changed(self):  # i is an index
         i = self.capture_list.currentRow()
-        method = self.capture_list_data[i]["method"]
-        id = self.capture_list_data[i]["imei"]
-        if method == "adb":
-            autohelper.gui.device_manager.set_preferred_device(id)
+        imei = self.capture_list_data[i]["imei"]
+        autohelper.gui.device_manager.set_preferred_device(imei)
 
     def update_capture(self):
         devices = autohelper.gui.device_manager.get_devices()
@@ -78,7 +88,7 @@ class LoadingWindow(QWidget):
                 item = self.capture_list.item(row)
                 if not device['connected']:
                     item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
-                self.capture_list_data.append(({"method": "adb", "imei": device['imei']}))
+                self.capture_list_data.append(device)
             if selected == -1:
                 selected = 0
             self.capture_list.setCurrentRow(selected)
@@ -87,8 +97,6 @@ class LoadingWindow(QWidget):
 
     def initUI(self):
         self.setWindowTitle(self.app.title)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-
         self.setWindowIcon(self.app.icon)
 
         communicate.loading_progress.connect(self.update_progress)

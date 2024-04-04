@@ -6,10 +6,10 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QStyleFactory, QMenu, QSystemTrayIcon
 
 import autohelper
+import autohelper.gui.resources
 from autohelper.gui.Communicate import communicate
 from autohelper.gui.MainWindow import MainWindow
 from autohelper.gui.i18n.path import i18n_path
-from autohelper.gui.icon.icon import icon_path
 from autohelper.gui.loading.LoadingWindow import LoadingWindow
 from autohelper.gui.overlay.OverlayWindow import OverlayWindow
 from autohelper.logging.Logger import get_logger
@@ -30,13 +30,13 @@ class App:
         self.overlay_window = None
         self.main_window = None
         self.exit_event = exit_event
-        self.icon = QIcon(icon or icon_path)
+        self.icon = QIcon(icon or ":/icon/icon.ico")
         self.tray = QSystemTrayIcon(self.icon)
 
         locale = QLocale.system().name()
         translator = QTranslator(self.app)
         full_path = os.path.join(i18n_path, f"{QLocale().name()}")
-        if translator.load(QLocale().name(), i18n_path):
+        if translator.load(QLocale().name(), ":/i18n"):
             translator.setParent(self.app)
             self.app.installTranslator(translator)
             QCoreApplication.installTranslator(translator)

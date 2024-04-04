@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="autohelper",
-    version="0.0.5",
+    version="0.0.6",
     author="CTO",
     author_email="firedcto@gmail.com",
     description="Automation with Computer Vision for Python",

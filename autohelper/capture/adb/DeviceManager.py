@@ -170,11 +170,12 @@ class DeviceManager:
 
 
 def do_screencap(device) -> np.ndarray | None:
-    png_bytes = device.shell("screencap -p", encoding=None)
-    if png_bytes is not None and len(png_bytes) > 0:
-        image_data = np.frombuffer(png_bytes, dtype=np.uint8)
-        image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
-        if image is not None:
-            return image
-        else:
-            logger.error(f"Screencap image decode error, probably disconnected")
+    if device is not None:
+        png_bytes = device.shell("screencap -p", encoding=None)
+        if png_bytes is not None and len(png_bytes) > 0:
+            image_data = np.frombuffer(png_bytes, dtype=np.uint8)
+            image = cv2.imdecode(image_data, cv2.IMREAD_COLOR)
+            if image is not None:
+                return image
+            else:
+                logger.error(f"Screencap image decode error, probably disconnected")

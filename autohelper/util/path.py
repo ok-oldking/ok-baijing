@@ -28,3 +28,10 @@ def ensure_dir_for_file(file_path):
     if not os.path.exists(directory):
         # If the directory does not exist, create it (including any intermediate directories)
         os.makedirs(directory)
+
+
+def get_path_in_package(base, file):
+    the_dir = os.path.dirname(os.path.realpath(base))
+
+    # Get the path of the file relative to the script
+    return os.path.join(the_dir, file)
