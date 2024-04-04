@@ -10,7 +10,6 @@ class ManXunTask(BJTask):
 
     def __init__(self):
         super().__init__()
-        self.level = 0
         self.name = "自动漫巡任务"
         self.description = """自动漫巡
     """
@@ -27,11 +26,10 @@ class ManXunTask(BJTask):
                                "深度等级最多提升到": 12
                                }
         self.destination = None
-        self.skill_counter = {}
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
 
     def end(self, message, result=False):
-        self.logger.info(f"执行结束:{message}")
+        self.log_info(f"执行结束:{message}")
         return result
 
     @property
@@ -45,18 +43,18 @@ class ManXunTask(BJTask):
     @override
     def run_frame(self):
         if not self.check_is_manxun_ui():
-            self.logger.error("必须从漫巡选项界面开始, 并且开启路线追踪")
+            self.log_error("必须从漫巡选项界面开始, 并且开启路线追踪", notify=True)
             self.set_done()
             return False
-
         try:
             while self.loop():
                 pass
         except Exception as e:
-            self.logger.error(f"运行异常:", e)
+            self.log_error(f"运行异常:", e, True)
             pass
 
-        self.logger.info("漫巡完成")
+        self.log_info("漫巡完成")
+        self.notification("漫巡完成")
         return True
 
     def check_is_manxun_ui(self):
@@ -85,13 +83,13 @@ class ManXunTask(BJTask):
     def do_handle_dialog(self, choice, choices, choice_clicked):
         boxes = self.ocr(self.dialog_zone)
         if self.find_depth(boxes) > 0:
-            self.logger.info(f"没有弹窗, 进行下一步")
+            self.log_info(f"没有弹窗, 进行下一步")
             return True
         self.logger.debug(f"检测对话框区域 {boxes} ")
         if find_box_by_name(boxes, "提升攻击"):
             box = self.find_highest_gaowei_number(boxes)
             self.click_box(box)
-            self.logger.info(f"高位同调 点击最高 {box}")
+            self.log_info(f"高位同调 点击最高 {box}")
         elif confirm := find_box_by_name(boxes, "完成漫巡"):
             self.click_box(confirm)
             self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="确认"))
@@ -101,11 +99,11 @@ class ManXunTask(BJTask):
         elif confirm := find_box_by_name(boxes, "解锁技能和区域"):
             self.handle_skill_dialog(boxes, confirm)
         elif find_box_by_name(boxes, "获得了一些技能点"):
-            self.logger.info(f"获取技能点成功")
+            self.log_info(f"获取技能点成功")
             self.click_box(find_box_by_name(boxes, re.compile(r"^\+\d+")))
         elif find_box_by_name(boxes, "刻印技能上限"):
             confirm = find_box_by_name(boxes, re.compile(r"前进！解锁"))
-            self.logger.info(f"区域技能,点击两次")
+            self.log_info(f"区域技能,点击两次")
             self.click_box(confirm)
             self.sleep(0.5)
             self.click_box(confirm)
@@ -114,17 +112,19 @@ class ManXunTask(BJTask):
             self.logger.debug(
                 f"开始战斗 跳过战斗查询结果:{skip_battle} abs(choice):{abs(choice)} len(choices) {len(choices)}")
             if skip_battle and abs(choice) < len(choices):
-                self.logger.info(f"回避配置列表里的战斗 {skip_battle}")
+                self.log_info(f"回避配置列表里的战斗 {skip_battle}")
                 self.click_cancel()
                 return self.loop(choice=choice - 1)
             elif self.config.get("无法直接胜利, 自动投降跳过"):
-                self.logger.info(f"开始自动跳过战斗")
+                self.log_info(f"开始自动跳过战斗")
                 self.click_box(stat_combat)
                 self.auto_skip_combat()
             else:
-                raise RuntimeError("未开启自动战斗, 无法继续漫巡, 结束")
+                message = "未开启自动战斗, 无法继续漫巡, 结束"
+                self.log_info(message, True)
+                raise RuntimeError(message)
         elif no_brain_box := self.click_box_if_name_match(boxes, self.click_no_brainer):
-            self.logger.info(f"点击固定对话框: {no_brain_box.name}")
+            self.log_info(f"点击固定对话框: {no_brain_box.name}")
         elif stats_up_choices := self.find_stats_up(boxes):
             self.handle_stats_up(stats_up_choices)
         else:
@@ -176,10 +176,10 @@ class ManXunTask(BJTask):
                 # Assuming stats_up_parsed[stat] is a list of tuples (value, box)
                 # and we want the one with the highest 'value'
                 value, box = max(stats_up_parsed[stat], key=lambda x: x[0])
-                self.logger.info(f"查找最高优先级提升属性结果 {box.name}")
+                self.log_info(f"查找最高优先级提升属性结果 {box.name}")
                 target = box
                 break
-        self.logger.info(
+        self.log_info(
             f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target}")
         self.click_box(target)
 
@@ -189,7 +189,8 @@ class ManXunTask(BJTask):
         self.draw_boxes("skill_search_area", search_skill_name_box)
         skills = find_boxes_within_boundary(boxes, search_skill_name_box)
         self.draw_boxes("skills", skills)
-        self.logger.info(f"获取技能 {skills}")
+        self.info_add_to_list("获得技能", [obj.name for obj in skills])
+        self.log_info(f"获取技能 {skills}")
         self.click_box(confirm)
 
     def click_choice(self, index=-1):
@@ -199,18 +200,20 @@ class ManXunTask(BJTask):
         else:
             if choices[index].name == "深度等级提升":
                 depth = self.find_depth()
-                self.logger.info(f"提升深度, {depth} 目前是第{abs(index)}个选项, 共有{len(choices)}选项")
+                self.log_info(f"提升深度, {depth} 目前是第{abs(index)}个选项, 共有{len(choices)}选项")
                 if depth < self.config['深度等级最多提升到'] or abs(index) == len(choices):
-                    self.logger.info(f"提升深度,当前深度{depth}")
+                    self.log_info(f"提升深度,当前深度{depth}")
                 else:
-                    self.logger.info(f"不提升深度,当前深度{depth}")
+                    self.log_info(f"不提升深度,当前深度{depth}")
                     index -= - 1
-            priority = self.config['低深度选项优先级'] if self.level < self.config['高低深度分界'] else self.config[
-                '高深度选项优先级']
+            priority = self.config['低深度选项优先级'] if self.info.get('漫巡深度', 0) < self.config[
+                '高低深度分界'] else \
+                self.config[
+                    '高深度选项优先级']
             index = find_priority_string(choices, priority, index)
             self.click_box(choices[index])
             self.sleep(3)  # 等待动画
-            self.logger.info(f"点击选项:{choices[index]}, 使用优先级 {priority}, index {index}")
+            self.log_info(f"点击选项:{choices[index]}, 使用优先级 {priority}, index {index}")
         return choices, choices[index]
 
     def do_find_choices(self):
@@ -223,7 +226,7 @@ class ManXunTask(BJTask):
                     self.destination = choices[i].name
                 choices[i].height *= 3
                 if self.destination != choices[i].name:
-                    self.logger.info("排除错误追踪目标")
+                    self.log_info("排除错误追踪目标")
                     del choices[i]
                     continue
                 right_text_box = choices[i].find_closest_box("right", boxes)
@@ -251,7 +254,7 @@ class ManXunTask(BJTask):
         if depth_box is not None:
             depth_box.name = depth_box.name.replace("D", "2")
             depth = int(depth_box.name)
-            self.level = depth
+            self.info['漫巡深度'] = depth
         return depth
 
     def click_cancel(self):
