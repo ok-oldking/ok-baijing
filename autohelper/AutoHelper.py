@@ -97,5 +97,6 @@ class AutoHelper:
         if self.device_manager is None:
             from autohelper.capture.adb.DeviceManager import DeviceManager
             self.device_manager = DeviceManager(self.config.get("config_folder") or "config",
-                                                self.config.get('capture_window_title'), self.exit_event)
+                                                self.config.get('capture_window_title'), self.config.get("debug"),
+                                                self.exit_event)
             autohelper.gui.device_manager = self.device_manager

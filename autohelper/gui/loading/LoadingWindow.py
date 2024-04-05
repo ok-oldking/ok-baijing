@@ -65,6 +65,7 @@ class LoadingWindow(QWidget):
             show_alert(self.tr("Error"),
                        self.tr(f"PC version requires admin privileges, Please restart this app with admin privileges!"))
             return
+        autohelper.gui.device_manager.start()
         self.app.show_main_window()
 
     def capture_index_changed(self):  # i is an index

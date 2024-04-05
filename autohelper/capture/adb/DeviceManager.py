@@ -19,11 +19,13 @@ logger = get_logger(__name__)
 
 class DeviceManager:
 
-    def __init__(self, config_folder, hwnd_title=None, exit_event=None):
+    def __init__(self, config_folder, hwnd_title=None, debug=False, exit_event=None):
         self._device = None
         self.adb = None
         self.hwnd_title = hwnd_title
+        self.debug = debug
         self.interaction = None
+        self.exit_event = exit_event
         if hwnd_title is not None:
             self.hwnd = HwndWindow(hwnd_title, exit_event)
         self.config = Config({"devices": {}}, config_folder, "DeviceManager")
@@ -90,11 +92,18 @@ class DeviceManager:
             else:
                 self.device_dict[imei] = adb_device
         if self.hwnd_title:
+            nick = self.hwnd_title
+            width = 0
+            height = 0
+            if self.hwnd:
+                nick = self.hwnd.title_text()
+                width = self.hwnd.width
+                height = self.hwnd.height
             self.device_dict[self.hwnd_title] = {"address": "", "imei": self.hwnd_title, "method": "windows",
-                                                 "model": "", "nick": self.hwnd.title_text() or self.hwnd_title,
-                                                 "connected": self.hwnd.exists,
+                                                 "model": "", "nick": nick or self.hwnd_title,
+                                                 "connected": self.hwnd is not None and self.hwnd.exists,
                                                  "preferred": False,
-                                                 "resolution": f"{self.hwnd.width}x{self.hwnd.height}"}
+                                                 "resolution": f"{width}x{height}"}
         communicate.adb_devices.emit()
         self.config.save_file()
         logger.debug(f'refresh {self.device_dict}')
@@ -118,6 +127,8 @@ class DeviceManager:
             preferred['preferred'] = True
             if preferred['method'] == 'windows':
                 if not isinstance(self.capture_method, WindowsGraphicsCaptureMethod):
+                    if self.capture_method is not None:
+                        self.capture_method.close()
                     self.capture_method = WindowsGraphicsCaptureMethod(self.hwnd)
                     self.interaction = Win32Interaction(self.capture_method)
                 self.capture_method.hwnd_window = self.hwnd
@@ -126,10 +137,26 @@ class DeviceManager:
                     if adb_device.serial == preferred.get('address'):
                         self._device = adb_device
                 if not isinstance(self.capture_method, ADBCaptureMethod):
+                    if self.capture_method is not None:
+                        self.capture_method.close()
                     self.capture_method = ADBCaptureMethod(self)
                     self.interaction = ADBBaseInteraction(self, self.capture_method)
         self.config.save_file()
         logger.debug(f'preferred device: {preferred}')
+
+    def start(self):
+        if isinstance(self.capture_method, ADBCaptureMethod):
+            if self.debug:
+                if self.hwnd is not None:
+                    self.hwnd.update_title_re("autohelper_debug")
+                    self.hwnd.frame_width = self.capture_method.width
+                    self.hwnd.frame_height = self.capture_method.height
+                else:
+                    self.hwnd = HwndWindow("autohelper_debug", self.exit_event, self.capture_method.width,
+                                           self.capture_method.height)
+            else:
+                self.hwnd.stop()
+                self.hwnd = None
 
     @property
     def device(self):

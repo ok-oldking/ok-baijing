@@ -15,7 +15,6 @@ class ADBCaptureMethod(BaseCaptureMethod):
     def __init__(self, device_manager):
         super().__init__()
         self.device_manager = device_manager
-        logger.info(f"ADBCaptureMethod size: {self.width}x{self.height}")
 
     @property
     def width(self):

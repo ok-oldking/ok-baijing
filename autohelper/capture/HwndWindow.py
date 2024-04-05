@@ -34,17 +34,24 @@ class HwndWindow:
 
     def __init__(self, title="", exit_event=threading.Event(), frame_width=0, frame_height=0):
         super().__init__()
-        self.title = re.compile(title)
+        self.app_exit_event = exit_event
+        self.stop_event = threading.Event()
+        self.update_title_re(title)
         self.visible = False
         self.update_frame_size(frame_width, frame_height)
         self.do_update_window_size()
         self.thread = threading.Thread(target=self.update_window_size)
-        self.exit_event = exit_event
         self.thread.start()
 
     @override
     def close(self):
-        self.exit_event.set()
+        self.app_exit_event.set()
+
+    def stop(self):
+        self.stop_event.set()
+
+    def update_title_re(self, title):
+        self.title = re.compile(title)
 
     def update_frame_size(self, width, height):
         if width != self.frame_width or height != self.frame_height:
@@ -55,9 +62,9 @@ class HwndWindow:
                 logger.debug(f"HwndWindow: frame ratio:{self.frame_aspect_ratio} width: {width}, height: {height}")
 
     def update_window_size(self):
-        while not self.exit_event.is_set():
+        while not self.app_exit_event.is_set() and not self.stop_event.is_set():
             self.do_update_window_size()
-            self.exit_event.wait(0.1)
+            self.app_exit_event.wait(0.1)
 
     def get_abs_cords(self, x, y):
         return int(self.x * self.scaling + (self.border * self.scaling + x)), int(

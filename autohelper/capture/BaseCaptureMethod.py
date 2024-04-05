@@ -11,7 +11,6 @@ class BaseCaptureMethod:
     right_cut = 0
     width = 0
     height = 0
-    window_change_listeners = []
 
     def __init__(self):
         # Some capture methods don't need an initialization process
