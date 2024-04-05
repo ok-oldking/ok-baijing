@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.10'  # Use the version of Python you need
+          python-version: '3.11'  # Use the version of Python you need
 
       - name: Install Dependencies
         run: |
@@ -28,27 +28,24 @@ jobs:
 
       - name: Build Executable
         run: |
-           echo ${{ github.sha }} > Release.txt
+          echo ${{ github.sha }} > Release.txt
+          pyinstaller main.spec
+          mv dist baijing_autohelper
+          7z a -tzip -r "baijing_autohelper.zip" "baijing_autohelper"
+
       - name: Upload artifact
-        uses: actions/upload-artifact@v2.1.4
+        uses: actions/upload-artifact@v2
         with:
           name: app
-          path: dist/*.exe
+          path: baijing_autohelper.zip
           token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Release
-        uses: "softprops/action-gh-release@v2"
+      - name: upload-win
+        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.release }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
-          prerelease: true
-          draft: true
-          body: |
-            main_adb.exe 模拟器手机adb连接
-            main_pc.exe PC版
-            自动构建main分支
-
-          files: |
-             Release.txt
+          upload_url: ${{ needs.release.outputs.Up_Url }}
+          asset_path: baijing_autohelper.zip
+          asset_name: baijing_autohelper.zip
+          asset_content_type: application/zip
