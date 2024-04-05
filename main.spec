@@ -51,7 +51,7 @@ exe = EXE(
     a.datas,
     [],
     name='BaiJingZhuShou',
-    icon='carrot.ico',
+    icon='icon.ico',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
