@@ -45,7 +45,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.release.outputs.Up_Url }}
+          upload_url: ${{ github.event.release.upload_url }}
           asset_path: baijing_autohelper.zip
           asset_name: baijing_autohelper.zip
           asset_content_type: application/zip
