@@ -2,10 +2,9 @@ name: Build Windows Executable
 
 on:
   push:
-    branches:
-      - main
-  release:
-    types: [ created ]
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -33,19 +32,23 @@ jobs:
           mv dist baijing_autohelper
           7z a -tzip -r "baijing_autohelper.zip" "baijing_autohelper"
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: app
-          path: baijing_autohelper.zip
-          token: "${{ secrets.GITHUB_TOKEN }}"
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
 
       - name: upload-win
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: baijing_autohelper.zip
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./baijing_autohelper.zip
           asset_name: baijing_autohelper.zip
           asset_content_type: application/zip
