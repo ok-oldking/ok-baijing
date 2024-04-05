@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="autohelper",
-    version="0.0.6",
+    version="0.0.7",
     author="CTO",
     author_email="firedcto@gmail.com",
     description="Automation with Computer Vision for Python",
@@ -25,9 +25,7 @@ setuptools.setup(
         'PyDirectInput~=1.0.4',
         'pywin32==306',
         'typing-extensions~=4.10.0',
-        'PySide6~=6.6.2',
-        'paddlepaddle~=2.6.0',
-        'paddleocr~=2.7.0.3',
+        'PySide6~=6.6.2'
     ],
     python_requires='>=3.4',
 )
