@@ -15,16 +15,17 @@ class ManXunTask(BJTask):
     """
         self.click_no_brainer = ["直接胜利", "属性提升", "前进", "通过", "继续", "收下", "跳过", "开始强化",
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
-        self.default_config = {"跳过战斗": ["鱼叉将军-日光浅滩E"],
-                               "低深度选项优先级": ["烙痕唤醒", "记忆强化", "获取刻印属性", "研习区",
-                                                    "休整区"],
-                               "高深度选项优先级": ["烙痕唤醒", "获取刻印属性", "记忆强化", "研习区",
-                                                    "休整区"],
-                               "高低深度分界": 10,
-                               "无法直接胜利, 自动投降跳过": False,
-                               "唤醒属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
-                               "深度等级最多提升到": 12
-                               }
+        self.default_config = {
+            "无法直接胜利, 自动投降跳过": False,
+            "唤醒属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
+            "深度等级最多提升到": 12,
+            "低深度选项优先级": ["烙痕唤醒", "记忆强化", "获取刻印属性", "研习区",
+                                 "休整区"],
+            "高深度选项优先级": ["烙痕唤醒", "获取刻印属性", "记忆强化", "研习区",
+                                 "休整区"],
+            "高低深度分界": 10,
+            "跳过战斗": ["鱼叉将军-日光浅滩E"],
+        }
         self.destination = None
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
 
@@ -51,10 +52,9 @@ class ManXunTask(BJTask):
                 pass
         except Exception as e:
             self.log_error(f"运行异常:", e, True)
-            pass
 
-        self.log_info("漫巡完成")
-        self.notification("漫巡完成")
+        self.log_info("自动漫巡任务结束")
+        self.set_done()
         return True
 
     def check_is_manxun_ui(self):
@@ -195,6 +195,8 @@ class ManXunTask(BJTask):
 
     def click_choice(self, index=-1):
         choices = self.find_choices()
+        if choices is None:
+            return None, None
         if abs(index) > len(choices):
             raise ValueError(f"click_choice out of bonds")
         else:
