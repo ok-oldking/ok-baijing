@@ -30,7 +30,7 @@ jobs:
           echo ${{ github.sha }} > Release.txt
           pyinstaller main.spec
           mv dist baijing_autohelper
-          7z a -tzip -r "baijing_autohelper.zip" "baijing_autohelper"
+          7z a -t7z -r "baijing_autohelper.7z" "baijing_autohelper"
 
       - name: Create Release
         id: create_release
@@ -49,6 +49,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./baijing_autohelper.zip
-          asset_name: baijing_autohelper.zip
+          asset_path: ./baijing_autohelper.7z
+          asset_name: baijing_autohelper.7z
           asset_content_type: application/zip
