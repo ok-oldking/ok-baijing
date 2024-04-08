@@ -1,6 +1,6 @@
 from typing_extensions import override
 
-from autohelper.task.FindFeatureTask import FindFeatureTask
+from ok.task.FindFeatureTask import FindFeatureTask
 from show_case_genshin.scene.MonthlyCardScene import MonthlyCardScene
 from show_case_genshin.scene.StartScence import StartScene
 

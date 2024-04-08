@@ -1,5 +1,5 @@
-from autohelper.color.Color import calculate_color_percentage, black_color
-from autohelper.scene.FeatureScene import FindFeatureScene
+from ok.color.Color import calculate_color_percentage, black_color
+from ok.scene.FeatureScene import FindFeatureScene
 
 
 class BlackDialogScene(FindFeatureScene):

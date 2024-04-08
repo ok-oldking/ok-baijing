@@ -1,5 +1,5 @@
-from autohelper.feature.Box import Box
-from autohelper.scene.FeatureScene import FindFeatureScene
+from ok.feature.Box import Box
+from ok.scene.FeatureScene import FindFeatureScene
 
 
 class DialogPlayingScene(FindFeatureScene):

@@ -13,12 +13,13 @@ from show_case_genshin.task.AutoPlayDialogTask import AutoPlayDialogTask
 config = {
     'debug': True,  # Optional, default: False
     'use_gui': True,  # Optional, default: False
-    'capture': 'windows',  # adb/windows, see #autohelper.capture
-    'interaction': 'windows',  # adb/windows, see #autohelper.interaction
+    'capture': 'windows',  # adb/windows, see #ok.capture
+    'interaction': 'windows',  # adb/windows, see #ok.interaction
     'capture_window_title': r"^(原神|Genshin Impact)$",  # required  when using windows capture
     'default_horizontal_variance': 0,
     'default_vertical_variance': 0,
     'default_threshold': 0.9,
+    'gui_title': "OK Genshin Impact",
     'coco_feature_folder': 'assets/coco_feature',  # required if using feature detection
     'log_file': 'logs/auto_helper.log',  # Optional, auto rotating every day
     'tasks': [  # tasks to execute

@@ -1,9 +1,9 @@
-from autohelper.overlay.TkWindow import TkWindow
+from ok.overlay.TkWindow import TkWindow
 
-from autohelper.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
-from autohelper.feature.FeatureSet import FeatureSet
-from autohelper.interaction.Win32Interaction import Win32Interaction
-from autohelper.task.TaskExecutor import TaskExecutor
+from ok.capture.windows.WindowsGraphicsCaptureMethod import WindowsGraphicsCaptureMethod
+from ok.feature.FeatureSet import FeatureSet
+from ok.interaction.Win32Interaction import Win32Interaction
+from ok.task.TaskExecutor import TaskExecutor
 from show_case_genshin.task.AutoPlayDialogTask import AutoDialogTask
 
 # Example usage

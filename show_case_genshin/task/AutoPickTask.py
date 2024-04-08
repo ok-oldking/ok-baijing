@@ -1,6 +1,6 @@
 from typing_extensions import override
 
-from autohelper.task.FindFeatureTask import FindFeatureTask
+from ok.task.FindFeatureTask import FindFeatureTask
 from show_case_genshin.matching.choice import find_choices
 from show_case_genshin.scene.WorldScene import WorldScene
 

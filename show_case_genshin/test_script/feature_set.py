@@ -1,4 +1,4 @@
-from autohelper.feature.FeatureSet import FeatureSet
+from ok.feature.FeatureSet import FeatureSet
 
 # Example usage
 coco_folder = 'genshin/assets/coco_feature'

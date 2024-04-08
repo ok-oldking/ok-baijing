@@ -1,8 +1,8 @@
 from typing import List
 
-from autohelper.color.Color import calculate_color_percentage
-from autohelper.feature.Box import Box
-from autohelper.gui.Communicate import communicate
+from ok.color.Color import calculate_color_percentage
+from ok.feature.Box import Box
+from ok.gui.Communicate import communicate
 
 white_color = {
     'r': (220, 255),  # Red range

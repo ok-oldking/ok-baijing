@@ -1,4 +1,4 @@
-from autohelper.AutoHelper import AutoHelper
+from ok.OK import OK
 from show_case_genshin.config import config
 
-autoui = AutoHelper(config)
+autoui = OK(config)
