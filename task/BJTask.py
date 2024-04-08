@@ -1,5 +1,5 @@
-from autohelper.ocr.OCR import OCR
-from autohelper.task.BaseTask import BaseTask
+from ok.ocr.OCR import OCR
+from ok.task.BaseTask import BaseTask
 
 
 class BJTask(BaseTask, OCR):
