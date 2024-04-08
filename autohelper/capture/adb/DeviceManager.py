@@ -149,8 +149,7 @@ class DeviceManager:
             if self.debug:
                 if self.hwnd is not None:
                     self.hwnd.update_title_re("autohelper_debug")
-                    self.hwnd.frame_width = self.capture_method.width
-                    self.hwnd.frame_height = self.capture_method.height
+                    self.hwnd.update_frame_size(self.capture_method.width, self.capture_method.height)
                 else:
                     self.hwnd = HwndWindow("autohelper_debug", self.exit_event, self.capture_method.width,
                                            self.capture_method.height)
@@ -188,6 +187,8 @@ class DeviceManager:
                 logger.error(f"shell_wrapper error occurred: {e}")
 
     def screencap(self):
+        if self.exit_event.is_set():
+            return None
         self._size = (0, 0)
         frame = do_screencap(self.device)
         if frame is not None:

@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="autohelper",
+    name="ok-script",
     version="0.0.7",
-    author="CTO",
+    author="ok-oldking",
     author_email="firedcto@gmail.com",
     description="Automation with Computer Vision for Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/CrashTechnologyOfficer/autoui",
+    url="https://github.com/ok-oldking/ok-script",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

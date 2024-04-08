@@ -99,7 +99,7 @@ class TaskExecutor:
                 to_sleep = self.pause_end_time - time.time()
                 if to_sleep <= 0:
                     return
-            time.sleep(0.01)  # Sleep for 100ms or the remaining time, whichever is smaller
+            time.sleep(0.001)
 
     def pause(self):
         self.paused = True
