@@ -3,4 +3,5 @@ from ok.OK import OK
 
 config = config
 config['debug'] = True
-autoui = OK(config)
+ok = OK(config)
+ok.start()
