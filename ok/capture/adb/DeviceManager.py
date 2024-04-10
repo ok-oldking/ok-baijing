@@ -102,7 +102,6 @@ class DeviceManager:
             self.device_dict[self.hwnd_title] = {"address": "", "imei": self.hwnd_title, "method": "windows",
                                                  "model": "", "nick": nick or self.hwnd_title,
                                                  "connected": self.hwnd is not None and self.hwnd.exists,
-                                                 "preferred": False,
                                                  "resolution": f"{width}x{height}"}
         communicate.adb_devices.emit()
         self.config.save_file()
@@ -110,20 +109,13 @@ class DeviceManager:
 
     def set_preferred_device(self, imei=None):
         logger.debug(f"set_preferred_device {imei}")
-        preferred = None
         if imei is None:
-            for device in self.device_dict.values():
-                if device.get('preferred'):
-                    preferred = device
-                    imei = preferred['imei']
-        else:
-            preferred = self.device_dict.get(imei)
-        for key in self.device_dict.keys():
-            if imei == key:
-                self.device_dict[imei]["preferred"] = False
+            imei = self.config.get("preferred")
+        preferred = self.device_dict.get(imei)
         if preferred is None and len(self.device_dict) > 0:
             preferred = next(iter(self.device_dict.values()))
         if preferred is not None:
+            imei = preferred['imei']
             preferred['preferred'] = True
             if preferred['method'] == 'windows':
                 if not isinstance(self.capture_method, WindowsGraphicsCaptureMethod):
@@ -141,6 +133,7 @@ class DeviceManager:
                         self.capture_method.close()
                     self.capture_method = ADBCaptureMethod(self)
                     self.interaction = ADBBaseInteraction(self, self.capture_method)
+        self.config["preferred"] = imei
         self.config.save_file()
         logger.debug(f'preferred device: {preferred}')
 
@@ -148,10 +141,10 @@ class DeviceManager:
         if isinstance(self.capture_method, ADBCaptureMethod):
             if self.debug:
                 if self.hwnd is not None:
-                    self.hwnd.update_title_re("autohelper_debug")
+                    self.hwnd.update_title_re("ok_debug")
                     self.hwnd.update_frame_size(self.capture_method.width, self.capture_method.height)
                 else:
-                    self.hwnd = HwndWindow("autohelper_debug", self.exit_event, self.capture_method.width,
+                    self.hwnd = HwndWindow("ok_debug", self.exit_event, self.capture_method.width,
                                            self.capture_method.height)
             else:
                 self.hwnd.stop()
@@ -159,8 +152,6 @@ class DeviceManager:
 
     @property
     def device(self):
-        if self._device is None:
-            self.set_preferred_device()
         return self._device
 
     @property

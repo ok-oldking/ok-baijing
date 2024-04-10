@@ -170,12 +170,7 @@ class TaskExecutor:
                     task.running = True
                     task.last_execute_time = start
                     try:
-                        result = task.run_frame()
-                        if result is not None:
-                            if result:
-                                task.success_count += 1
-                            else:
-                                task.error_count += 1
+                        task.run_frame()
                     except TaskDisabledException:
                         logger.info(f"{task.name} is disabled, breaking")
                     except Exception as e:

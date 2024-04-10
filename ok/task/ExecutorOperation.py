@@ -1,8 +1,5 @@
 from ok.feature.Box import Box, find_box_by_name
 from ok.gui.Communicate import communicate
-from ok.logging.Logger import get_logger
-
-logger = get_logger(__name__)
 
 
 class ExecutorOperation:
@@ -16,6 +13,9 @@ class ExecutorOperation:
             return True
         else:
             return False
+
+    def pause(self):
+        self.executor.pause()
 
     def is_scene(self, the_scene):
         return isinstance(self.executor.current_scene, the_scene)
@@ -46,7 +46,7 @@ class ExecutorOperation:
         """
         to_click = find_box_by_name(boxes, names)
         if to_click is not None:
-            logger.info(f"click_box_if_name_match found {to_click}")
+            self.logger.info(f"click_box_if_name_match found {to_click}")
             self.click_box(to_click, relative_x, relative_y)
             return to_click
 
@@ -79,9 +79,9 @@ class ExecutorOperation:
             if len(box) > 0:
                 box = box[0]
             else:
-                logger.error(f"No box")
+                self.logger.error(f"No box")
         if box is None:
-            logger.error(f"click_box box is None")
+            self.logger.error(f"click_box box is None")
             if raise_if_not_found:
                 raise Exception(f"click_box box is None")
             return

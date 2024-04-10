@@ -80,7 +80,7 @@ class LoadingWindow(QWidget):
         self.capture_list_data.clear()
         if len(devices) > 0:
             for row, device in enumerate(devices):
-                if device["preferred"]:
+                if device["imei"] == ok.gui.device_manager.config.get("preferred"):
                     selected = row
                 method = self.tr("PC") if device['method'] == "windows" else self.tr("Android")
                 connected = self.tr("Connected") if device['connected'] else self.tr("Disconnected")

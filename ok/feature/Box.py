@@ -24,6 +24,14 @@ class Box:
                 self.confidence == other.confidence and
                 self.name == other.name)
 
+    def in_boundary(self, boxes):
+        in_boundary_boxes = []
+        for box in boxes:
+            if (self.x <= box.x and self.x + self.width >= box.x + box.width and
+                    self.y <= box.y and self.y + self.height >= box.y + box.height):
+                in_boundary_boxes.append(box)
+        return in_boundary_boxes
+
     def __repr__(self):
         return self.name
 
@@ -80,7 +88,7 @@ class Box:
     def center(self):
         return self.x + self.width / 2, self.y + self.height / 2
 
-    def find_closest_box(self, direction: str, boxes: list):
+    def find_closest_box(self, direction: str, boxes: list, condition=None):
         orig_center_x, orig_center_y = self.center()
 
         def distance_criteria(box):
@@ -91,14 +99,21 @@ class Box:
             dy = box_center_y - orig_center_y
             distance = math.sqrt(dx ** 2 + dy ** 2)
             if box == self:
-                return float('inf')
+                distance = float('inf')
             elif direction == 'up' and self.y - (box.y + box.height / 2) >= 0:
-                return distance
+                pass
             elif direction == 'down' and box.y - (self.y + self.height / 2) >= 0:
-                return distance
+                pass
             elif direction == 'left' and self.x - (box.x + box.width / 2) >= 0:
-                return distance
+                pass
             elif direction == 'right' and box.x - (self.x + self.width / 2) >= 0:
+                pass
+            else:
+                distance = float('inf')
+            return check_condition(box, distance)
+
+        def check_condition(box, distance):
+            if condition is None or condition(box):
                 return distance
             else:
                 return float('inf')

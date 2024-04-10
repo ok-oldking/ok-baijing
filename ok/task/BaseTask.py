@@ -15,8 +15,6 @@ class BaseTask(ExecutorOperation):
     def __init__(self):
         self.logger = get_logger(self.__class__.__name__)
         self.name = self.__class__.__name__
-        self.success_count = 0
-        self.error_count = 0
         self.enabled = True
         self.running = False
         self.config = None
@@ -30,6 +28,11 @@ class BaseTask(ExecutorOperation):
         if notify:
             self.notification(message)
         communicate.task_info.emit()
+
+    def log_debug(self, message, notify=False):
+        self.logger.debug(message)
+        if notify:
+            self.notification(message)
 
     def log_error(self, message, exception=None, notify=False):
         self.logger.error(message, exception)

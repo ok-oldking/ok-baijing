@@ -38,16 +38,20 @@ class OK:
             self.app = App(self.config.get('gui_icon'), self.debug, self.config.get('gui_title'),
                            self.config['tasks'], self.exit_event)
             ok.gui.app = self.app
+        else:
+            self.device_manager.set_preferred_device()
+            self.device_manager.start()
+            self.do_init()
+
+    def start(self):
+        if self.config.get("use_gui"):
             self.app.show_loading()
             self.worker = InitWorker(self.do_init)
             self.worker.start()
             self.app.exec()
         else:
-            self.device_manager.set_preferred_device()
-            self.device_manager.start()
-            self.do_init()
             self.task_executor.start()
-            if config.get("debug"):
+            if self.config.get("debug"):
                 self.app = QApplication(sys.argv)
                 self.overlay_window = OverlayWindow(ok.gui.device_manager.hwnd)
                 self.app.exec()

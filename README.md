@@ -1,4 +1,4 @@
-# autoui
+# ok-script
 
 This project aims to provide a universal framework for developing automation tool for PC/Android games, running in
 windows,
