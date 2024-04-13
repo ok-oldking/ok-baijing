@@ -21,7 +21,8 @@ config = {
     'default_threshold': 0.9,
     'gui_title': "OK Genshin Impact",
     'coco_feature_folder': 'assets/coco_feature',  # required if using feature detection
-    'log_file': 'logs/auto_helper.log',  # Optional, auto rotating every day
+    'log_file': 'logs/ok-script.log',  # Optional, auto rotating every day
+    'error_log_file': 'logs/ok-script_error.log',
     'tasks': [  # tasks to execute
         AutoPlayDialogTask(),  # speeding up the dialogs
         AutoChooseDialogTask(),  # choose dialog options
