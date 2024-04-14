@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtWidgets import QMessageBox, QTabWidget
 
+from ok.gui.about.AboutTab import AboutTab
 from ok.gui.debug.DebugTab import DebugTab
 from ok.gui.tasks.TaskTab import TaskTab
 from ok.logging.Logger import get_logger
@@ -13,7 +14,7 @@ class Communicate(QObject):
 
 
 class MainWindow(QTabWidget):
-    def __init__(self, tasks, debug=False, exit_event=None):
+    def __init__(self, tasks, debug=False, about=None, exit_event=None):
         super().__init__()
         self.exit_event = exit_event
         task_tab = TaskTab(tasks)
@@ -22,6 +23,9 @@ class MainWindow(QTabWidget):
             debug_tab = DebugTab()
             self.addTab(debug_tab, self.tr("Debug"))
         # ... Add other tabs similarly
+        if about:
+            about_tab = AboutTab(about)
+            self.addTab(about_tab, self.tr("About"))
 
         # Styling the tabs and content if needed, for example:
         self.setStyleSheet("""

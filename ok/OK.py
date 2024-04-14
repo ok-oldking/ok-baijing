@@ -36,7 +36,7 @@ class OK:
         self.init_device_manager()
         if config.get("use_gui"):
             self.app = App(self.config.get('gui_icon'), self.debug, self.config.get('gui_title'),
-                           self.config['tasks'], self.exit_event)
+                           self.config['tasks'], self.config.get('about'), self.exit_event)
             ok.gui.app = self.app
         else:
             self.device_manager.set_preferred_device()

@@ -18,12 +18,13 @@ logger = get_logger(__name__)
 
 
 class App:
-    def __init__(self, icon=None, overlay=False, title="AutoUI", tasks=None,
+    def __init__(self, icon=None, overlay=False, title="AutoUI", tasks=None, about=None,
                  exit_event=None):
         super().__init__()
         self.app = QApplication(sys.argv)
         self.app.setStyle(QStyleFactory.create("Fusion"))
         self.tasks = tasks
+        self.about = about
         self.title = title
         self.overlay = overlay
         self.loading_window = None
@@ -86,7 +87,7 @@ class App:
 
     def show_main_window(self):
         self.loading_window.close()
-        self.main_window = MainWindow(self.tasks, self.overlay, exit_event=self.exit_event)
+        self.main_window = MainWindow(self.tasks, self.overlay, self.about, exit_event=self.exit_event)
         self.main_window.setWindowTitle(self.title)  # Set the window title here
         self.main_window.setWindowIcon(self.icon)
         if self.overlay and ok.gui.device_manager.hwnd is not None:
