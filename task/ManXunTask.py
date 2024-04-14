@@ -277,14 +277,16 @@ class ManXunTask(BJTask):
                         self.log_debug(f"sum_gaowei add right {box.name} += {right_closest.name}")
                         box.name = box.name + right_closest.name
                         right_closest.name = 0
-                weight = find_text_color_weight(self.frame, box)
-                self.log_debug(f"sum_gaowei * weight {sum_gaowei} = {weight} x {box.name}")
+                weight = self.find_text_color_weight(box)
+                self.log_debug(f"sum_gaowei * weight {weight * box.name} = {weight} x {box.name}")
                 box.name = weight * box.name
                 if box.name > highest_gaowei_number:
                     highest_gaowei_number = box.name
                     highest_gaowei_box = box
         self.draw_boxes("ocr", boxes)
         return highest_gaowei_box
+
+    # 寻找灰色, 如有则降低优先级
 
     def parse_stats_choices(self, boxes):
         attributes = {}
@@ -304,6 +306,27 @@ class ManXunTask(BJTask):
         black_percentage = calculate_color_percentage(self.frame, black_color, box)
         return black_percentage >= 0.05
 
+    def find_text_color_weight(self, box):
+        green_percentage = calculate_color_percentage(self.frame, green_color, box)
+        weight = 0.01
+        if green_percentage > 0.07:  # 绿色是点亮, 优先
+            weight = 2
+        elif calculate_color_percentage(self.frame, yellow_color, box) > 0.07:
+            weight = 3
+        elif calculate_color_percentage(self.frame, white_color, box) > 0.07:
+            weight = 1
+        has_gray_line = self.gaowei_has_gray_line(box)
+        if has_gray_line:
+            weight *= 0.5
+        return weight
+
+    def gaowei_has_gray_line(self, box):
+        box = box.copy(0, -box.height * 1.4, name=f"{box.name}_search_line")
+        gray_percentage = calculate_color_percentage(self.frame, gray_color, box)
+        box.confidence = gray_percentage
+        self.draw_boxes(boxes=box, color="blue")
+        return gray_percentage > 0.01
+
 
 def find_priority_string(input_list, priority_list, start_index=-1):
     # 不在priority_list 为最高优先级
@@ -319,19 +342,6 @@ def find_priority_string(input_list, priority_list, start_index=-1):
     return start_index
 
 
-def find_text_color_weight(image, box):
-    green_percentage = calculate_color_percentage(image, green_color, box)
-    if green_percentage > 0.07:  # 绿色是点亮, 优先
-        return 2
-    yellow_percentage = calculate_color_percentage(image, yellow_color, box)
-    if yellow_percentage > 0.07:  # 黄色是1000+ 乘以1.5
-        return 3
-    white_percentage = calculate_color_percentage(image, white_color, box)
-    if white_percentage > 0.07:
-        return 1
-    return 0
-
-
 green_color = {
     'r': (132, 152),  # Red range
     'g': (222, 242),  # Green range
@@ -342,6 +352,12 @@ black_color = {
     'r': (0, 25),  # Red range
     'g': (0, 25),  # Green range
     'b': (0, 25)  # Blue range
+}
+
+gray_color = {
+    'r': (80, 105),  # Red range
+    'g': (90, 110),  # Green range
+    'b': (97, 120)  # Blue range
 }
 
 yellow_color = {

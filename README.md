@@ -3,7 +3,7 @@
 白荆自动漫巡辅助脚本
 ![img.png](readme/img.png)
 
-* 基于[ok-script](https://github.com/ok-oldking/ok-script)开发, 完全使用OCR文字识别开发, 仅有约300行代码
+* 基于[ok-script](https://github.com/ok-oldking/ok-script)开发, 完全使用OCR文字识别开发, 仅有约400行代码
 * 支持PC版, 以及安卓模拟器或使用adb连接的安卓物理机
 * 可以选择路线分支优先级, 可后半前半使用不同的优先级
 * 可以设定最高提升深度
