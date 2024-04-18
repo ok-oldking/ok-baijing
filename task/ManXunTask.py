@@ -22,7 +22,7 @@ class ManXunTask(BJTask):
             "深度等级最多提升到": 12,
             "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
             "高深度选项优先级": ["风险区", "烙痕唤醒", "高维同调", "记忆强化", "研习区", "休整区"],
-            "高低深度分界": 10,
+            "高低深度分界": 8,
             "跳过战斗": ["鱼叉将军-日光浅滩E"],
         }
         self.destination = None
@@ -37,8 +37,16 @@ class ManXunTask(BJTask):
         return self.box_of_screen(0.7, 0.25, 0.3, 0.5, "选项检测区域")
 
     @property
+    def current_zone(self):
+        return self.box_of_screen(0.6, 0.8, 0.3, 0.2, "当前区域")
+
+    @property
     def dialog_zone(self):
-        return self.box_of_screen(0.25, 0.2, 0.5, 0.7, "弹窗检测区域")
+        return self.box_of_screen(0.25, 0.15, 0.5, 0.7, "弹窗检测区域")
+
+    @property
+    def battle_popup_zone(self):
+        return self.box_of_screen(0.25, 0.15, 0.5, 0.85, "战斗检测区域")
 
     def filter_gaowei_number_zone(self, boxes):
         return self.box_of_screen(0.25, 0.5, 0.5, 0.5).in_boundary(boxes)
@@ -47,17 +55,20 @@ class ManXunTask(BJTask):
     def run_frame(self):
         if not self.check_is_manxun_ui():
             self.log_error("必须从漫巡选项界面开始, 并且开启路线追踪", notify=True)
+            self.screenshot("必须从漫巡选项界面开始, 并且开启路线追踪")
             self.set_done()
+            return
         try:
             while self.loop():
                 pass
         except Exception as e:
+            self.screenshot(f"运行异常{e}")
             self.log_error(f"运行异常:", e, True)
 
         self.log_info("自动漫巡任务结束", notify=True)
         self.set_done()
 
-    def check_is_manxun_ui(self):
+    def check_optimistic(self):
         choices = self.find_choices()
         if not choices:
             self.logger.debug("找不到选项")
@@ -67,23 +78,38 @@ class ManXunTask(BJTask):
             return False
         return choices
 
+    def check_is_manxun_ui(self):
+        choices = self.check_optimistic()
+        if choices:
+            return choices
+        current = self.ocr(self.current_zone, match=re.compile("当前区域"))
+        if not current:
+            return False
+        else:
+            self.click_box(current)
+            self.sleep(2)
+            self.next_frame()
+            return self.check_optimistic()
+
     def loop(self, choice=-1):
         choices, choice_clicked = self.click_choice(choice)
         if not choice_clicked:
             self.logger.error(f"没有选项可以点击")
+            self.screenshot("没有选项可以点击")
             return False
-        self.wait_until(lambda: self.do_handle_dialog(choice, choices, choice_clicked))
+        self.wait_until(lambda: self.do_handle_dialog(choice, choices), wait_until_before_delay=1.5)
         if self.done:
             return False
         return True
 
-    def do_handle_dialog(self, choice, choices, choice_clicked):
+    def do_handle_dialog(self, choice, choices, retry=0):
         boxes = self.ocr(self.dialog_zone)
         if self.find_depth(boxes) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
             return True
         self.logger.debug(f"检测对话框区域 {boxes}")
-        if find_box_by_name(boxes, "提升攻击"):
+        gaowei = find_box_by_name(boxes, "高维同调")
+        if self.box_in_horizontal_center(gaowei, off_percent=0.1):
             box = self.find_highest_gaowei_number(boxes)
             self.click_box(box)
             self.log_info(f"高位同调 点击最高 {box}")
@@ -126,6 +152,11 @@ class ManXunTask(BJTask):
             self.log_info(f"点击固定对话框: {no_brain_box.name}")
         elif stats_up_choices := self.find_stats_up(boxes):
             self.handle_stats_up(stats_up_choices)
+        elif retry == 0:
+            self.log_error("没找到弹窗,可能是动画问题,等待一秒继续尝试")
+            self.sleep(1)
+            self.next_frame()
+            self.do_handle_dialog(choice, choices, retry + 1)
         else:
             raise RuntimeError(f"未知弹窗 无法处理")
         return True
@@ -150,8 +181,8 @@ class ManXunTask(BJTask):
         if not start_combat:
             raise RuntimeError("无法找到开始战斗按钮")
         self.click_relative(0.04, 0.065)
-        self.wait_click_box(lambda: self.ocr(self.dialog_zone, "离开战斗"))
-        self.wait_click_box(lambda: self.ocr(self.dialog_zone, "离开战斗"))
+        self.wait_click_box(lambda: self.ocr(self.battle_popup_zone, "离开战斗"))
+        self.wait_click_box(lambda: self.ocr(self.battle_popup_zone, "离开战斗"))
         self.wait_click_box(lambda: self.ocr(self.dialog_zone, "继续"), time_out=30)
         self.wait_click_box(lambda: self.ocr(self.dialog_zone, match=re.compile(r"回避")))
         self.wait_click_box(lambda: self.ocr(self.dialog_zone, match=re.compile(r"确\s?认")))
@@ -221,7 +252,7 @@ class ManXunTask(BJTask):
                     self.log_info("排除错误追踪目标")
                     del choices[i]
                     continue
-                right_text_box = choices[i].find_closest_box("down", boxes, self.is_black_text)
+                right_text_box = next((x for x in boxes if self.is_black_text(x)), None)
                 if right_text_box is not None:
                     choices[i].name = right_text_box.name
                     boxes.remove(right_text_box)
@@ -248,6 +279,8 @@ class ManXunTask(BJTask):
             depth_box.name = depth_box.name.replace("D", "2")
             depth = int(depth_box.name)
             self.info['漫巡深度'] = depth
+        elif find_box_by_name(boxes, "深度等级") is not None:  # 弹窗可能出现太快 无法找到depth_box, 有深度等级的话就继续
+            depth = self.info.get('漫巡深度', 0)
         return depth
 
     def click_cancel(self):
@@ -317,11 +350,11 @@ class ManXunTask(BJTask):
             weight = 1
         has_gray_line = self.gaowei_has_gray_line(box)
         if has_gray_line:
-            weight *= 0.5
+            weight *= 0.2
         return weight
 
     def gaowei_has_gray_line(self, box):
-        box = box.copy(0, -box.height * 1.4, name=f"{box.name}_search_line")
+        box = box.copy(0, -box.height * 1.5, name=f"{box.name}_search_line")
         gray_percentage = calculate_color_percentage(self.frame, gray_color, box)
         box.confidence = gray_percentage
         self.draw_boxes(boxes=box, color="blue")

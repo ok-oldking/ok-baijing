@@ -10,6 +10,9 @@ __pycache__/
 configs/
 ok/
 ok
+click_screenshots/
+test_scripts/
+screenshots/
 
 # C extensions
 *.so
