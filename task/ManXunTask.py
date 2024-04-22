@@ -4,6 +4,7 @@ from typing_extensions import override
 
 from ok.color.Color import calculate_color_percentage, white_color
 from ok.feature.Box import find_box_by_name, find_boxes_by_name, find_boxes_within_boundary
+from ok.task.TaskExecutor import TaskDisabledException
 from task.BJTask import BJTask
 
 
@@ -12,7 +13,7 @@ class ManXunTask(BJTask):
     def __init__(self):
         super().__init__()
         self.name = "自动漫巡任务"
-        self.description = """自动漫巡
+        self.description = """自动漫巡, 必须进入漫巡后开始, 并开启追踪
     """
         self.click_no_brainer = ["直接胜利", "属性提升", "前进", "通过", "继续", "收下", "跳过", "开始强化",
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
@@ -52,7 +53,7 @@ class ManXunTask(BJTask):
         return self.box_of_screen(0.25, 0.5, 0.5, 0.5).in_boundary(boxes)
 
     @override
-    def run_frame(self):
+    def run(self):
         if not self.check_is_manxun_ui():
             self.log_error("必须从漫巡选项界面开始, 并且开启路线追踪", notify=True)
             self.screenshot("必须从漫巡选项界面开始, 并且开启路线追踪")
@@ -61,6 +62,8 @@ class ManXunTask(BJTask):
         try:
             while self.loop():
                 pass
+        except TaskDisabledException:
+            pass
         except Exception as e:
             self.screenshot(f"运行异常{e}")
             self.log_error(f"运行异常:", e, True)

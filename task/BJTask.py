@@ -1,8 +1,8 @@
 from ok.ocr.OCR import OCR
-from ok.task.BaseTask import BaseTask
+from ok.task.OneTimeTask import OneTimeTask
 
 
-class BJTask(BaseTask, OCR):
+class BJTask(OneTimeTask, OCR):
     def __init__(self):
         super(BJTask, self).__init__()
         self.auto_combat_timeout = 600

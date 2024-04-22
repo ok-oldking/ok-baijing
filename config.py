@@ -20,7 +20,7 @@ config = {
     # 'coco_feature_folder': get_path(__file__, 'assets/coco_feature'),  # required if using feature detection
     'log_file': 'logs/ok-script.log',  # Optional, auto rotating every day
     'error_log_file': 'logs/ok-script_error.log',
-    'tasks': [  # tasks to execute
+    'onetime_tasks': [  # tasks to execute
         ManXunTask(),
     ], 'scenes': [  # scenes to detect
 
