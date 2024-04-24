@@ -308,10 +308,10 @@ class ManXunTask(BJTask):
         current_stats = []
         for box in boxes:
             if stats := get_current_stats(box.name):
-                box.name = stats
-                current_stats.append(box)
+                current_stats.append(stats)
         if len(current_stats) != 5:
-            raise Exception("没有找到五个属性")
+            current_stats = [0, 0, 0, 0, 0]
+            self.log_error("没有找到五个属性")
         tisheng_boxes = find_boxes_by_name(boxes, re.compile(r"^提升"))
         if len(tisheng_boxes) != 5:
             raise Exception("没有找到五个提升")
@@ -328,7 +328,7 @@ class ManXunTask(BJTask):
                     priority = 0
             else:  # 有灰色线, 以黄线数量为优先级
                 priority = 10 + yellow_line
-            priority += (10000 - current_stats[i].name) / 10000  # 优先级相同 就加最低数值的
+            priority += (10000 - current_stats[i]) / 10000  # 优先级相同 就加最低数值的
             if priority > highest_priority:
                 highest_index = i
                 highest_priority = priority
