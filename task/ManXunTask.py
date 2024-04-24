@@ -2,10 +2,24 @@ import re
 
 from typing_extensions import override
 
-from ok.color.Color import calculate_color_percentage, white_color
-from ok.feature.Box import find_box_by_name, find_boxes_by_name, find_boxes_within_boundary
+from ok.color.Color import calculate_color_percentage
+from ok.feature.Box import find_box_by_name, find_boxes_by_name, find_boxes_within_boundary, average_width
 from ok.task.TaskExecutor import TaskDisabledException
 from task.BJTask import BJTask
+
+
+def get_current_stats(s):
+    try:
+        # Split the string on '/'
+        parts = s.split('/')
+        # Check if there are exactly two parts and both are digits
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+            return int(parts[0])
+        else:
+            return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 
 class ManXunTask(BJTask):
@@ -43,7 +57,7 @@ class ManXunTask(BJTask):
 
     @property
     def dialog_zone(self):
-        return self.box_of_screen(0.25, 0.15, 0.5, 0.7, "弹窗检测区域")
+        return self.box_of_screen(0.25, 0.15, 0.5, 0.75, "弹窗检测区域")
 
     @property
     def battle_popup_zone(self):
@@ -57,7 +71,6 @@ class ManXunTask(BJTask):
         if not self.check_is_manxun_ui():
             self.log_error("必须从漫巡选项界面开始, 并且开启路线追踪", notify=True)
             self.screenshot("必须从漫巡选项界面开始, 并且开启路线追踪")
-            self.set_done()
             return
         try:
             while self.loop():
@@ -69,10 +82,9 @@ class ManXunTask(BJTask):
             self.log_error(f"运行异常:", e, True)
 
         self.log_info("自动漫巡任务结束", notify=True)
-        self.set_done()
 
     def check_optimistic(self):
-        choices = self.find_choices()
+        choices = self.do_find_choices()
         if not choices:
             self.logger.debug("找不到选项")
             return False
@@ -102,6 +114,7 @@ class ManXunTask(BJTask):
             return False
         self.wait_until(lambda: self.do_handle_dialog(choice, choices), wait_until_before_delay=1.5)
         if self.done:
+            self.logger.debug("已经完成, 跳出循环")
             return False
         return True
 
@@ -291,36 +304,57 @@ class ManXunTask(BJTask):
 
     def find_highest_gaowei_number(self, boxes):
         boxes = self.filter_gaowei_number_zone(boxes)
-        highest_gaowei_number = 0
-        highest_gaowei_box = None
         # 文字转数字
+        current_stats = []
         for box in boxes:
-            if isinstance(box.name, str) and box.name[0] == '+' and all(
-                    char.isdigit() or char == '-' or char == '+' or char == ' ' for char in box.name):
-                box.name = box.name.replace('-', '')
-                # Split the string by '+' and sum the numbers
-                numbers = box.name.split('+')
-                sum_gaowei = sum(int(number) for number in numbers if number)
-                box.name = sum_gaowei
-
-        # 合并右边的数值,并把右边的改为0
-        for box in boxes:
-            if isinstance(box.name, int) and box.name > 0:
-                right_closest = box.find_closest_box("right", boxes)
-                if right_closest is not None:
-                    distance = box.closest_distance(right_closest)
-                    if distance < box.width / 2 and isinstance(right_closest.name, int):
-                        self.log_debug(f"sum_gaowei add right {box.name} += {right_closest.name}")
-                        box.name = box.name + right_closest.name
-                        right_closest.name = 0
-                weight = self.find_text_color_weight(box)
-                self.log_debug(f"sum_gaowei * weight {weight * box.name} = {weight} x {box.name}")
-                box.name = weight * box.name
-                if box.name > highest_gaowei_number:
-                    highest_gaowei_number = box.name
-                    highest_gaowei_box = box
+            if stats := get_current_stats(box.name):
+                box.name = stats
+                current_stats.append(box)
+        if len(current_stats) != 5:
+            raise Exception("没有找到五个属性")
+        tisheng_boxes = find_boxes_by_name(boxes, re.compile(r"^提升"))
+        if len(tisheng_boxes) != 5:
+            raise Exception("没有找到五个提升")
+        avg_width = average_width(tisheng_boxes)
+        self.log_debug(f"高维:目前数值 {current_stats} {tisheng_boxes}")
+        highest_priority = 0
+        highest_index = None
+        for i in range(5):
+            box, yellow_line, gray_line = self.locate_gaowei_line(tisheng_boxes[i], avg_width)
+            if gray_line == 0:  # 全点亮或者没有对应卡
+                if yellow_line > 0:  # 全点亮 以黄线数量为优先级
+                    priority = 100 + yellow_line
+                else:  # 没对应卡 最低优先级
+                    priority = 0
+            else:  # 有灰色线, 以黄线数量为优先级
+                priority = 10 + yellow_line
+            priority += (10000 - current_stats[i].name) / 10000  # 优先级相同 就加最低数值的
+            if priority > highest_priority:
+                highest_index = i
+                highest_priority = priority
+            self.log_debug(f"高维属性 {box} {yellow_line} {gray_line}  {priority}")
+        self.log_debug(f"最高优先级 高维 {tisheng_boxes[highest_index]} {highest_priority}")
         self.draw_boxes("ocr", boxes)
-        return highest_gaowei_box
+        return tisheng_boxes[highest_index]
+
+    def locate_gaowei_line(self, box, width):
+        box.width = width
+        box = box.copy(0, -box.height * 0.15, 0, -box.height * 0.8,
+                       name=f"{box.name}_search_line")
+        while True:
+            box = box.copy(y_offset=-box.height)
+            if box.y < 0:
+                raise Exception("找不到高维黑色区域")
+            black_percent = calculate_color_percentage(self.frame, gaowei_bg, box)
+            if black_percent > 0.7:
+                box = box.copy(y_offset=-box.height * 4)
+                gray_percentage = calculate_color_percentage(self.frame, gray_color, box) * 100
+                yellow_percentage = calculate_color_percentage(self.frame, yellow_color, box) * 100
+                gray_line = (gray_percentage + gray_percent_per_line / 2) / gray_percent_per_line
+                yellow_line = (yellow_percentage + yellow_percent_per_line / 2) / yellow_percent_per_line
+                # self.log_debug(f"高维点亮 {box} {yellow_line} {yellow_percentage} {yellow_percent_per_line}")
+                self.draw_boxes(boxes=box, color="blue")
+                return box, int(yellow_line), int(gray_line)
 
     # 寻找灰色, 如有则降低优先级
 
@@ -342,27 +376,6 @@ class ManXunTask(BJTask):
         black_percentage = calculate_color_percentage(self.frame, black_color, box)
         return black_percentage >= 0.05
 
-    def find_text_color_weight(self, box):
-        green_percentage = calculate_color_percentage(self.frame, green_color, box)
-        weight = 0.01
-        if green_percentage > 0.07:  # 绿色是点亮, 优先
-            weight = 2
-        elif calculate_color_percentage(self.frame, yellow_color, box) > 0.07:
-            weight = 3
-        elif calculate_color_percentage(self.frame, white_color, box) > 0.07:
-            weight = 1
-        has_gray_line = self.gaowei_has_gray_line(box)
-        if has_gray_line:
-            weight *= 0.2
-        return weight
-
-    def gaowei_has_gray_line(self, box):
-        box = box.copy(0, -box.height * 1.5, name=f"{box.name}_search_line")
-        gray_percentage = calculate_color_percentage(self.frame, gray_color, box)
-        box.confidence = gray_percentage
-        self.draw_boxes(boxes=box, color="blue")
-        return gray_percentage > 0.01
-
 
 def find_priority_string(input_list, priority_list, start_index=-1):
     # 不在priority_list 为最高优先级
@@ -378,6 +391,9 @@ def find_priority_string(input_list, priority_list, start_index=-1):
     return start_index
 
 
+gray_percent_per_line = 0.03660270078 * 100
+yellow_percent_per_line = 0.02821869488 * 100
+
 green_color = {
     'r': (132, 152),  # Red range
     'g': (222, 242),  # Green range
@@ -390,6 +406,12 @@ black_color = {
     'b': (0, 25)  # Blue range
 }
 
+gaowei_bg = {
+    'r': (25, 45),  # Red range
+    'g': (25, 45),  # Green range
+    'b': (25, 45)  # Blue range
+}
+
 gray_color = {
     'r': (80, 105),  # Red range
     'g': (90, 110),  # Green range
@@ -397,7 +419,7 @@ gray_color = {
 }
 
 yellow_color = {
-    'r': (230, 250),  # Red range
-    'g': (220, 240),  # Green range
-    'b': (130, 150)  # Blue range
+    'r': (220, 250),  # Red range
+    'g': (180, 210),  # Green range
+    'b': (90, 110)  # Blue range
 }
