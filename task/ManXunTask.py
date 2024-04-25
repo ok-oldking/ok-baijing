@@ -111,14 +111,14 @@ class ManXunTask(BJTask):
         if not choice_clicked:
             self.logger.error(f"没有选项可以点击")
             self.screenshot("没有选项可以点击")
-            return False
-        self.wait_until(lambda: self.do_handle_dialog(choice, choices), wait_until_before_delay=1.5)
+            return self.do_handle_dialog(choice)
+        self.wait_until(lambda: self.do_handle_dialog(choice), wait_until_before_delay=1.5)
         if self.done:
             self.logger.debug("已经完成, 跳出循环")
             return False
         return True
 
-    def do_handle_dialog(self, choice, choices, retry=0):
+    def do_handle_dialog(self, choice, retry=0):
         boxes = self.ocr(self.dialog_zone)
         if self.find_depth(boxes) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
@@ -151,8 +151,8 @@ class ManXunTask(BJTask):
         elif stat_combat := find_box_by_name(boxes, "开始战斗"):
             skip_battle = find_box_by_name(boxes, self.config.get("跳过战斗"))
             self.logger.debug(
-                f"开始战斗 跳过战斗查询结果:{skip_battle} abs(choice):{abs(choice)} len(choices) {len(choices)}")
-            if skip_battle and abs(choice) < len(choices):
+                f"开始战斗 跳过战斗查询结果:{skip_battle} abs(choice):{abs(choice)}")
+            if skip_battle:
                 self.log_info(f"回避配置列表里的战斗 {skip_battle}")
                 self.click_cancel()
                 return self.loop(choice=choice - 1)
@@ -172,7 +172,7 @@ class ManXunTask(BJTask):
             self.log_error("没找到弹窗,可能是动画问题,等待一秒继续尝试")
             self.sleep(1)
             self.next_frame()
-            self.do_handle_dialog(choice, choices, retry + 1)
+            self.do_handle_dialog(choice, retry + 1)
         else:
             raise RuntimeError(f"未知弹窗 无法处理")
         return True
