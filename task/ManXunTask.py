@@ -138,7 +138,7 @@ class ManXunTask(BJTask):
                 self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="完成漫巡"))
                 self.wait_click_box(lambda: self.ocr(self.box_of_screen(0.5, 0.5, 0.4, 0.3), match="确定完成"))
                 self.wait_until(lambda: self.ocr(self.box_of_screen(0, 0, 0.2, 0.2)),
-                                pre_action=lambda: self.click_relative(0.5, 0.1), time_out=60)
+                                pre_action=lambda: self.click_relative(0.5, 0.1), time_out=90)
             raise Finished()
         elif confirm := find_box_by_name(boxes, "解锁技能和区域"):
             self.handle_skill_dialog(boxes, confirm)
@@ -204,7 +204,7 @@ class ManXunTask(BJTask):
         return find_boxes_by_name(boxes, self.stats_up_re)
 
     def auto_skip_combat(self):
-        start_combat = self.wait_until(lambda: self.ocr(self.star_combat_zone, "开始战斗"), time_out=50)
+        start_combat = self.wait_until(lambda: self.ocr(self.star_combat_zone, "开始战斗"), time_out=80)
         if not start_combat:
             raise RuntimeError("无法找到开始战斗按钮")
         self.click_relative(0.04, 0.065)

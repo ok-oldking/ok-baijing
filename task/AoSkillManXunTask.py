@@ -41,12 +41,13 @@ class AoSkillManXunTask(ManXunTask):
             boxes = self.ocr(self.box_of_screen(0.2, 0.5, 0.8, 0.3, "漫巡路线检测区域"), match=self.config['路线'])
             if boxes:
                 self.route = boxes[0]
+                self.log_debug(f'在漫巡路线选择界面 {self.route}')
             if not self.route:
                 self.log_error("必须从主界面或漫巡界面开始", notify=True)
                 self.screenshot("必须从主界面或漫巡界面开始")
                 return False
         if is_main or self.route:
-            self.select_chars()
+            self.enter_manxun()
             self.start_manxun()
         while True:
             try:
@@ -63,9 +64,10 @@ class AoSkillManXunTask(ManXunTask):
         manxun_start = find_box_by_name(boxes, "漫巡开始")
         if not manxun_start:
             self.select_char()
-            manxun_start = find_box_by_name(boxes, "漫巡开始")
+            manxun_start = self.ocr(self.bottom_button_zone, "漫巡开始")
         self.click_box(manxun_start)
-        self.sleep(10)
+        self.wait_until(lambda: self.ocr(self.current_zone, match=re.compile(r"^自动")), time_out=60)
+        self.click_relative(0.5, 0.5)
 
     def if_skip_battle(self):
         if self.info['漫巡深度'] < self.config['深度等级最多提升到']:
@@ -90,6 +92,7 @@ class AoSkillManXunTask(ManXunTask):
                         skills[skill] = skills.get(skill, 0) + 1
         if current_count != self.info.get('已获得目标技能个数', 0):
             self.info['已获得目标技能个数'] = current_count
+            self.info['已获取的目标技能'] = current_skills
             self.notification(f"已经获取到 {current_count}个目标技能 {skills}")
 
     def select_char(self):
@@ -108,16 +111,16 @@ class AoSkillManXunTask(ManXunTask):
         self.wait_click_box(lambda: self.ocr(self.top_right_button_zone, "上次编组"))
         self.sleep(3)
         while True:
-            boxes = self.ocr(self.box_of_screen(0.5, 0.5, 0.5, 0.5, "支援记忆烙痕检测区域"), re.compile("支援记忆烙痕"))
-            if not boxes:
+            boxes = self.ocr(self.box_of_screen(0.5, 0.5, 0.5, 0.5, "支援记忆烙痕检测区域"),
+                             re.compile("选择支援记忆烙痕"))
+            if boxes:
                 self.notification("没有支援记忆烙痕, 请手动选择后继续!")
                 self.screenshot("没有支援记忆烙痕, 请手动选择后继续!")
                 self.pause()
             break
         self.sleep(0.5)
-        self.click_box(next_step)
 
-    def select_chars(self):
+    def enter_manxun(self):
         if not self.route:
             self.main_go_to_manxun()
             self.wait_click_box(
