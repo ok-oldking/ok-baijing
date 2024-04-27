@@ -1,4 +1,5 @@
 from ok.util.path import get_path_in_package
+from task.AoSkillManXunTask import AoSkillManXunTask
 
 from task.ManXunTask import ManXunTask
 
@@ -23,6 +24,7 @@ config = {
     'error_log_file': 'logs/ok-script_error.log',
     'onetime_tasks': [  # tasks to execute
         ManXunTask(),
+        AoSkillManXunTask(),
     ], 'scenes': [  # scenes to detect
 
     ]

@@ -4,7 +4,6 @@ from typing_extensions import override
 
 from ok.color.Color import calculate_color_percentage
 from ok.feature.Box import find_box_by_name, find_boxes_by_name, find_boxes_within_boundary, average_width
-from ok.task.TaskExecutor import TaskDisabledException
 from task.BJTask import BJTask
 
 
@@ -22,6 +21,10 @@ def get_current_stats(s):
         return None
 
 
+class Finished(Exception):
+    pass
+
+
 class ManXunTask(BJTask):
 
     def __init__(self):
@@ -37,7 +40,7 @@ class ManXunTask(BJTask):
             "深度等级最多提升到": 12,
             "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
             "高深度选项优先级": ["风险区", "烙痕唤醒", "高维同调", "记忆强化", "研习区", "休整区"],
-            "高低深度分界": 8,
+            "高低深度分界": 6,
             "跳过战斗": ["鱼叉将军-日光浅滩E"],
         }
         self.destination = None
@@ -72,16 +75,16 @@ class ManXunTask(BJTask):
             self.log_error("必须从漫巡选项界面开始, 并且开启路线追踪", notify=True)
             self.screenshot("必须从漫巡选项界面开始, 并且开启路线追踪")
             return
-        try:
-            while self.loop():
-                pass
-        except TaskDisabledException:
-            pass
-        except Exception as e:
-            self.screenshot(f"运行异常{e}")
-            self.log_error(f"运行异常:", e, True)
-
-        self.log_info("自动漫巡任务结束", notify=True)
+        while True:
+            try:
+                self.loop()
+            except Finished:
+                self.log_info("自动漫巡任务结束", notify=True)
+                return
+            except Exception as e:
+                self.screenshot(f"运行异常{e}")
+                self.log_error(f"运行异常,已暂停:", e, True)
+                self.pause()
 
     def check_optimistic(self):
         choices = self.do_find_choices()
@@ -97,11 +100,11 @@ class ManXunTask(BJTask):
         choices = self.check_optimistic()
         if choices:
             return choices
-        current = self.ocr(self.current_zone, match=re.compile("当前区域"))
+        current = self.ocr(self.current_zone, match=re.compile(r"^自动"))
         if not current:
             return False
         else:
-            self.click_box(current)
+            self.click_relative(0.9, 0.5)
             self.sleep(2)
             self.next_frame()
             return self.check_optimistic()
@@ -113,10 +116,6 @@ class ManXunTask(BJTask):
             self.screenshot("没有选项可以点击")
             return self.do_handle_dialog(choice)
         self.wait_until(lambda: self.do_handle_dialog(choice), wait_until_before_delay=1.5)
-        if self.done:
-            self.logger.debug("已经完成, 跳出循环")
-            return False
-        return True
 
     def do_handle_dialog(self, choice, retry=0):
         boxes = self.ocr(self.dialog_zone)
@@ -134,7 +133,13 @@ class ManXunTask(BJTask):
             self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="确认"))
             self.wait_click_box(lambda: self.ocr(self.star_combat_zone, match="跳过漫巡回顾"))
             self.wait_click_box(lambda: self.ocr(self.star_combat_zone, match="点击屏幕确认结算"))
-            self.set_done()
+            if self.confirm_generate():
+                self.wait_click_box(lambda: self.ocr(self.box_of_screen(0.7, 0.6, 0.3, 0.4), match="确认生成"))
+                self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="完成漫巡"))
+                self.wait_click_box(lambda: self.ocr(self.box_of_screen(0.5, 0.5, 0.4, 0.3), match="确定完成"))
+                self.wait_until(lambda: self.ocr(self.box_of_screen(0, 0, 0.2, 0.2)),
+                                pre_action=lambda: self.click_relative(0.5, 0.1), time_out=60)
+            raise Finished()
         elif confirm := find_box_by_name(boxes, "解锁技能和区域"):
             self.handle_skill_dialog(boxes, confirm)
         elif find_box_by_name(boxes, "获得了一些技能点"):
@@ -156,7 +161,7 @@ class ManXunTask(BJTask):
                 self.log_info(f"回避配置列表里的战斗 {skip_battle}")
                 self.click_cancel()
                 return self.loop(choice=choice - 1)
-            elif self.config.get("无法直接胜利, 自动投降跳过"):
+            elif self.if_skip_battle():
                 self.log_info(f"开始自动跳过战斗")
                 self.click_box(stat_combat)
                 self.auto_skip_combat()
@@ -176,6 +181,12 @@ class ManXunTask(BJTask):
         else:
             raise RuntimeError(f"未知弹窗 无法处理")
         return True
+
+    def confirm_generate(self):
+        return False
+
+    def if_skip_battle(self):
+        return self.config.get("无法直接胜利, 自动投降跳过")
 
     def find_stats_up(self, boxes):
         for box in boxes:
@@ -225,8 +236,12 @@ class ManXunTask(BJTask):
         skills = find_boxes_within_boundary(boxes, search_skill_name_box)
         self.draw_boxes("skills", skills)
         self.info_add_to_list("获得技能", [obj.name for obj in skills])
+        self.check_skills()
         self.log_info(f"获取技能 {skills}")
         self.click_box(confirm)
+
+    def check_skills(self):
+        pass
 
     def click_choice(self, index=-1):
         choices = self.find_choices()
