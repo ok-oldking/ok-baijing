@@ -11,14 +11,16 @@ class AoSkillManXunTask(ManXunTask):
     def __init__(self):
         super().__init__()
         self.route = None
-        self.name = "自动漫巡凹技能"
-        self.description = """主界面开始, 凹指定角色指定技能, 达不到要求就自动跳过战斗结束
+        self.name = "循环漫巡凹技能"
+        self.description = """主界面开始, 凹指定角色指定技能, 刷不到指定技能就自动跳过战斗结束
     """
         self.super_config = self.default_config
-        del self.super_config['无法直接胜利, 自动投降跳过']
+        del self.super_config['投降跳过战斗']
         self.default_config = {'角色名': '岑缨', '路线': '空想王国', '循环次数': 5,
-                               '目标技能': ['职业联动', '针对打击'], '目标技能个数': 2}
+                               '目标技能': ['职业联动', '针对打击', '奉献'], '目标技能个数': 3}
         self.default_config = {**self.default_config, **self.super_config}
+        self.config_description["目标技能"] = "部分匹配, 最好不要加标点符号"
+        self.pause_combat_message = "成功刷到目标技能, 暂停"
 
     @override
     def run(self):
@@ -47,8 +49,8 @@ class AoSkillManXunTask(ManXunTask):
                 self.screenshot("必须从主界面或漫巡界面开始")
                 return False
         if is_main or self.route:
-            self.enter_manxun()
-            self.start_manxun()
+            if not self.enter_manxun():
+                self.start_manxun()
         while True:
             try:
                 self.loop()
@@ -92,8 +94,10 @@ class AoSkillManXunTask(ManXunTask):
                         skills[skill] = skills.get(skill, 0) + 1
         if current_count != self.info.get('已获得目标技能个数', 0):
             self.info['已获得目标技能个数'] = current_count
-            self.info['已获取的目标技能'] = current_skills
+            self.info['已获取的目标技能'] = skills
             self.notification(f"已经获取到 {current_count}个目标技能 {skills}")
+            if current_count >= self.config['目标技能个数']:
+                self.pause()
 
     def select_char(self):
         char_name = self.wait_until(
@@ -129,18 +133,27 @@ class AoSkillManXunTask(ManXunTask):
             self.click_box(self.route)
         self.wait_click_box(
             lambda: self.ocr(self.right_button_zone, match='前往回廊漫巡'))
-        start_manxun = self.wait_click_box(
-            lambda: self.ocr(self.star_combat_zone, match='开始新漫巡'))
         self.sleep(1)
-        boxes = self.ocr(self.box_of_screen(0.2, 0.5, 0.3, 0.3, "精神改善剂检测区域"), re.compile(r'^可回复精神力'))
-        if len(boxes) == 1:
-            self.click_box(boxes[0], relative_y=-4)
+        continue_manxun = self.ocr(self.dialog_zone, match='继续漫巡')
+        if continue_manxun:
+            self.click_box(continue_manxun)
             self.wait_click_box(
-                lambda: self.ocr(self.right_button_zone, match='确认使用'))
-            self.sleep(0.5)
-            self.click_relative(0.95, 0.5)
-            self.sleep(3)
-            self.click_box(start_manxun)
+                lambda: self.ocr(self.dialog_zone, match='确认'))
+            return True
+        else:
+            start_manxun = self.wait_click_box(
+                lambda: self.ocr(self.star_combat_zone, '开始新漫巡'))
+            self.sleep(1)
+            boxes = self.ocr(self.box_of_screen(0.2, 0.5, 0.3, 0.3, "精神改善剂检测区域"), re.compile(r'^可回复精神力'))
+            if len(boxes) == 1:
+                self.click_box(boxes[0], relative_y=-4)
+                self.wait_click_box(
+                    lambda: self.ocr(self.right_button_zone, match='确认使用'))
+                self.sleep(0.5)
+                self.click_relative(0.95, 0.5)
+                self.sleep(3)
+                self.click_box(start_manxun)
+            return False
 
     @property
     def right_button_zone(self):

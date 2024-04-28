@@ -12,7 +12,7 @@ class BJTask(OneTimeTask, OCR):
 
     @property
     def star_combat_zone(self):
-        return self.box_of_screen(0.8, 0.8, 0.2, 0.2)
+        return self.box_of_screen(0.8, 0.8, 0.2, 0.2, name="star_combat_zone")
 
     @property
     def main_menu_zone(self):

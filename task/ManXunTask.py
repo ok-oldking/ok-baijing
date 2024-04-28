@@ -29,22 +29,31 @@ class ManXunTask(BJTask):
 
     def __init__(self):
         super().__init__()
-        self.name = "自动漫巡任务"
+        self.name = "执行一次自动漫巡"
         self.description = """自动漫巡, 必须进入漫巡后开始, 并开启追踪
     """
         self.click_no_brainer = ["直接胜利", "属性提升", "前进", "通过", "继续", "收下", "跳过", "开始强化",
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
         self.default_config = {
-            "无法直接胜利, 自动投降跳过": False,
+            "投降跳过战斗": False,
             "唤醒属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
             "深度等级最多提升到": 12,
             "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
             "高深度选项优先级": ["风险区", "烙痕唤醒", "高维同调", "记忆强化", "研习区", "休整区"],
             "高低深度分界": 6,
+            "烙痕唤醒黑名单": ["幕影重重", "谎言之下", "馆中遗影"],
             "跳过战斗": ["鱼叉将军-日光浅滩E"],
+        }
+        self.config_description = {
+            "投降跳过战斗": "如果无法直接胜利, 自动投降跳过",
+            "深度等级最多提升到": "海底图建议12",
+            "高低深度分界": "比如可以配置低深度优先记忆强化, 高深度优先高维同调",
+            "烙痕唤醒黑名单": "可以使用烙痕名称或者核心技能名称, 部分匹配即可",
+            "跳过战斗": "不打的战斗, 比如鱼叉将军",
         }
         self.destination = None
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
+        self.pause_combat_message = "未开启自动战斗, 无法继续漫巡, 暂停中, 请手动完成战斗或开启自动跳过后继续"
 
     def end(self, message, result=False):
         self.log_info(f"执行结束:{message}")
@@ -117,8 +126,9 @@ class ManXunTask(BJTask):
             return self.do_handle_dialog(choice)
         self.wait_until(lambda: self.do_handle_dialog(choice), wait_until_before_delay=1.5)
 
-    def do_handle_dialog(self, choice, retry=0):
-        boxes = self.ocr(self.dialog_zone)
+    def do_handle_dialog(self, choice, retry=0, boxes=None):
+        if boxes is None:
+            boxes = self.ocr(self.dialog_zone)
         if self.find_depth(boxes) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
             return True
@@ -166,8 +176,7 @@ class ManXunTask(BJTask):
                 self.click_box(stat_combat)
                 self.auto_skip_combat()
             else:
-                message = "未开启自动战斗, 无法继续漫巡, 暂停中, 请手动完成战斗或开启自动跳过后继续"
-                self.log_info(message, True)
+                self.log_info(self.pause_combat_message, True)
                 self.pause()
         elif no_brain_box := self.click_box_if_name_match(boxes, self.click_no_brainer):
             self.log_info(f"点击固定对话框: {no_brain_box.name}")
@@ -186,7 +195,7 @@ class ManXunTask(BJTask):
         return False
 
     def if_skip_battle(self):
-        return self.config.get("无法直接胜利, 自动投降跳过")
+        return self.config.get("投降跳过战斗")
 
     def find_stats_up(self, boxes):
         for box in boxes:
@@ -254,6 +263,9 @@ class ManXunTask(BJTask):
                 '高低深度分界'] else \
                 self.config[
                     '高深度选项优先级']
+            clicked, c, i = self.try_handle_laohen_choices(choices, index, priority)
+            if clicked:
+                return c, c[i]
             if choices[index].name == "深度等级提升":
                 depth = self.find_depth()
                 self.log_info(f"提升深度, {depth} 目前是第{abs(index)}个选项, 共有{len(choices)}选项")
@@ -269,6 +281,38 @@ class ManXunTask(BJTask):
             self.log_info(
                 f"点击选项:{choices[index]}, 使用优先级 {priority}, index {index}, {choices}")
         return choices, choices[index]
+
+    def try_handle_laohen_choices(self, choices, index, priority):
+        laohen_count = 0
+        laohen_priority = find_index("烙痕唤醒", priority)
+        last_laohen_index = index
+        for i in range(index, -len(choices) - 1, -1):
+            if choices[i].name == "烙痕唤醒":
+                laohen_count += 1
+                last_laohen_index = i
+            elif choice_index := find_index(choices[i].name, priority):
+                if choice_index <= laohen_priority:  # 有比烙痕唤醒高优先级的, 不点击
+                    return False, choices, index
+        if laohen_count < 2:
+            return False, choices, index
+        black_list = self.config["烙痕唤醒黑名单"] + [re.compile("核心技能已解锁满级")]
+        for i in range(index, last_laohen_index - 1, -1):
+            if i == last_laohen_index:
+                self.click_box(choices[i])
+                self.log_debug("最后一个烙痕唤醒选项, 点击")
+                return True, choices, i
+            if choices[i].name == "烙痕唤醒":
+                self.click_box(choices[i])
+                self.wait_until(lambda: self.ocr(self.dialog_zone, match="烙痕唤醒"))
+                boxes = self.ocr(match=black_list)
+                if boxes:
+                    self.log_debug(f"烙痕唤醒在黑名单, 跳过 {boxes}")
+                    self.click_relative(0.5, 0.1)
+                    self.sleep(3)
+                    continue
+                else:
+                    self.log_debug("烙痕不在黑名单, 点击")
+                    return True, choices, i
 
     def do_find_choices(self):
         boxes = self.ocr(self.choice_zone)
@@ -404,6 +448,13 @@ def find_priority_string(input_list, priority_list, start_index=-1):
                 # Return the negative index of the string in the input list
                 return i
     return start_index
+
+
+def find_index(element, lst):
+    try:
+        return lst.index(element)
+    except ValueError:
+        return -1
 
 
 gray_percent_per_line = 0.03660270078 * 100
