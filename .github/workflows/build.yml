@@ -29,8 +29,8 @@ jobs:
         run: |
           echo ${{ github.sha }} > Release.txt
           pyinstaller main.spec
-          mv dist baijing_autohelper
-          7z a -t7z -r "baijing_autohelper.7z" "baijing_autohelper"
+          mv dist ok-baijing
+          7z a -t7z -r "ok-baijing.7z" "ok-baijing"
 
       - name: Create Release
         id: create_release

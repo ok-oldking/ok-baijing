@@ -50,7 +50,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='BaiJingZhuShou',
+    name='ok-baijing',
     icon='icon.ico',
     debug=False,
     bootloader_ignore_signals=False,
