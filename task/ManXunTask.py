@@ -130,13 +130,15 @@ class ManXunTask(BJTask):
         for i in range(2):
             try:
                 self.do_handle_dialog(choice)
-                return True
+                return
+            except Finished as e:
+                raise e
             except Exception as e:
                 self.log_error("处理对话框异常 重试一次", e)
                 self.sleep(2)
                 continue
 
-    def do_handle_dialog(self, choice, retry=0):
+    def do_handle_dialog(self, choice):
         boxes = self.ocr(self.dialog_zone)
         if self.find_depth(boxes) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
