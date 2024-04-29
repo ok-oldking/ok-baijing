@@ -123,12 +123,21 @@ class ManXunTask(BJTask):
         if not choice_clicked:
             self.logger.error(f"没有选项可以点击")
             self.screenshot("没有选项可以点击")
-            return self.do_handle_dialog(choice)
-        self.wait_until(lambda: self.do_handle_dialog(choice), wait_until_before_delay=1.5)
+            return self.handle_dialog_with_retry(choice)
+        self.wait_until(lambda: self.handle_dialog_with_retry(choice), wait_until_before_delay=1.5)
 
-    def do_handle_dialog(self, choice, retry=0, boxes=None):
-        if boxes is None:
-            boxes = self.ocr(self.dialog_zone)
+    def handle_dialog_with_retry(self, choice):
+        for i in range(2):
+            try:
+                self.do_handle_dialog(choice)
+                return True
+            except Exception as e:
+                self.log_error("处理对话框异常 重试一次", e)
+                self.sleep(2)
+                continue
+
+    def do_handle_dialog(self, choice, retry=0):
+        boxes = self.ocr(self.dialog_zone)
         if self.find_depth(boxes) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
             return True
@@ -182,11 +191,6 @@ class ManXunTask(BJTask):
             self.log_info(f"点击固定对话框: {no_brain_box.name}")
         elif stats_up_choices := self.find_stats_up(boxes):
             self.handle_stats_up(stats_up_choices)
-        elif retry == 0:
-            self.log_error("没找到弹窗,可能是动画问题,等待一秒继续尝试")
-            self.sleep(1)
-            self.next_frame()
-            self.do_handle_dialog(choice, retry + 1)
         else:
             raise RuntimeError(f"未知弹窗 无法处理")
         return True
