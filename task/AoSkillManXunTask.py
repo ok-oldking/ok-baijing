@@ -72,7 +72,7 @@ class AoSkillManXunTask(ManXunTask):
         self.click_relative(0.5, 0.5)
 
     def if_skip_battle(self):
-        if self.info['漫巡深度'] < self.config['深度等级最多提升到']:
+        if self.info.get('漫巡深度', 0) < self.config['深度等级最多提升到']:
             self.log_debug(f"未达到预定深度, 不跳过战斗")
             return False
 

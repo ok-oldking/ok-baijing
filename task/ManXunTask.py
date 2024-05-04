@@ -130,19 +130,23 @@ class ManXunTask(BJTask):
         for i in range(2):
             try:
                 self.do_handle_dialog(choice)
-                return
+                return True
             except Finished as e:
                 raise e
             except Exception as e:
-                self.log_error("处理对话框异常 重试一次", e)
-                self.sleep(2)
-                continue
+                if i == 0:
+                    self.screenshot("处理对话框异常重试一次")
+                    self.log_error("处理对话框异常 重试一次", e)
+                    self.sleep(3)
+                    continue
+                else:
+                    raise e
 
     def do_handle_dialog(self, choice):
         boxes = self.ocr(self.dialog_zone)
         if self.find_depth(boxes) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
-            return True
+            return
         self.logger.debug(f"检测对话框区域 {boxes}")
         gaowei = find_box_by_name(boxes, "高维同调")
         if self.box_in_horizontal_center(gaowei, off_percent=0.1):
@@ -194,8 +198,7 @@ class ManXunTask(BJTask):
         elif stats_up_choices := self.find_stats_up(boxes):
             self.handle_stats_up(stats_up_choices)
         else:
-            raise RuntimeError(f"未知弹窗 无法处理")
-        return True
+            raise Exception(f"未知弹窗 无法处理")
 
     def confirm_generate(self):
         return False
