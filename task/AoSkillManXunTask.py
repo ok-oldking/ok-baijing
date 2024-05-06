@@ -3,7 +3,8 @@ import re
 from typing_extensions import override
 
 from ok.feature.Box import find_box_by_name
-from task.ManXunTask import ManXunTask, Finished
+from ok.task.TaskExecutor import FinishedException
+from task.ManXunTask import ManXunTask
 
 
 class AoSkillManXunTask(ManXunTask):
@@ -54,7 +55,7 @@ class AoSkillManXunTask(ManXunTask):
         while True:
             try:
                 self.loop()
-            except Finished:
+            except FinishedException:
                 return True
             except Exception as e:
                 self.screenshot(f"运行异常{e}")

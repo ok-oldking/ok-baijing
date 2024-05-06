@@ -4,6 +4,7 @@ from typing_extensions import override
 
 from ok.color.Color import calculate_color_percentage
 from ok.feature.Box import find_box_by_name, find_boxes_by_name, find_boxes_within_boundary, average_width
+from ok.task.TaskExecutor import FinishedException
 from task.BJTask import BJTask
 
 
@@ -21,10 +22,6 @@ def get_current_stats(s):
         return None
 
 
-class Finished(Exception):
-    pass
-
-
 class ManXunTask(BJTask):
 
     def __init__(self):
@@ -36,7 +33,7 @@ class ManXunTask(BJTask):
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
         self.default_config = {
             "投降跳过战斗": False,
-            "唤醒属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
+            "属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
             "深度等级最多提升到": 12,
             "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
             "高深度选项优先级": ["风险区", "烙痕唤醒", "高维同调", "记忆强化", "研习区", "休整区"],
@@ -131,7 +128,7 @@ class ManXunTask(BJTask):
             try:
                 self.do_handle_dialog(choice)
                 return True
-            except Finished as e:
+            except FinishedException as e:
                 raise e
             except Exception as e:
                 if i == 0:
@@ -235,7 +232,7 @@ class ManXunTask(BJTask):
     def handle_stats_up(self, stats_up_choices):
         stats_up_parsed = self.parse_stats_choices(stats_up_choices)
         target = list(stats_up_parsed.values())[0][0][1]
-        for stat in self.config['唤醒属性优先级']:
+        for stat in self.config['属性优先级']:
             if stat in stats_up_parsed:
                 # Assuming stats_up_parsed[stat] is a list of tuples (value, box)
                 # and we want the one with the highest 'value'
@@ -396,7 +393,11 @@ class ManXunTask(BJTask):
                     priority = 0
             else:  # 有灰色线, 以黄线数量为优先级
                 priority = 10 + yellow_line
-            priority += (10000 - current_stats[i]) / 10000  # 优先级相同 就加最低数值的
+            stats_priority = find_index(tisheng_boxes[i].name.replace('提升', ''), self.config.get('属性优先级'))
+            if stats_priority != -1:
+                priority += 10 - stats_priority
+            if current_stats[i] >= 1250 or (i == 4) and current_stats[i] >= 900:  ##超过上限或者终端超过900不点
+                priority = 0
             if priority > highest_priority:
                 highest_index = i
                 highest_priority = priority
