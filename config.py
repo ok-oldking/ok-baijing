@@ -10,9 +10,8 @@ config = {
     'gui_icon': get_path_in_package(__file__, 'icon.ico'),
     'ocr': 'RapidOCR',
     'about': """
-    <h1>基于ok-script的白荆回廊自动漫巡辅助</h1>
-    <p>Github下载和源码地址:</p>
-    <p><a href="https://github.com/ok-oldking/ok_baijing">https://github.com/ok-oldking/ok_baijing</a></p>
+    <h1>OK白荆回廊自动漫巡辅助</h1>
+    <p>QQ群:594495691</p>
 """,
     'screenshots_folder': "screenshots",
     'gui_title': 'OK白荆漫巡',  # Optional

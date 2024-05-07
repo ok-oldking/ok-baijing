@@ -84,7 +84,7 @@ class ManXunTask(BJTask):
         while True:
             try:
                 self.loop()
-            except Finished:
+            except FinishedException:
                 self.log_info("自动漫巡任务结束", notify=True)
                 return
             except Exception as e:
@@ -161,7 +161,7 @@ class ManXunTask(BJTask):
                 self.wait_click_box(lambda: self.ocr(self.box_of_screen(0.5, 0.5, 0.4, 0.3), match="确定完成"))
                 self.wait_until(lambda: self.ocr(self.box_of_screen(0, 0, 0.2, 0.2)),
                                 pre_action=lambda: self.click_relative(0.5, 0.1), time_out=90)
-            raise Finished()
+            raise FinishedException()
         elif confirm := find_box_by_name(boxes, "解锁技能和区域"):
             self.handle_skill_dialog(boxes, confirm)
         elif find_box_by_name(boxes, "获得了一些技能点"):
@@ -388,11 +388,11 @@ class ManXunTask(BJTask):
             box, yellow_line, gray_line = self.locate_gaowei_line(tisheng_boxes[i], avg_width)
             if gray_line == 0:  # 全点亮或者没有对应卡
                 if yellow_line > 0:  # 全点亮 以黄线数量为优先级
-                    priority = 100 + yellow_line
+                    priority = 100 * yellow_line
                 else:  # 没对应卡 最低优先级
-                    priority = 0
+                    priority = -1
             else:  # 有灰色线, 以黄线数量为优先级
-                priority = 10 + yellow_line
+                priority = 10 * yellow_line
             stats_priority = find_index(tisheng_boxes[i].name.replace('提升', ''), self.config.get('属性优先级'))
             if stats_priority != -1:
                 priority += 10 - stats_priority
