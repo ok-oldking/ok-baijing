@@ -48,7 +48,6 @@ class ManXunTask(BJTask):
             "烙痕唤醒黑名单": "可以使用烙痕名称或者核心技能名称, 部分匹配即可",
             "跳过战斗": "不打的战斗, 比如鱼叉将军",
         }
-        self.destination = None
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
         self.pause_combat_message = "未开启自动战斗, 无法继续漫巡, 暂停中, 请手动完成战斗或开启自动跳过后继续"
 
@@ -325,11 +324,11 @@ class ManXunTask(BJTask):
         choices = find_boxes_by_name(boxes, re.compile(r"^通往"))
         if len(choices) > 0:
             for i in range(len(choices)):
-                if self.destination is None:
+                if self.info.get('destination') is None:
                     self.logger.debug(f"检测到追踪目标: {choices[i].name}")
-                    self.destination = choices[i].name
+                    self.info['destination'] = choices[i].name
                 choices[i].height *= 3
-                if self.destination != choices[i].name:
+                if self.info.get('destination') != choices[i].name:
                     self.log_info("排除错误追踪目标")
                     del choices[i]
                     continue
