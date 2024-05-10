@@ -3,7 +3,7 @@ import re
 from typing_extensions import override
 
 from ok.feature.Box import find_box_by_name
-from ok.task.TaskExecutor import FinishedException
+from ok.task.TaskExecutor import FinishedException, TaskDisabledException
 from task.ManXunTask import ManXunTask
 
 
@@ -13,14 +13,15 @@ class AoSkillManXunTask(ManXunTask):
         super().__init__()
         self.route = None
         self.name = "循环漫巡凹技能"
-        self.description = """主界面开始, 凹指定角色指定技能, 刷不到指定技能就自动跳过战斗结束
-    """
+        self.description = "烙痕使用上次编组, 凹指定角色指定技能, 刷不到指定技能就自动跳过战斗结束"
         self.super_config = self.default_config
         del self.super_config['投降跳过战斗']
         self.default_config = {'角色名': '岑缨', '路线': '空想王国', '循环次数': 5,
                                '目标技能': ['职业联动', '针对打击', '奉献'], '目标技能个数': 3}
         self.default_config = {**self.default_config, **self.super_config}
         self.config_description["目标技能"] = "部分匹配, 最好不要加标点符号"
+        self.config_description["目标技能个数"] = "目标技能加起来一共刷多少个, 大于等于"
+        self.config_description["循环次数"] = "刷多少次, 直到技能满足要求"
         self.pause_combat_message = "成功刷到目标技能, 暂停"
 
     @override
@@ -57,6 +58,8 @@ class AoSkillManXunTask(ManXunTask):
                 self.loop()
             except FinishedException:
                 return True
+            except TaskDisabledException:
+                self.pause()
             except Exception as e:
                 self.screenshot(f"运行异常{e}")
                 self.log_error(f"运行异常,已暂停:", e, True)

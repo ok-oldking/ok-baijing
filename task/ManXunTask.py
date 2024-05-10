@@ -1,10 +1,12 @@
+import queue
 import re
+import threading
 
 from typing_extensions import override
 
 from ok.color.Color import calculate_color_percentage
 from ok.feature.Box import find_box_by_name, find_boxes_by_name, find_boxes_within_boundary, average_width
-from ok.task.TaskExecutor import FinishedException
+from ok.task.TaskExecutor import FinishedException, TaskDisabledException
 from task.BJTask import BJTask
 
 
@@ -26,6 +28,8 @@ class ManXunTask(BJTask):
 
     def __init__(self):
         super().__init__()
+        self.update_stats_thread = None
+        self.update_stats_queue = queue.Queue()
         self.name = "执行一次自动漫巡"
         self.description = """自动漫巡, 必须进入漫巡后开始, 并开启追踪
     """
@@ -64,6 +68,10 @@ class ManXunTask(BJTask):
         return self.box_of_screen(0.6, 0.8, 0.3, 0.2, "当前区域")
 
     @property
+    def stats_zone(self):
+        return self.box_of_screen(0.25, 0.9, 0.5, 0.1, "当前属性区域")
+
+    @property
     def dialog_zone(self):
         return self.box_of_screen(0.25, 0.15, 0.5, 0.75, "弹窗检测区域")
 
@@ -76,6 +84,9 @@ class ManXunTask(BJTask):
 
     @override
     def run(self):
+        if self.update_stats_thread is None:
+            self.update_stats_thread = threading.Thread(target=self.do_update_current_stats, name="update_stats")
+            self.update_stats_thread.start()
         if not self.check_is_manxun_ui():
             self.log_error("必须从漫巡选项界面开始, 并且开启路线追踪", notify=True)
             self.screenshot("必须从漫巡选项界面开始, 并且开启路线追踪")
@@ -86,6 +97,8 @@ class ManXunTask(BJTask):
             except FinishedException:
                 self.log_info("自动漫巡任务结束", notify=True)
                 return
+            except TaskDisabledException:
+                self.pause()
             except Exception as e:
                 self.screenshot(f"运行异常{e}")
                 self.log_error(f"运行异常,已暂停:", e, True)
@@ -137,6 +150,18 @@ class ManXunTask(BJTask):
                     continue
                 else:
                     raise e
+
+    def update_current_stats(self):
+        self.update_stats_queue.put(self.frame)
+
+    def do_update_current_stats(self):
+        while True and not self.exit_is_set():
+            frame = self.update_stats_queue.get()
+            boxes = self.ocr(self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
+            if len(boxes) != 5:
+                self.log_error(f"无法找到5个属性, {boxes}")
+            else:
+                self.info['当前属性'] = [int(box.name) for box in boxes]
 
     def do_handle_dialog(self, choice):
         boxes = self.ocr(self.dialog_zone)
@@ -231,7 +256,11 @@ class ManXunTask(BJTask):
     def handle_stats_up(self, stats_up_choices):
         stats_up_parsed = self.parse_stats_choices(stats_up_choices)
         target = list(stats_up_parsed.values())[0][0][1]
-        for stat in self.config['属性优先级']:
+        priority = self.config['属性优先级']
+        if self.info.get('当前属性', [0, 0, 0, 0, 0])[4] >= 900:
+            priority = remove_item(priority, '终端')
+            self.log_debug(f'终端超过900, 从优先级中移除终端 {priority}')
+        for stat in priority:
             if stat in stats_up_parsed:
                 # Assuming stats_up_parsed[stat] is a list of tuples (value, box)
                 # and we want the one with the highest 'value'
@@ -282,6 +311,7 @@ class ManXunTask(BJTask):
                     index = find_priority_string(choices, priority, index)
             else:
                 index = find_priority_string(choices, priority, index)
+            self.update_current_stats()
             self.click_box(choices[index])
             self.log_info(
                 f"点击选项:{choices[index]}, 使用优先级 {priority}, index {index}, {choices}")
@@ -324,11 +354,11 @@ class ManXunTask(BJTask):
         choices = find_boxes_by_name(boxes, re.compile(r"^通往"))
         if len(choices) > 0:
             for i in range(len(choices)):
-                if self.info.get('destination') is None:
+                if self.info.get('追踪目标') is None:
                     self.logger.debug(f"检测到追踪目标: {choices[i].name}")
-                    self.info['destination'] = choices[i].name
+                    self.info['追踪目标'] = choices[i].name
                 choices[i].height *= 3
-                if self.info.get('destination') != choices[i].name:
+                if self.info.get('追踪目标') != choices[i].name:
                     self.log_info("排除错误追踪目标")
                     del choices[i]
                     continue
@@ -374,8 +404,10 @@ class ManXunTask(BJTask):
             if stats := get_current_stats(box.name):
                 current_stats.append(stats)
         if len(current_stats) != 5:
-            current_stats = [0, 0, 0, 0, 0]
-            self.log_error("没有找到五个属性")
+            self.log_error(f"没有找到五个属性 {current_stats}")
+            current_stats = self.info.get('当前属性', [0, 0, 0, 0, 0])
+        else:
+            self.info['当前属性'] = current_stats
         tisheng_boxes = find_boxes_by_name(boxes, re.compile(r"^提升"))
         if len(tisheng_boxes) != 5:
             raise Exception("没有找到五个提升")
@@ -395,7 +427,7 @@ class ManXunTask(BJTask):
             stats_priority = find_index(tisheng_boxes[i].name.replace('提升', ''), self.config.get('属性优先级'))
             if stats_priority != -1:
                 priority += 10 - stats_priority
-            if current_stats[i] >= 1250 or (i == 4) and current_stats[i] >= 900:  ##超过上限或者终端超过900不点
+            if current_stats[i] >= 1250 or (i == 4 and current_stats[i] >= 900):  ##超过上限或者终端超过900不点
                 priority = 0
             if priority > highest_priority:
                 highest_index = i
@@ -464,6 +496,11 @@ def find_index(element, lst):
         return lst.index(element)
     except ValueError:
         return -1
+
+
+def remove_item(original_list, item_to_remove):
+    new_list = [item for item in original_list if item != item_to_remove]
+    return new_list
 
 
 gray_percent_per_line = 0.03660270078 * 100
