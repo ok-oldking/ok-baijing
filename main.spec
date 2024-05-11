@@ -1,12 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
-import rapidocr_onnxruntime
+import rapidocr_openvino
 
 
 block_cipher = None
 
-package_name = 'rapidocr_onnxruntime'
-install_dir = Path(rapidocr_onnxruntime.__file__).resolve().parent
+package_name = 'rapidocr_openvino'
+install_dir = Path(rapidocr_openvino.__file__).resolve().parent
 
 onnx_paths = list(install_dir.rglob('*.onnx'))
 yaml_paths = list(install_dir.rglob('*.yaml'))

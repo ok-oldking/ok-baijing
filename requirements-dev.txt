@@ -6,4 +6,4 @@ typing-extensions
 opencv-python
 PySide6
 
-rapidocr_onnxruntime
+rapidocr_openvino
