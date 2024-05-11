@@ -2,6 +2,8 @@ import queue
 import re
 import threading
 
+import win32api
+import win32process
 from typing_extensions import override
 
 from ok.color.Color import calculate_color_percentage
@@ -28,8 +30,6 @@ class ManXunTask(BJTask):
 
     def __init__(self):
         super().__init__()
-        self.update_stats_thread = None
-        self.update_stats_queue = queue.Queue()
         self.name = "执行一次自动漫巡"
         self.description = """自动漫巡, 必须进入漫巡后开始, 并开启追踪
     """
@@ -54,6 +54,10 @@ class ManXunTask(BJTask):
         }
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
         self.pause_combat_message = "未开启自动战斗, 无法继续漫巡, 暂停中, 请手动完成战斗或开启自动跳过后继续"
+        self.stats_seq = ["体质", "防御", "攻击", "专精", "终端"]
+        self.update_stats_thread = None
+        self.update_stats_queue = queue.Queue()
+        self.ocr_target_height = 700  # 缩小图片提升ocr速度
 
     def end(self, message, result=False):
         self.log_info(f"执行结束:{message}")
@@ -69,7 +73,7 @@ class ManXunTask(BJTask):
 
     @property
     def stats_zone(self):
-        return self.box_of_screen(0.25, 0.9, 0.5, 0.1, "当前属性区域")
+        return self.box_of_screen(0.3, 0.92, 0.4, 0.06, "当前属性区域")
 
     @property
     def dialog_zone(self):
@@ -151,10 +155,31 @@ class ManXunTask(BJTask):
                 else:
                     raise e
 
+    @property
+    def stats_priority(self):
+        priority = self.config['属性优先级']
+        current = self.info.get('当前属性', [0, 0, 0, 0, 0])
+        to_remove = []
+        to_demote = []
+        for i, value in enumerate(current):
+            if value >= 1280 or (value >= 900 and i == 4):
+                to_remove.append(self.stats_seq[i])
+            elif value >= 1000:
+                to_demote.append(self.stats_seq[i])
+        priority = remove_item(priority, to_remove)
+        if to_demote:
+            not_demote = [item for item in priority if item not in to_demote]
+            priority = not_demote + [item for item in priority if item in to_demote]
+        return priority
+
     def update_current_stats(self):
         self.update_stats_queue.put(self.frame)
 
     def do_update_current_stats(self):
+        thread = win32api.GetCurrentThread()
+
+        # Set the priority of the thread to lowest
+        win32process.SetThreadPriority(thread, win32process.THREAD_PRIORITY_LOWEST)
         while True and not self.exit_is_set():
             frame = self.update_stats_queue.get()
             boxes = self.ocr(self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
@@ -203,7 +228,10 @@ class ManXunTask(BJTask):
             skip_battle = find_box_by_name(boxes, self.config.get("跳过战斗"))
             self.logger.debug(
                 f"开始战斗 跳过战斗查询结果:{skip_battle} abs(choice):{abs(choice)}")
-            if skip_battle:
+            if new_combat := find_box_by_name(boxes, re.compile(r"全新挑战无法直接胜利")):
+                self.log_info("发现全新挑战, 暂停", True)
+                self.pause()
+            elif skip_battle:
                 self.log_info(f"回避配置列表里的战斗 {skip_battle}")
                 self.click_cancel()
                 return self.loop(choice=choice - 1)
@@ -256,10 +284,7 @@ class ManXunTask(BJTask):
     def handle_stats_up(self, stats_up_choices):
         stats_up_parsed = self.parse_stats_choices(stats_up_choices)
         target = list(stats_up_parsed.values())[0][0][1]
-        priority = self.config['属性优先级']
-        if self.info.get('当前属性', [0, 0, 0, 0, 0])[4] >= 900:
-            priority = remove_item(priority, '终端')
-            self.log_debug(f'终端超过900, 从优先级中移除终端 {priority}')
+        priority = self.stats_priority
         for stat in priority:
             if stat in stats_up_parsed:
                 # Assuming stats_up_parsed[stat] is a list of tuples (value, box)
@@ -269,7 +294,7 @@ class ManXunTask(BJTask):
                 target = box
                 break
         self.log_info(
-            f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target}")
+            f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target} priority:{priority}")
         self.click_box(target)
 
     def handle_skill_dialog(self, boxes, confirm):
@@ -413,22 +438,25 @@ class ManXunTask(BJTask):
             raise Exception("没有找到五个提升")
         avg_width = average_width(tisheng_boxes)
         self.log_debug(f"高维:目前数值 {current_stats} {tisheng_boxes}")
-        highest_priority = 0
-        highest_index = None
+        highest_priority = -2
+        highest_index = 0
+        stats_priority = self.stats_priority
         for i in range(5):
             box, yellow_line, gray_line = self.locate_gaowei_line(tisheng_boxes[i], avg_width)
+            if current_stats[i] >= 1000:
+                yellow_line = yellow_line / 2
             if gray_line == 0:  # 全点亮或者没有对应卡
                 if yellow_line > 0:  # 全点亮 以黄线数量为优先级
-                    priority = 100 * yellow_line
+                    priority = 1000 * yellow_line
                 else:  # 没对应卡 最低优先级
                     priority = -1
             else:  # 有灰色线, 以黄线数量为优先级
-                priority = 10 * yellow_line
-            stats_priority = find_index(tisheng_boxes[i].name.replace('提升', ''), self.config.get('属性优先级'))
-            if stats_priority != -1:
-                priority += 10 - stats_priority
-            if current_stats[i] >= 1250 or (i == 4 and current_stats[i] >= 900):  ##超过上限或者终端超过900不点
-                priority = 0
+                priority = 100 * yellow_line
+            stats_priority_index = find_index(tisheng_boxes[i].name.replace('提升', ''), stats_priority)
+            if stats_priority_index != -1:
+                priority += 10 - stats_priority_index
+            if current_stats[i] >= 1280 or (i == 4 and current_stats[i] >= 900):  ##超过上限或者终端超过900不点
+                priority = -1
             if priority > highest_priority:
                 highest_index = i
                 highest_priority = priority
@@ -498,9 +526,11 @@ def find_index(element, lst):
         return -1
 
 
-def remove_item(original_list, item_to_remove):
-    new_list = [item for item in original_list if item != item_to_remove]
-    return new_list
+def remove_item(original_list, items_to_remove):
+    if items_to_remove:
+        return [item for item in original_list if item not in items_to_remove]
+    else:
+        return original_list
 
 
 gray_percent_per_line = 0.03660270078 * 100
