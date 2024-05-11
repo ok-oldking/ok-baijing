@@ -37,13 +37,16 @@ class ManXunTask(BJTask):
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
         self.default_config = {
             "投降跳过战斗": False,
-            "属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
+            "1000以下属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
+            "1000以上属性优先级": ["专精", "体质", "攻击", "防御", "终端"],
+            "烙痕唤醒属性优先级": ["终端", "攻击", "专精", "体质", "防御"],
             "深度等级最多提升到": 12,
             "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
             "高深度选项优先级": ["风险区", "烙痕唤醒", "高维同调", "记忆强化", "研习区", "休整区"],
             "高低深度分界": 6,
             "烙痕唤醒黑名单": ["幕影重重", "谎言之下", "馆中遗影"],
             "跳过战斗": ["鱼叉将军-日光浅滩E"],
+            "烙痕属性提升不选技能点": True
         }
         self.config_description = {
             "投降跳过战斗": "如果无法直接胜利, 自动投降跳过",
@@ -51,6 +54,9 @@ class ManXunTask(BJTask):
             "高低深度分界": "比如可以配置低深度优先记忆强化, 高深度优先高维同调",
             "烙痕唤醒黑名单": "可以使用烙痕名称或者核心技能名称, 部分匹配即可",
             "跳过战斗": "不打的战斗, 比如鱼叉将军",
+            "1000以下属性优先级": "1000以下最好优先点满破5星烙痕, 用暗礁和烙痕唤醒加其他属性",
+            "1000以上属性优先级": "1000以上优先攻击,专精属性",
+            "烙痕唤醒属性优先级": "比如用烙痕凑900终端",
         }
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
         self.pause_combat_message = "未开启自动战斗, 无法继续漫巡, 暂停中, 请手动完成战斗或开启自动跳过后继续"
@@ -155,21 +161,21 @@ class ManXunTask(BJTask):
                 else:
                     raise e
 
-    @property
-    def stats_priority(self):
-        priority = self.config['属性优先级']
+    def stats_priority(self, gaowei):
+        priority = self.config['1000以下属性优先级'] if gaowei else self.config['1000以下属性优先级']
+        priority_1000 = self.config['1000以上属性优先级']
         current = self.info.get('当前属性', [0, 0, 0, 0, 0])
         to_remove = []
         to_demote = []
         for i, value in enumerate(current):
-            if value >= 1280 or (value >= 900 and i == 4):
+            if value >= 1250 or (value >= 900 and i == 4):
                 to_remove.append(self.stats_seq[i])
             elif value >= 1000:
                 to_demote.append(self.stats_seq[i])
         priority = remove_item(priority, to_remove)
         if to_demote:
             not_demote = [item for item in priority if item not in to_demote]
-            priority = not_demote + [item for item in priority if item in to_demote]
+            priority = not_demote + [item for item in priority_1000 if item in to_demote]
         return priority
 
     def update_current_stats(self):
@@ -271,7 +277,7 @@ class ManXunTask(BJTask):
         return find_boxes_by_name(boxes, self.stats_up_re)
 
     def auto_skip_combat(self):
-        start_combat = self.wait_until(lambda: self.ocr(self.star_combat_zone, "开始战斗"), time_out=80)
+        start_combat = self.wait_until(lambda: self.ocr(self.star_combat_zone, "开始战斗"), time_out=180)
         if not start_combat:
             raise RuntimeError("无法找到开始战斗按钮")
         self.click_relative(0.04, 0.065)
@@ -283,18 +289,27 @@ class ManXunTask(BJTask):
 
     def handle_stats_up(self, stats_up_choices):
         stats_up_parsed = self.parse_stats_choices(stats_up_choices)
-        target = list(stats_up_parsed.values())[0][0][1]
-        priority = self.stats_priority
+        skilled_list = []
+        target = None
+        priority = self.stats_priority(False)
         for stat in priority:
-            if stat in stats_up_parsed:
-                # Assuming stats_up_parsed[stat] is a list of tuples (value, box)
-                # and we want the one with the highest 'value'
-                value, box = max(stats_up_parsed[stat], key=lambda x: x[0])
-                self.log_info(f"查找最高优先级提升属性结果 {box.name}")
-                target = box
+            if target is not None:
                 break
+            for box_stat, _, box in stats_up_parsed:
+                if box_stat == stat:
+                    closet = box.find_closest_box("all", stats_up_choices)
+                    if closet and self.config.get(
+                            '烙痕属性提升不选技能点') and '技能点' in closet.name and box.closest_distance(
+                        closet) < box.height:
+                        skilled_list.append(box)
+                        continue
+                    else:
+                        target = box
+                        break
+        if target is None:
+            target = skilled_list[0]
         self.log_info(
-            f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target} priority:{priority}")
+            f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target} priority:{priority} skilled_list:{skilled_list}")
         self.click_box(target)
 
     def handle_skill_dialog(self, boxes, confirm):
@@ -440,7 +455,7 @@ class ManXunTask(BJTask):
         self.log_debug(f"高维:目前数值 {current_stats} {tisheng_boxes}")
         highest_priority = -2
         highest_index = 0
-        stats_priority = self.stats_priority
+        stats_priority = self.stats_priority(True)
         for i in range(5):
             box, yellow_line, gray_line = self.locate_gaowei_line(tisheng_boxes[i], avg_width)
             if current_stats[i] >= 1000:
@@ -461,7 +476,7 @@ class ManXunTask(BJTask):
                 highest_index = i
                 highest_priority = priority
             self.log_debug(f"高维属性 {box} {yellow_line} {gray_line}  {priority}")
-        self.log_debug(f"最高优先级 高维 {tisheng_boxes[highest_index]} {highest_priority}")
+        self.log_debug(f"最高优先级 高维 {tisheng_boxes[highest_index]} {highest_priority} {stats_priority}")
         self.draw_boxes("ocr", boxes)
         return tisheng_boxes[highest_index]
 
@@ -487,18 +502,16 @@ class ManXunTask(BJTask):
     # 寻找灰色, 如有则降低优先级
 
     def parse_stats_choices(self, boxes):
-        attributes = {}
+        stats_list = []
         for box in boxes:
             # Find all matches of the pattern in the input string
             for match in re.finditer(self.stats_up_re, box.name):
                 attribute, start, end = match.groups()
                 # Calculate the value. If 'end' is None, use 'start'; otherwise, calculate the average.
                 value = int(start) if not end else (int(start) + int(end)) / 2
-                a_list = attributes.get(attribute, [])
-                a_list.append((value, box))
-                attributes[attribute] = a_list
+                stats_list.append((attribute, value, box))
 
-        return attributes
+        return sorted(stats_list, key=lambda x: x[1], reverse=True)
 
     def is_black_text(self, box):
         black_percentage = calculate_color_percentage(self.frame, black_color, box)
