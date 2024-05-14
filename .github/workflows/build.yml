@@ -24,8 +24,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller  # Add other dependencies if needed
           pip install -r requirements.txt
-          pip uninstall -y numpy
-          pip install -i https://pypi.anaconda.org/intel/simple numpy
 
       - name: Build Executable
         run: |
