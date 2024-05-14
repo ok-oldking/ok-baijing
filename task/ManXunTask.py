@@ -38,8 +38,8 @@ class ManXunTask(BJTask):
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
         self.default_config = {
             "投降跳过战斗": False,
-            "1000以下属性优先级": ["专精", "攻击", "终端", "体质", "防御"],
-            "1000以上属性优先级": ["专精", "攻击", "体质", "防御", "终端"],
+            "1000以下属性优先级": ["专精", "攻击", "终端", "防御", "体质"],
+            "1000以上属性优先级": ["专精", "攻击", "防御", "体质", "终端"],
             "烙痕唤醒属性优先级": ["终端", "攻击", "专精", "体质", "防御"],
             "深度等级最多提升到": 12,
             "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
@@ -66,8 +66,10 @@ class ManXunTask(BJTask):
         self.ocr_target_height = 700  # 缩小图片提升ocr速度
 
     def on_create(self):
+        self.log_debug('on_create')
         self.update_stats_queue = queue.Queue()
-        self.update_stats_thread = threading.Thread(target=self.do_update_current_stats, name="update_stats")
+        self.update_stats_thread = threading.Thread(target=self.do_update_current_stats,
+                                                    name=f"{self.__class__.__name__}_update_stats")
         self.update_stats_thread.start()
 
     def on_destroy(self):
