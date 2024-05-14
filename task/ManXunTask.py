@@ -38,8 +38,8 @@ class ManXunTask(BJTask):
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
         self.default_config = {
             "投降跳过战斗": False,
-            "1000以下属性优先级": ["终端", "专精", "体质", "攻击", "防御"],
-            "1000以上属性优先级": ["专精", "体质", "攻击", "防御", "终端"],
+            "1000以下属性优先级": ["专精", "攻击", "终端", "体质", "防御"],
+            "1000以上属性优先级": ["专精", "攻击", "体质", "防御", "终端"],
             "烙痕唤醒属性优先级": ["终端", "攻击", "专精", "体质", "防御"],
             "深度等级最多提升到": 12,
             "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
@@ -175,7 +175,7 @@ class ManXunTask(BJTask):
         for i, value in enumerate(current):
             if value >= 1250 or (value >= 900 and i == 4):
                 to_remove.append(self.stats_seq[i])
-            elif value >= 1000:
+            elif value >= 950:
                 to_demote.append(self.stats_seq[i])
         priority = remove_item(priority, to_remove)
         if to_demote:
