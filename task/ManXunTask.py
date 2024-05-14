@@ -1,4 +1,3 @@
-import queue
 import re
 import threading
 
@@ -30,6 +29,7 @@ class ManXunTask(BJTask):
 
     def __init__(self):
         super().__init__()
+        self.update_stats_queue = None
         self.name = "执行一次自动漫巡"
         self.description = """自动漫巡, 必须进入漫巡后开始, 并开启追踪
     """
@@ -62,7 +62,6 @@ class ManXunTask(BJTask):
         self.pause_combat_message = "未开启自动战斗, 无法继续漫巡, 暂停中, 请手动完成战斗或开启自动跳过后继续"
         self.stats_seq = ["体质", "防御", "攻击", "专精", "终端"]
         self.update_stats_thread = None
-        self.update_stats_queue = queue.Queue()
         self.ocr_target_height = 700  # 缩小图片提升ocr速度
 
     def end(self, message, result=False):
@@ -95,6 +94,7 @@ class ManXunTask(BJTask):
     @override
     def run(self):
         if self.update_stats_thread is None:
+            self.update_stats_queue = self.new_queue()
             self.update_stats_thread = threading.Thread(target=self.do_update_current_stats, name="update_stats")
             self.update_stats_thread.start()
         if not self.check_is_manxun_ui():
@@ -186,8 +186,11 @@ class ManXunTask(BJTask):
 
         # Set the priority of the thread to lowest
         win32process.SetThreadPriority(thread, win32process.THREAD_PRIORITY_LOWEST)
-        while True and not self.exit_is_set():
+        while not self.exit_is_set():
             frame = self.update_stats_queue.get()
+            if frame is None:
+                self.log_info("No frame in queue, destroyed")
+                return
             boxes = self.ocr(self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
             if len(boxes) != 5:
                 self.log_error(f"无法找到5个属性, {boxes}")

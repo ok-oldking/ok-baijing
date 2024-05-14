@@ -24,15 +24,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller  # Add other dependencies if needed
           pip install -r requirements.txt
+          pip uninstall -y numpy
+          pip install -i https://pypi.anaconda.org/intel/simple numpy
 
       - name: Build Executable
         run: |
           echo ${{ github.sha }} > Release.txt
           pyinstaller main.spec
-          mv dist ok-baijing
+          mv dist/bundle ok-baijing
           7z a -t7z -r "ok-baijing.7z" "ok-baijing"
+          rm -r dist
           pyinstaller main_debug.spec
-          mv dist ok-baijing-debug
+          mv dist/bundle ok-baijing-debug
           7z a -t7z -r "ok-baijing-debug.7z" "ok-baijing-debug"
 
       - name: Create Release

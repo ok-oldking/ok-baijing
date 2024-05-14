@@ -57,10 +57,11 @@ a = Analysis(
     noarchive=False,
 )
 
-import fnmatch
 
 # List of patterns to exclude
-exclude_patterns = ['opencv_videoio_ffmpeg',  'opengl32sw.dll']
+exclude_patterns = ['opencv_videoio_ffmpeg',  'opengl32sw.dll', 'Qt6Quick.dll','Qt6Pdf.dll','Qt6Qml.dll','Qt6OpenGL.dll','Qt6Network.dll','Qt6QmlModels.dll','Qt6VirtualKeyboard.dll','QtNetwork.pyd','libcrypto-3.dll'
+,'mfc140u.dll','openvino_pytorch_frontend.dll','openvino_tensorflow_frontend.dll','py_tensorflow_frontend.cp311-win_amd64.pyd','py_pytorch_frontend.cp311-win_amd64.pyd',
+'MSVCP140.dll']
 
 # Optimized list comprehension using any() with a generator expression
 a.binaries = [x for x in a.binaries if not any(pattern in x[0] for pattern in exclude_patterns)]
@@ -72,9 +73,8 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='ok-baijing-debug',
     icon='icon.ico',
     debug=False,
@@ -96,6 +96,6 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='test',
+    name='bundle',
 )
 
