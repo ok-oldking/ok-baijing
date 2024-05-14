@@ -1,3 +1,4 @@
+import queue
 import re
 import threading
 
@@ -64,6 +65,14 @@ class ManXunTask(BJTask):
         self.update_stats_thread = None
         self.ocr_target_height = 700  # 缩小图片提升ocr速度
 
+    def on_create(self):
+        self.update_stats_queue = queue.Queue()
+        self.update_stats_thread = threading.Thread(target=self.do_update_current_stats, name="update_stats")
+        self.update_stats_thread.start()
+
+    def on_destroy(self):
+        self.update_stats_queue.put(None)
+
     def end(self, message, result=False):
         self.log_info(f"执行结束:{message}")
         return result
@@ -93,10 +102,6 @@ class ManXunTask(BJTask):
 
     @override
     def run(self):
-        if self.update_stats_thread is None:
-            self.update_stats_queue = self.new_queue()
-            self.update_stats_thread = threading.Thread(target=self.do_update_current_stats, name="update_stats")
-            self.update_stats_thread.start()
         if not self.check_is_manxun_ui():
             self.log_error("必须从漫巡选项界面开始, 并且开启路线追踪", notify=True)
             self.screenshot("必须从漫巡选项界面开始, 并且开启路线追踪")
