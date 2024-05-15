@@ -182,7 +182,7 @@ class ManXunTask(BJTask):
         priority = remove_item(priority, to_remove)
         if to_demote:
             not_demote = [item for item in priority if item not in to_demote]
-            priority = not_demote + [item for item in priority_1000 if item in to_demote]
+            priority = not_demote + [item for item in priority_1000 if item in to_demote] + to_remove
         return priority
 
     def update_current_stats(self):
@@ -317,7 +317,10 @@ class ManXunTask(BJTask):
                         target = box
                         break
         if target is None:
-            target = skilled_list[0]
+            if skilled_list:
+                target = skilled_list[0]
+            else:
+                target = stats_up_parsed[0]
         self.log_info(
             f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target} priority:{priority} skilled_list:{skilled_list}")
         self.click_box(target)
