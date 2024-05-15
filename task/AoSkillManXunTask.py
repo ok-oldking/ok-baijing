@@ -56,10 +56,8 @@ class AoSkillManXunTask(ManXunTask):
         while True:
             try:
                 self.loop()
-            except FinishedException:
+            except (FinishedException, TaskDisabledException):
                 return True
-            except TaskDisabledException:
-                self.pause()
             except Exception as e:
                 self.screenshot(f"运行异常{e}")
                 self.log_error(f"运行异常,已暂停:", e, True)
