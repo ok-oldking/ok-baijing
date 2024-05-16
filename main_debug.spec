@@ -41,7 +41,25 @@ add_data = list(set(yaml_add_data + onnx_add_data + openvino_add_data))
 
 excludes = ['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'resources', 'matplotlib','numpy.lib']
 add_data.append(('icon.ico', '.'))
-add_data.append(('assets', '.'))
+
+def list_files(directory, prefix=''):
+    file_list = []
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            # Create the full filepath by joining root with the filename
+            filepath = os.path.join(root, filename)
+            # Create the relative path for the file to be used in the spec datas
+            relative_path = os.path.relpath(filepath, prefix)
+            # Append the tuple (full filepath, relative path) to the file list
+            file_list.append((filepath, relative_path))
+    return file_list
+
+if os.path.exists('assets'):
+    root_folder = os.getcwd()  # Get the current working directory
+    assets = list_files(os.path.join(root_folder, 'assets'), root_folder)
+    print(f"assets {assets}")
+    add_data += assets
+    
 print(f"add_data {add_data}")
 
 a = Analysis(
