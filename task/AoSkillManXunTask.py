@@ -4,7 +4,7 @@ from typing_extensions import override
 
 from ok.feature.Box import find_box_by_name
 from ok.task.TaskExecutor import FinishedException, TaskDisabledException
-from task.ManXunTask import ManXunTask
+from task.ManXunTask import ManXunTask, find_index
 
 
 class AoSkillManXunTask(ManXunTask):
@@ -16,13 +16,19 @@ class AoSkillManXunTask(ManXunTask):
         self.description = "烙痕使用上次编组, 凹指定角色指定技能, 刷不到指定技能就自动跳过战斗结束"
         self.super_config = self.default_config
         del self.super_config['投降跳过战斗']
-        self.default_config = {'角色名': '岑缨', '路线': '空想王国', '循环次数': 5,
+        self.default_config = {'角色名': '岑缨', '路线': '空想王国', '支援烙痕': '于火光中', '支援烙痕类型': '专精',
+                               '循环次数': 5,
                                '目标技能': ['职业联动', '针对打击', '奉献'], '目标技能个数': 3}
         self.default_config = {**self.default_config, **self.super_config}
         self.config_description["目标技能"] = "部分匹配, 最好不要加标点符号"
         self.config_description["目标技能个数"] = "目标技能加起来一共刷多少个, 大于等于"
         self.config_description["循环次数"] = "刷多少次, 直到技能满足要求"
+        self.config_description["支援烙痕"] = '部分匹配, 如"于火光中[蛋生]" 可以填"于火光中"'
+        self.config_description["角色名"] = '部分匹配即可'
+        self.config_description["支援烙痕类型"] = '一定要匹配, 否则刷不到'
+        self.config_type["支援烙痕类型"] = {'type': "drop_down", 'options': self.stats_seq}
         self.pause_combat_message = "成功刷到目标技能, 暂停"
+        self.refresh_laohen_button = None
 
     @override
     def run(self):
@@ -69,6 +75,8 @@ class AoSkillManXunTask(ManXunTask):
         if not manxun_start:
             self.select_char()
             manxun_start = self.ocr(self.bottom_button_zone, "漫巡开始")
+        self.choose_assist_laohen()
+        self.sleep(3)
         self.click_box(manxun_start)
         self.wait_until(lambda: self.ocr(self.current_zone, match=re.compile(r"^自动")), time_out=60)
         self.click_relative(0.5, 0.5)
@@ -76,10 +84,12 @@ class AoSkillManXunTask(ManXunTask):
     def if_skip_battle(self):
         if self.info.get('漫巡深度', 0) < self.config['深度等级最多提升到']:
             self.log_debug(f"未达到预定深度, 不跳过战斗")
+            self.pause_combat_message = "未达到预定深度, 不跳过战斗"
             return False
 
         self.log_debug(f"检测技能是否满足条件 {self.info.get('已获得目标技能个数', 0)} {self.info.get('获得技能', [])}")
         if self.info.get('已获得目标技能个数', 0) >= self.config['目标技能个数']:
+            self.pause_combat_message = "成功刷到目标技能, 暂停"
             return False
         else:
             return True
@@ -116,15 +126,44 @@ class AoSkillManXunTask(ManXunTask):
         self.click_box(next_step)
         self.wait_click_box(lambda: self.ocr(self.top_right_button_zone, "上次编组"))
         self.sleep(3)
-        while True:
-            boxes = self.ocr(self.box_of_screen(0.5, 0.5, 0.5, 0.5, "支援记忆烙痕检测区域"),
-                             re.compile("选择支援记忆烙痕"))
-            if boxes:
-                self.notification("没有支援记忆烙痕, 请手动选择后继续!")
-                self.screenshot("没有支援记忆烙痕, 请手动选择后继续!")
-                self.pause()
-            break
-        self.sleep(0.5)
+
+    def choose_assist_laohen(self):
+        boxes = self.ocr(self.box_of_screen(0.5, 0.5, 0.5, 0.5, "支援记忆烙痕检测区域"),
+                         re.compile("支援记忆烙痕"))
+        zhiyuan = boxes[0]
+        self.click_box(zhiyuan, relative_y=-0.5)
+        self.sleep(2)
+        if not self.refresh_laohen_button:
+            self.refresh_laohen_button = self.ocr(self.top_right_button_zone, "刷新列表")
+        assist_laohen_type = self.config.get("支援烙痕类型")
+        laohen_type_index = find_index(assist_laohen_type, self.stats_seq)
+        gap = self.height_of_screen((1564 - 1209) / 4 / 1080)
+        laohen_type_y = self.height_of_screen(68 / 1080)
+        laohen_type_x = self.screen_width - self.height_of_screen((1920 - 1564) / 1080) - (
+                4 - laohen_type_index) * gap
+        self.click(laohen_type_x, laohen_type_y)
+        assist = self.wait_until(self.choose_assist_laohen_check,
+                                 time_out=300,
+                                 wait_until_before_delay=3,
+                                 post_action=lambda: self.click_box(self.refresh_laohen_button))
+        self.click_box(assist)
+        self.sleep(2)
+        select = self.ocr(self.box_of_screen(0.5, 0.5, 0.5, 0.5, "支援记忆烙痕检测区域"),
+                          re.compile("选择支援记忆烙痕"))
+        if select:
+            self.log_info("选了上次选中的支援烙痕, 再选一遍")
+            self.choose_assist_laohen()
+
+    def choose_assist_laohen_check(self):
+        manpos = self.find_feature('manpo_90', 1, 1, 0.96)
+        if manpos:
+            boxes = self.ocr(self.box_of_screen(0.1, 0.3, 0.9, 0.6, "支援烙痕检测区域"))
+            for box_90 in manpos:
+                laohen = box_90.find_closest_box('all', boxes,
+                                                 lambda box: self.config.get('支援烙痕') in box.name)
+                if laohen and box_90.closest_distance(laohen) < box_90.width:
+                    self.log_info(f"查找到满破烙痕 {laohen}")
+                    return box_90
 
     def enter_manxun(self):
         if not self.route:
@@ -168,3 +207,10 @@ class AoSkillManXunTask(ManXunTask):
     @property
     def bottom_button_zone(self):
         return self.box_of_screen(0.2, 0.8, 0.6, 0.2, "下面按钮检测区域")
+
+
+white_color = {
+    'r': (240, 255),  # Red range
+    'g': (240, 255),  # Green range
+    'b': (240, 255)  # Blue range
+}

@@ -494,23 +494,17 @@ class ManXunTask(BJTask):
         return tisheng_boxes[highest_index]
 
     def locate_gaowei_line(self, box, width):
-        box.width = width
-        box = box.copy(0, -box.height * 0.15, 0, -box.height * 0.8,
+        box = box.copy(height_offset=-box.height * 0.8,
                        name=f"{box.name}_search_line")
-        while True:
-            box = box.copy(y_offset=-box.height)
-            if box.y < 0:
-                raise Exception("找不到高维黑色区域")
-            black_percent = calculate_color_percentage(self.frame, gaowei_bg, box)
-            if black_percent > 0.7:
-                box = box.copy(y_offset=-box.height * 4)
-                gray_percentage = calculate_color_percentage(self.frame, gray_color, box) * 100
-                yellow_percentage = calculate_color_percentage(self.frame, yellow_color, box) * 100
-                gray_line = (gray_percentage + gray_percent_per_line / 2) / gray_percent_per_line
-                yellow_line = (yellow_percentage + yellow_percent_per_line / 2) / yellow_percent_per_line
-                # self.log_debug(f"高维点亮 {box} {yellow_line} {yellow_percentage} {yellow_percent_per_line}")
-                self.draw_boxes(boxes=box, color="blue")
-                return box, int(yellow_line), int(gray_line)
+        box.width = width
+        box.y = self.height_of_screen(0.592)
+        gray_percentage = calculate_color_percentage(self.frame, gray_color, box) * 100
+        yellow_percentage = calculate_color_percentage(self.frame, yellow_color, box) * 100
+        gray_line = (gray_percentage + gray_percent_per_line / 2) / gray_percent_per_line
+        yellow_line = (yellow_percentage + yellow_percent_per_line / 2) / yellow_percent_per_line
+        # self.log_debug(f"高维点亮 {box} {yellow_line} {yellow_percentage} {yellow_percent_per_line}")
+        self.draw_boxes(boxes=box, color="blue")
+        return box, int(yellow_line), int(gray_line)
 
     # 寻找灰色, 如有则降低优先级
 
@@ -572,12 +566,6 @@ black_color = {
     'r': (0, 25),  # Red range
     'g': (0, 25),  # Green range
     'b': (0, 25)  # Blue range
-}
-
-gaowei_bg = {
-    'r': (25, 45),  # Red range
-    'g': (25, 45),  # Green range
-    'b': (25, 45)  # Blue range
 }
 
 gray_color = {

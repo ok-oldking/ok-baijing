@@ -41,6 +41,7 @@ add_data = list(set(yaml_add_data + onnx_add_data + openvino_add_data))
 
 excludes = ['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'resources', 'matplotlib','numpy.lib']
 add_data.append(('icon.ico', '.'))
+add_data.append(('assets', '.'))
 print(f"add_data {add_data}")
 
 a = Analysis(

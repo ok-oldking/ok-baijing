@@ -1,9 +1,10 @@
 from ok.feature.Box import boxes_to_map_by_list_of_names
+from ok.feature.FindFeature import FindFeature
 from ok.ocr.OCR import OCR
 from ok.task.OneTimeTask import OneTimeTask
 
 
-class BJTask(OneTimeTask, OCR):
+class BJTask(OneTimeTask, OCR, FindFeature):
     def __init__(self):
         super(BJTask, self).__init__()
         self.main_menu_buttons = None
