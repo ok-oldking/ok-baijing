@@ -75,6 +75,7 @@ a = Analysis(
     excludes=[],
     cipher=block_cipher,
     noarchive=False,
+    noconsole=True,
 )
 
 
