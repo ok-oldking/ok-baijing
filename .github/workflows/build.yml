@@ -32,10 +32,10 @@ jobs:
       - name: Build Executable
         run: |
           echo ${{ github.sha }} > Release.txt
-          (Get-Content config.py) -replace 'version = "v0.0.1"', 'version = "${{ github.ref }}"' | Set-Content config.py
+          (Get-Content config.py) -replace 'version = "v0.0.1"', 'version = "${{ steps.tagName.outputs.tag }}"' | Set-Content config.py
           pyinstaller main.spec
           mv dist/bundle ok-baijing
-          7z a -t7z-r "ok-baijing-${{ steps.tagName.outputs.tag }}.7z" "ok-baijing"
+          7z a -t7z -r "ok-baijing-${{ steps.tagName.outputs.tag }}.7z" "ok-baijing"
           rm -r dist
           pyinstaller main_debug.spec
           mv dist/bundle ok-baijing-debug
@@ -54,6 +54,16 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: upload-win-debug
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ok-baijing-debug-${{ steps.tagName.outputs.tag }}.7z
+          asset_name: ok-baijing-debug-${{ steps.tagName.outputs.tag }}.7z
+          asset_content_type: application/zip
+
       - name: upload-win
         uses: actions/upload-release-asset@v1
         env:
@@ -64,12 +74,3 @@ jobs:
           asset_name: ok-baijing-${{ steps.tagName.outputs.tag }}.7z
           asset_content_type: application/zip
 
-      - name: upload-win-debug
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ok-baijing-debug-${{ steps.tagName.outputs.tag }}.7z
-          asset_name: ok-baijing-debug-${{ steps.tagName.outputs.tag }}.7z
-          asset_content_type: application/zip
