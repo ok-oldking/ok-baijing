@@ -1,6 +1,7 @@
+import os
+
 from ok.util.path import get_path_in_package
 from task.AoSkillManXunTask import AoSkillManXunTask
-
 from task.ManXunTask import ManXunTask
 
 version = "v0.0.1"
@@ -11,7 +12,7 @@ config = {
     'config_folder': 'configs',
     'gui_icon': get_path_in_package(__file__, 'icon.ico'),
     'ocr': 'RapidOCR',
-    'coco_feature_folder': 'assets/coco',  # required if using feature detection
+    'coco_feature_folder': os.path.join('assets', 'coco'),  # required if using feature detection
     'about': """
     <h1>OK白荆回廊自动漫巡辅助</h1>
     <p>QQ群:594495691</p>

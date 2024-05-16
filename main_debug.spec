@@ -50,16 +50,16 @@ def list_files(directory, prefix=''):
             filepath = os.path.join(root, filename)
             # Create the relative path for the file to be used in the spec datas
             relative_path = os.path.relpath(filepath, prefix)
+            folder_path = os.path.dirname(relative_path)
             # Append the tuple (full filepath, relative path) to the file list
-            file_list.append((filepath, relative_path))
+            file_list.append((filepath, folder_path))
     return file_list
 
 if os.path.exists('assets'):
     root_folder = os.getcwd()  # Get the current working directory
     assets = list_files(os.path.join(root_folder, 'assets'), root_folder)
-    print(f"assets {assets}")
     add_data += assets
-    
+
 print(f"add_data {add_data}")
 
 a = Analysis(
