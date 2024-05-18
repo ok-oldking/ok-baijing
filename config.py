@@ -25,6 +25,7 @@ config = {
     'log_file': 'logs/ok-script.log',  # Optional, auto rotating every day
     'error_log_file': 'logs/ok-script_error.log',
     'version': version,
+    'locale': 'zh_CN',
     'onetime_tasks': [  # tasks to execute
         ManXunTask(),
         AoSkillManXunTask(),
