@@ -1,4 +1,4 @@
-# -*- mode: python ; coding: utf-8 -*-
+# -*- mode: pythzon ; coding: utf-8 -*-
 from pathlib import Path
 import rapidocr_openvino
 
@@ -80,7 +80,7 @@ a = Analysis(
 
 
 # List of patterns to exclude
-exclude_patterns = ['opencv_videoio_ffmpeg',  'opengl32sw.dll', 'Qt6Quick.dll','Qt6Pdf.dll','Qt6Qml.dll','Qt6OpenGL.dll','Qt6Network.dll','Qt6QmlModels.dll','Qt6VirtualKeyboard.dll','QtNetwork.pyd','libcrypto-3.dll'
+exclude_patterns = ['opencv_videoio_ffmpeg',  'opengl32sw.dll', 'Qt6Quick.dll','Qt6Pdf.dll','Qt6Qml.dll','Qt6OpenGL.dll','Qt6Network.dll','Qt6QmlModels.dll','Qt6VirtualKeyboard.dll','QtNetwork.pyd'
 ,'mfc140u.dll','openvino_pytorch_frontend.dll','openvino_tensorflow_frontend.dll','py_tensorflow_frontend.cp311-win_amd64.pyd','py_pytorch_frontend.cp311-win_amd64.pyd',
 'MSVCP140.dll']
 
