@@ -17,12 +17,12 @@ class AoSkillManXunTask(ManXunTask):
         self.super_config = self.default_config
         del self.super_config['投降跳过战斗']
         self.default_config = {'角色名': '岑缨', '路线': '空想王国', '支援烙痕': '于火光中', '支援烙痕类型': '专精',
-                               '循环次数': 5,
+                               '漫巡次数': 5,
                                '目标技能': ['职业联动', '针对打击', '奉献'], '目标技能个数': 3}
         self.default_config = {**self.default_config, **self.super_config}
         self.config_description["目标技能"] = "部分匹配, 最好不要加标点符号"
         self.config_description["目标技能个数"] = "目标技能加起来一共刷多少个, 大于等于"
-        self.config_description["循环次数"] = "刷多少次, 直到技能满足要求"
+        self.config_description["漫巡次数"] = "刷多少次, 直到技能满足要求"
         self.config_description["支援烙痕"] = '部分匹配, 如"于火光中[蛋生]" 可以填"于火光中"'
         self.config_description["角色名"] = '部分匹配即可'
         self.config_description["支援烙痕类型"] = '一定要匹配, 否则刷不到'
@@ -32,11 +32,11 @@ class AoSkillManXunTask(ManXunTask):
 
     @override
     def run(self):
-        for i in range(self.config.get('循环次数')):
+        for i in range(self.config.get('漫巡次数')):
             self.info.clear()
             self.route = None
-            self.info['目前循环次数'] = i + 1
-            self.log_info(f'凹技能进行第{self.info["目前循环次数"]} 次')
+            self.info['目前漫巡次数'] = i + 1
+            self.log_info(f'凹技能进行第{self.info["目前漫巡次数"]} 次')
             if not self.loop_manxun():
                 break
         self.log_info("自动漫巡任务结束", notify=True)

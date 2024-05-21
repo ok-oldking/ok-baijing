@@ -405,6 +405,8 @@ class ManXunTask(BJTask):
     def do_find_choices(self):
         boxes = self.ocr(self.choice_zone)
         choices = find_boxes_by_name(boxes, re.compile(r"^通往"))
+        if len(choices) == 1:
+            self.info['追踪目标'] = choices[0].name
         if len(choices) > 0:
             for i in range(len(choices)):
                 if self.info.get('追踪目标') is None:
