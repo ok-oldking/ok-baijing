@@ -64,6 +64,7 @@ class ManXunTask(BJTask):
         self.stats_seq = ["体质", "防御", "攻击", "专精", "终端"]
         self.update_stats_thread = None
         self.ocr_target_height = 700  # 缩小图片提升ocr速度
+        self.total_anjiao_count = 3  # 预测暗礁属性
 
     def on_create(self):
         self.log_debug('on_create')
@@ -203,7 +204,23 @@ class ManXunTask(BJTask):
             if len(boxes) != 5:
                 self.log_error(f"无法找到5个属性, {boxes}")
             else:
-                self.info['当前属性'] = [int(box.name) for box in boxes]
+                stats = [int(box.name) for box in boxes]
+                self.update_stats_for_anjiao(stats)
+                self.info['当前属性'] = stats
+
+    def update_stats_for_anjiao(self, stats):
+        missing_count = self.total_anjiao_count - self.info.get('暗礁次数', 0)
+        if missing_count > 2:
+            missing_count = 2
+        if missing_count > 0:
+            sorted_indexes = target_index_array(stats)
+            for i, sort in enumerate(sorted_indexes):
+                if sort < 2:  # 最低两个加75
+                    stats[i] += 75 * missing_count
+                elif sort < 3:
+                    stats[i] += 40 * missing_count
+                else:
+                    stats[i] += 10 * missing_count
 
     def do_handle_dialog(self, choice):
         boxes = self.ocr(self.dialog_zone)
@@ -265,6 +282,7 @@ class ManXunTask(BJTask):
         elif no_brain_box := self.click_box_if_name_match(boxes, self.click_no_brainer):
             if no_brain_box.name == '属性提升':
                 self.log_info('暗礁属性提升')
+                self.info_add('暗礁次数')
             else:
                 self.log_info(f"点击固定对话框: {no_brain_box.name}")
         elif stats_up_choices := self.find_stats_up(boxes):
@@ -469,6 +487,7 @@ class ManXunTask(BJTask):
             self.log_error(f"没有找到五个属性 {current_stats}")
             current_stats = self.info.get('当前属性', [0, 0, 0, 0, 0])
         else:
+            self.update_stats_for_anjiao(current_stats)
             self.info['当前属性'] = current_stats
         tisheng_boxes = find_boxes_by_name(boxes, re.compile(r"^提升"))
         if len(tisheng_boxes) != 5:
@@ -561,6 +580,31 @@ def remove_item(original_list, items_to_remove):
     else:
         return original_list
 
+
+def target_index_array(lst):
+    # Pair each element with its index and sort by the element, then by the original index
+    sorted_pairs = sorted((e, i) for i, e in enumerate(lst))
+
+    # Create a list to hold the target indices
+    target_indices = [-1] * len(lst)
+
+    # Assign continuous indices to the elements in the sorted list
+    current_index = 0
+    for _, original_index in sorted_pairs:
+        if target_indices[original_index] == -1:
+            target_indices[original_index] = current_index
+            current_index += 1
+        else:
+            # If the number is equal to the previous, increment the current index
+            current_index += 1
+            target_indices[original_index] = current_index
+
+    return target_indices
+
+
+# Example usage:
+original_list = [3, 4, 1, 4]
+print(target_index_array(original_list))
 
 gray_percent_per_line = 0.03660270078 * 100
 yellow_percent_per_line = 0.02821869488 * 100
