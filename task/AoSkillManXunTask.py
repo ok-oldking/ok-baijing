@@ -155,7 +155,7 @@ class AoSkillManXunTask(ManXunTask):
             self.choose_assist_laohen()
 
     def choose_assist_laohen_check(self):
-        manpos = self.find_feature('manpo_90', 1, 1, 0.96)
+        manpos = self.find_feature('manpo_90', 1, 1, 0.95)
         if manpos:
             boxes = self.ocr(self.box_of_screen(0.1, 0.3, 0.9, 0.6, "支援烙痕检测区域"))
             for box_90 in manpos:
