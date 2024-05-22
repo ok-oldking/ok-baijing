@@ -59,7 +59,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body: ${{ steps.changes.outputs.log }}  # Include commit messages in release body
+          body: ${{ steps.changes.outputs.changes }}  # Include commit messages in release body
           draft: false
           prerelease: false
 
