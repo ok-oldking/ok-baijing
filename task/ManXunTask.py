@@ -212,15 +212,15 @@ class ManXunTask(BJTask):
         missing_count = self.total_anjiao_count - self.info.get('暗礁次数', 0)
         if missing_count > 2:
             missing_count = 2
-        if missing_count > 0:
+        for _ in range(missing_count):
             sorted_indexes = target_index_array(stats)
             for i, sort in enumerate(sorted_indexes):
                 if sort < 2:  # 最低两个加75
-                    stats[i] += 75 * missing_count
+                    stats[i] += 75
                 elif sort < 3:
-                    stats[i] += 40 * missing_count
+                    stats[i] += 40
                 else:
-                    stats[i] += 10 * missing_count
+                    stats[i] += 10
 
     def do_handle_dialog(self, choice):
         boxes = self.ocr(self.dialog_zone)
