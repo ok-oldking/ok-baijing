@@ -115,7 +115,8 @@ class ManXunTask(BJTask):
                 self.log_info("自动漫巡任务结束", notify=True)
                 return
             except TaskDisabledException:
-                self.pause()
+                self.log_info("点击停止", notify=True)
+                return
             except Exception as e:
                 self.screenshot(f"运行异常{e}")
                 self.log_error(f"运行异常,已暂停:", e, True)

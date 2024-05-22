@@ -13,7 +13,7 @@ ok
 click_screenshots/
 test_scripts/
 screenshots/
-
+thread_dumps.txt
 # C extensions
 *.so
 
