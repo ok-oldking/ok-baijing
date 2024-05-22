@@ -245,8 +245,11 @@ class ManXunTask(BJTask):
             skip_battle = find_box_by_name(boxes, self.config.get("跳过战斗"))
             self.logger.debug(
                 f"开始战斗 跳过战斗查询结果:{skip_battle} abs(choice):{abs(choice)}")
-            if new_combat := find_box_by_name(boxes, re.compile(r"全新挑战无法直接胜利")):
+            if find_box_by_name(boxes, re.compile(r"全新挑战无法直接胜利")):
                 self.log_info("发现全新挑战, 暂停", True)
+                self.pause()
+            elif find_box_by_name(boxes, re.compile(r"历史通过深度")):
+                self.log_info("历史通过深度不足, 暂停", True)
                 self.pause()
             elif skip_battle:
                 self.log_info(f"回避配置列表里的战斗 {skip_battle}")
@@ -260,7 +263,10 @@ class ManXunTask(BJTask):
                 self.log_info(self.pause_combat_message, True)
                 self.pause()
         elif no_brain_box := self.click_box_if_name_match(boxes, self.click_no_brainer):
-            self.log_info(f"点击固定对话框: {no_brain_box.name}")
+            if no_brain_box.name == '属性提升':
+                self.log_info('暗礁属性提升')
+            else:
+                self.log_info(f"点击固定对话框: {no_brain_box.name}")
         elif stats_up_choices := self.find_stats_up(boxes):
             self.handle_stats_up(stats_up_choices)
         else:
