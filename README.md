@@ -1,6 +1,7 @@
 # ![icon](icon.ico) ok_baijing
 
 白荆自动漫巡辅助脚本
+视频演示 [https://www.bilibili.com/video/BV1K7421f7KT/](https://www.bilibili.com/video/BV1K7421f7KT/)
 ![img.png](readme/img.png)
 
 * 基于[ok-script](https://github.com/ok-oldking/ok-script)开发, 完全使用OCR文字识别开发
