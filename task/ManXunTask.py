@@ -47,7 +47,8 @@ class ManXunTask(BJTask):
             "高低深度分界": 6,
             "烙痕唤醒黑名单": ["幕影重重", "谎言之下", "馆中遗影"],
             "跳过战斗": ["鱼叉将军-日光浅滩E"],
-            "烙痕属性提升不选技能点": True
+            "烙痕属性提升不选技能点": True,
+            "自定义路径": ["空想王国|2-10|[世界倒影,世界倒影]|1", "空想王国|2-10|[高维同调,烙痕唤醒]|1"]
         }
         self.config_description = {
             "投降跳过战斗": "如果无法直接胜利, 自动投降跳过",
@@ -58,6 +59,7 @@ class ManXunTask(BJTask):
             "1000以下属性优先级": "1000以下最好优先点满破5星烙痕, 用暗礁和烙痕唤醒加其他属性",
             "1000以上属性优先级": "1000以上优先攻击,专精属性",
             "烙痕唤醒属性优先级": "比如用烙痕凑900终端",
+            "自定义路径": "使用半角符号，格式为 路线|区域|[选项1名称,选项2名称]|选第几个。\n默认配置海底图多拿30终端少30攻击"
         }
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
         self.pause_combat_message = "未开启自动战斗, 无法继续漫巡, 暂停中, 请手动完成战斗或开启自动跳过后继续"
@@ -65,6 +67,7 @@ class ManXunTask(BJTask):
         self.update_stats_thread = None
         self.ocr_target_height = 700  # 缩小图片提升ocr速度
         self.total_anjiao_count = 3  # 预测暗礁属性
+        self.custom_routes = []
 
     def on_create(self):
         self.log_debug('on_create')
@@ -72,6 +75,22 @@ class ManXunTask(BJTask):
         self.update_stats_thread = threading.Thread(target=self.do_update_current_stats,
                                                     name=f"{self.__class__.__name__}_update_stats")
         self.update_stats_thread.start()
+
+    def validate_config(self, key, value):
+        self.custom_routes.clear()
+        if key == '自定义路径':
+            for v in value:
+                try:
+                    route, zone, choices, to_choose = v.split('|')
+                    list_of_choices = choices[1:-1].split(',')
+                    config_list = [route, zone, list_of_choices, int(to_choose)]
+                    if len(config_list) != 4:
+                        return f'自定义路径配置格式错误:{v}'
+                    self.custom_routes.append(config_list)
+                except Exception as e:
+                    self.log_error(f'自定义路径 配置错误：{v}', exception=e)
+                    return f'自定义路径配置格式错误:{v}'
+            self.log_info(f'加载自定义路径:{self.custom_routes}')
 
     def on_destroy(self):
         self.update_stats_queue.put(None)
@@ -139,12 +158,13 @@ class ManXunTask(BJTask):
             return choices
         current = self.ocr(self.current_zone, match=re.compile(r"^自动"))
         if not current:
-            return False
-        else:
-            self.click_relative(0.9, 0.5)
-            self.sleep(2)
-            self.next_frame()
-            return self.check_optimistic()
+            stats = self.ocr_stats()
+            if not stats:
+                return False
+        self.click_relative(0.9, 0.5)
+        self.sleep(2)
+        self.next_frame()
+        return self.check_optimistic()
 
     def loop(self, choice=-1):
         choices, choice_clicked = self.click_choice(choice)
@@ -200,13 +220,18 @@ class ManXunTask(BJTask):
             if frame is None:
                 self.log_info("No frame in queue, destroyed")
                 return
-            boxes = self.ocr(self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
-            if len(boxes) != 5:
-                self.log_error(f"无法找到5个属性, {boxes}")
-            else:
-                stats = [int(box.name) for box in boxes]
-                self.update_stats_for_anjiao(stats)
-                self.info['当前属性'] = stats
+            self.ocr_stats(frame)
+
+    def ocr_stats(self, frame=None):
+        boxes = self.ocr(self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
+        if len(boxes) != 5:
+            self.log_error(f"无法找到5个属性, {boxes}")
+            return False
+        else:
+            stats = [int(box.name) for box in boxes]
+            self.update_stats_for_anjiao(stats)
+            self.info['当前属性'] = stats
+            return True
 
     def update_stats_for_anjiao(self, stats):
         missing_count = self.total_anjiao_count - self.info.get('暗礁次数', 0)
@@ -283,12 +308,21 @@ class ManXunTask(BJTask):
             if no_brain_box.name == '属性提升':
                 self.log_info('暗礁属性提升')
                 self.info_add('暗礁次数')
+            elif no_brain_box.name == '漫巡推进' or no_brain_box.name == '前进':
+                self.sleep(4)
+                self.ocr_zone()
             else:
                 self.log_info(f"点击固定对话框: {no_brain_box.name}")
         elif stats_up_choices := self.find_stats_up(boxes):
             self.handle_stats_up(stats_up_choices)
         else:
             raise Exception(f"未知弹窗 无法处理")
+
+    def ocr_zone(self):
+        zone = self.ocr(self.box_of_screen(1527 / 1920, 957 / 1080, to_x=1695 / 1920, to_y=1063 / 1080))
+        if zone:
+            self.info['当前区域'] = zone[0].name
+            return self.info['当前区域']
 
     def confirm_generate(self):
         return False
@@ -345,7 +379,7 @@ class ManXunTask(BJTask):
             if skilled_list:
                 target = skilled_list[0]
             else:
-                target = stats_up_parsed[0]
+                target = stats_up_parsed[0][2]
         self.log_info(
             f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target} priority:{priority} skilled_list:{skilled_list}")
         self.click_box(target)
@@ -360,9 +394,31 @@ class ManXunTask(BJTask):
         self.check_skills()
         self.log_info(f"获取技能 {skills}")
         self.click_box(confirm)
+        self.sleep(4)
+        self.ocr_zone()
 
     def check_skills(self):
         pass
+
+    def check_custom_route(self, choices):
+        for custom_route in self.custom_routes:
+            target, zone, custom_choices, custom_index = custom_route
+            target_match = target in self.info.get('追踪目标')
+            zone_match = zone == self.info.get('当前区域')
+            size_custom = len(custom_choices)
+            if target_match and zone_match:
+                if size_custom == len(choices):
+                    all_match = True
+                    for i in range(size_custom):
+                        if custom_choices[i] != choices[i].name:
+                            all_match = False
+                            break
+                    if all_match:
+                        self.log_info(f"自定义路径找到，{custom_route} 点击第{custom_index}个")
+                        index = custom_index - 1
+                        self.click_box(choices[index])
+                        return True, choices[index]
+        return False, None
 
     def click_choice(self, index=-1):
         choices = self.find_choices()
@@ -371,6 +427,9 @@ class ManXunTask(BJTask):
         if abs(index) > len(choices):
             raise ValueError(f"click_choice out of bonds")
         else:
+            handled, clicked = self.check_custom_route(choices)
+            if handled:
+                return choices, clicked
             priority = self.config['低深度选项优先级'] if self.info.get('漫巡深度', 0) < self.config[
                 '高低深度分界'] else \
                 self.config[

@@ -20,7 +20,7 @@ class AoSkillManXunTask(ManXunTask):
                                '漫巡次数': 5,
                                '目标技能': ['职业联动', '针对打击', '奉献'], '目标技能个数': 3}
         self.default_config = {**self.default_config, **self.super_config}
-        self.config_description["目标技能"] = "部分匹配, 最好不要加标点符号"
+        self.config_description["目标技能"] = "部分匹配, 中间带标点的，留半边，如'职业联动*菱形'，写'职业联动'"
         self.config_description["目标技能个数"] = "目标技能加起来一共刷多少个, 大于等于"
         self.config_description["漫巡次数"] = "刷多少次, 直到技能满足要求"
         self.config_description["支援烙痕"] = '部分匹配, 如"于火光中[蛋生]" 可以填"于火光中"'
@@ -40,7 +40,7 @@ class AoSkillManXunTask(ManXunTask):
                 break
             self.info.clear()
             self.route = None
-            self.info['目前漫巡次数'] = i + 1
+            self.info['目前漫巡次数'] = i
             self.log_info(f'凹技能进行第{self.info["目前漫巡次数"]} 次', notify=True)
             if not self.loop_manxun():
                 break
@@ -160,14 +160,14 @@ class AoSkillManXunTask(ManXunTask):
             self.choose_assist_laohen()
 
     def choose_assist_laohen_check(self):
-        manpos = self.find_feature('manpo_90', 1, 1, 0.93)
+        manpos = self.find_feature('manpo_90', 1, 1, 0.90)
         if manpos:
             boxes = self.ocr(self.box_of_screen(0.1, 0.3, 0.9, 0.6, "支援烙痕检测区域"))
             for box_90 in manpos:
                 laohen = box_90.find_closest_box('all', boxes,
                                                  lambda box: self.config.get('支援烙痕') in box.name)
                 if laohen and box_90.closest_distance(laohen) < box_90.width * 2:
-                    self.log_info(f"查找到满破烙痕 {laohen}")
+                    self.log_info(f"查找到满破烙痕 {laohen} {box_90}")
                     return box_90
 
     def enter_manxun(self):
