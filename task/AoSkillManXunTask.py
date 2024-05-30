@@ -64,6 +64,7 @@ class AoSkillManXunTask(ManXunTask):
         if is_main or self.route:
             if not self.enter_manxun():
                 self.start_manxun()
+            self.wait_until(self.check_is_manxun_ui, time_out=60)
         while True:
             try:
                 self.loop()
@@ -83,8 +84,6 @@ class AoSkillManXunTask(ManXunTask):
         self.choose_assist_laohen()
         self.sleep(3)
         self.click_box(manxun_start)
-        self.wait_until(lambda: self.ocr(self.current_zone, match=re.compile(r"^自动")), time_out=60)
-        self.click_relative(0.5, 0.5)
 
     def if_skip_battle(self):
         if self.info.get('漫巡深度', 0) < self.config['深度等级最多提升到']:

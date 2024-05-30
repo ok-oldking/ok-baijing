@@ -142,29 +142,26 @@ class ManXunTask(BJTask):
                 self.log_error(f"运行异常,已暂停:", e, True)
                 self.pause()
 
-    def check_optimistic(self):
+    def check_is_manxun_ui(self):
         choices = self.do_find_choices()
         if not choices:
             self.logger.debug("找不到选项")
-            return False
+            current = self.ocr(self.current_zone, match=re.compile(r"^自动"))
+            if not current:
+                stats = self.ocr_stats()
+                if not stats:
+                    return False
+            self.click_relative(0.9, 0.5)
+            self.sleep(2)
+            return self.check_is_manxun_ui()
         if self.find_depth() == 0:
             self.logger.debug("找不到深度")
-            return False
-        return choices
+            self.click_relative(0.9, 0.5)
+            self.sleep(2)
+            return self.check_is_manxun_ui()
 
-    def check_is_manxun_ui(self):
-        choices = self.check_optimistic()
-        if choices:
-            return choices
-        current = self.ocr(self.current_zone, match=re.compile(r"^自动"))
-        if not current:
-            stats = self.ocr_stats()
-            if not stats:
-                return False
-        self.click_relative(0.9, 0.5)
-        self.sleep(2)
         self.next_frame()
-        return self.check_optimistic()
+        return choices
 
     def loop(self, choice=-1):
         choices, choice_clicked = self.click_choice(choice)
