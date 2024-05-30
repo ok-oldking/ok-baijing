@@ -19,6 +19,8 @@ jobs:
       - name: Get Changes between Tags
         id: changes
         uses: simbo/changes-between-tags-action@v1
+        with:
+          validate-tag: false
 
       - name: Get tag name
         id: tagName
