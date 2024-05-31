@@ -125,8 +125,8 @@ class ManXunTask(BJTask):
     @override
     def run(self):
         if not self.check_is_manxun_ui():
-            self.log_error("必须从漫巡选项界面开始, 并且开启路线追踪", notify=True)
-            self.screenshot("必须从漫巡选项界面开始, 并且开启路线追踪")
+            self.log_error("必须选好角色进入漫巡界面后开始, 并且开启路线追踪", notify=True)
+            self.screenshot("必须选好角色进入漫巡界面后开始")
             return
         while True:
             try:

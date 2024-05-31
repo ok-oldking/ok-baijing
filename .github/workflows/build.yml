@@ -65,7 +65,7 @@ jobs:
             下载不带debug的7z文件然后解压缩后运行, 如果需要查找问题，上传更多日志才需要下载debug版本
             最好使用模拟器运行安卓版，可以挂后台，稳定。PC版游戏可能兼容性较差，无法挂后台。
             更新内容：
-            ${{ steps.changes.outputs.changes }}  # Include commit messages in release body
+            ${{ steps.changes.outputs.changes }} 
           draft: false
           prerelease: false
 
