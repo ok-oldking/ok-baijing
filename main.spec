@@ -110,7 +110,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name=config['gui_title'],
+    name='ok-baijing',
     icon='icon.ico',
     debug=False,
     bootloader_ignore_signals=False,

@@ -32,6 +32,7 @@ class AoSkillManXunTask(ManXunTask):
 
     @override
     def run(self):
+        self.log_info(f'run, config {self.config}')
         i = 0
         while True:
             i = i + 1

@@ -123,6 +123,7 @@ class ManXunTask(BJTask):
 
     @override
     def run(self):
+        self.log_info(f'run, config {self.config}')
         if not self.check_is_manxun_ui():
             self.log_error("必须选好角色进入漫巡界面后开始, 并且开启路线追踪", notify=True)
             self.screenshot("必须选好角色进入漫巡界面后开始")
@@ -660,10 +661,6 @@ def target_index_array(lst):
 
     return target_indices
 
-
-# Example usage:
-original_list = [3, 4, 1, 4]
-print(target_index_array(original_list))
 
 gray_percent_per_line = 0.03660270078 * 100
 yellow_percent_per_line = 0.02821869488 * 100
