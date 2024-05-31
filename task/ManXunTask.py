@@ -2,8 +2,6 @@ import queue
 import re
 import threading
 
-import win32api
-import win32process
 from typing_extensions import override
 
 from ok.color.Color import calculate_color_percentage
@@ -68,6 +66,7 @@ class ManXunTask(BJTask):
         self.ocr_target_height = 700  # 缩小图片提升ocr速度
         self.total_anjiao_count = 3  # 预测暗礁属性
         self.custom_routes = []
+        self.to_update_stats = True
 
     def on_create(self):
         self.log_debug('on_create')
@@ -205,13 +204,14 @@ class ManXunTask(BJTask):
         return priority
 
     def update_current_stats(self):
-        self.update_stats_queue.put(self.frame)
+        if self.to_update_stats:
+            if self.update_stats_queue.qsize() > 0:
+                self.log_error(f"update_stats_queue blocked {self.update_stats_queue.qsize()}")
+                return
+            self.to_update_stats = False
+            self.update_stats_queue.put(self.frame)
 
     def do_update_current_stats(self):
-        thread = win32api.GetCurrentThread()
-
-        # Set the priority of the thread to lowest
-        win32process.SetThreadPriority(thread, win32process.THREAD_PRIORITY_LOWEST)
         while not self.exit_is_set():
             frame = self.update_stats_queue.get()
             if frame is None:
@@ -255,6 +255,7 @@ class ManXunTask(BJTask):
             box = self.find_highest_gaowei_number(boxes)
             self.click_box(box)
             self.log_info(f"高位同调 点击最高 {box}")
+            self.to_update_stats = True
         elif confirm := find_box_by_name(boxes, "完成漫巡"):
             self.click_box(confirm)
             self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="确认"))
@@ -305,6 +306,7 @@ class ManXunTask(BJTask):
             if no_brain_box.name == '属性提升':
                 self.log_info('暗礁属性提升')
                 self.info_add('暗礁次数')
+                self.to_update_stats = True
             elif no_brain_box.name == '漫巡推进' or no_brain_box.name == '前进':
                 self.sleep(4)
                 self.ocr_zone()
@@ -312,6 +314,7 @@ class ManXunTask(BJTask):
                 self.log_info(f"点击固定对话框: {no_brain_box.name}")
         elif stats_up_choices := self.find_stats_up(boxes):
             self.handle_stats_up(stats_up_choices)
+            self.to_update_stats = True
         else:
             raise Exception(f"未知弹窗 无法处理")
 

@@ -19,7 +19,10 @@ config = {
     'use_gui': True,
     'config_folder': 'configs',
     'gui_icon': get_path_in_package(__file__, 'icon.ico'),
-    'ocr': 'RapidOCR',
+    'ocr': {
+        'lib': 'RapidOCR',
+        'inference_num_threads': int(os.cpu_count() / 2)
+    },
     'coco_feature_folder': os.path.join('assets', 'coco'),  # required if using feature detection
     'windows_capture': {  # required  when supporting windows game
         'title': re.compile(r'^白荆回廊'),
