@@ -5,6 +5,8 @@
 
 [报告BUG](https://github.com/ok-oldking/ok-baijing/issues/new?assignees=ok-oldking&labels=bug&projects=&template=%E6%8A%A5%E5%91%8Abug-.md&title=%5BBUG%5D)
 
+QQ群594495691 [OK白荆回廊自动漫巡辅助]：https://qm.qq.com/q/aGO7eBJ2Uw
+
 ![img.png](readme/img.png)
 
 * 基于[ok-script](https://github.com/ok-oldking/ok-script)开发, 完全使用OCR文字识别开发
