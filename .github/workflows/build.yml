@@ -61,9 +61,23 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body: ${{ steps.changes.outputs.changes }}  # Include commit messages in release body
+          body: |
+            下载不带debug的7z文件然后解压缩后运行, 如果需要查找问题，上传更多日志才需要下载debug版本
+            最好使用模拟器运行安卓版，可以挂后台，稳定。PC版游戏可能兼容性较差，无法挂后台。
+            更新内容：
+            ${{ steps.changes.outputs.changes }}  # Include commit messages in release body
           draft: false
           prerelease: false
+
+      - name: upload-win
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./ok-baijing-${{ steps.tagName.outputs.tag }}.7z
+          asset_name: ok-baijing-${{ steps.tagName.outputs.tag }}.7z
+          asset_content_type: application/zip
 
       - name: upload-win-debug
         uses: actions/upload-release-asset@v1
@@ -75,13 +89,5 @@ jobs:
           asset_name: ok-baijing-debug-${{ steps.tagName.outputs.tag }}.7z
           asset_content_type: application/zip
 
-      - name: upload-win
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./ok-baijing-${{ steps.tagName.outputs.tag }}.7z
-          asset_name: ok-baijing-${{ steps.tagName.outputs.tag }}.7z
-          asset_content_type: application/zip
+
 

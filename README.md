@@ -2,6 +2,9 @@
 
 白荆自动漫巡辅助脚本
 视频演示 [https://www.bilibili.com/video/BV1K7421f7KT/](https://www.bilibili.com/video/BV1K7421f7KT/)
+
+[报告BUG](https://github.com/ok-oldking/ok-baijing/issues/new?assignees=ok-oldking&labels=bug&projects=&template=%E6%8A%A5%E5%91%8Abug-.md&title=%5BBUG%5D)
+
 ![img.png](readme/img.png)
 
 * 基于[ok-script](https://github.com/ok-oldking/ok-script)开发, 完全使用OCR文字识别开发
@@ -14,7 +17,7 @@
 ### windows版本运行
 
 1. 从[Github Release](https://github.com/ok-oldking/ok_baijing/releases)下载最新版, 双击运行.exe, 杀毒软件可能会报警,
-   关闭杀毒软件或添加白名单
+   添加安装目录到白名单
 2. 进入游戏漫巡界面, 设置全部为简化
    ![img_3.png](readme/img_3.png)
 3. 先选择窗口, 点击运行
