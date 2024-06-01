@@ -33,6 +33,11 @@ config = {
     'adb_capture': {
 
     },
+    'update': {
+        'releases_url': 'https://api.github.com/repos/ok-oldking/ok-baijing/releases',
+        'proxy_url': 'https://gh.ok-script.com/',
+        'use_proxy': True
+    },
     'about': """
     <h1>OK白荆回廊自动漫巡辅助</h1>
     <p>QQ群:594495691</p>

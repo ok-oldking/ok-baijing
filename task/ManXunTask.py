@@ -166,7 +166,7 @@ class ManXunTask(BJTask):
     def loop(self, choice=-1):
         choices, choice_clicked = self.click_choice(choice)
         if not choice_clicked:
-            self.logger.error(f"没有选项可以点击")
+            self.logger.error(f"没有选项可以点击, 请确认是否开启漫巡设置全部简化！")
             self.screenshot("没有选项可以点击")
             return self.handle_dialog_with_retry(choice)
         self.wait_until(lambda: self.handle_dialog_with_retry(choice), wait_until_before_delay=1.5)
@@ -468,7 +468,7 @@ class ManXunTask(BJTask):
                     return False, choices, index
         if laohen_count < 2:
             return False, choices, index
-        black_list = self.config["烙痕唤醒黑名单"] + [re.compile("核心技能已解锁满级")]
+        black_list = [re.compile(s) for s in self.config["烙痕唤醒黑名单"]] + [re.compile("核心技能已解锁满级")]
         for i in range(index, last_laohen_index - 1, -1):
             if i == last_laohen_index:
                 self.click_box(choices[i])
