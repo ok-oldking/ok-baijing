@@ -34,7 +34,7 @@ config = {
 
     },
     'update': {
-        'releases_url': 'https://api.github.com/repos/ok-oldking/ok-baijing/releases',
+        'releases_url': 'https://api.github.com/repos/ok-oldking/ok-baijing/releases?per_page=15',
         'proxy_url': 'https://gh.ok-script.com/',
         'exe_name': 'ok-baijing.exe',
         'use_proxy': True
