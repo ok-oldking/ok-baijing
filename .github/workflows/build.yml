@@ -48,6 +48,7 @@ jobs:
           mv dist/bundle ok-baijing
           7z a -t7z -r "ok-baijing-release-${{ steps.tagName.outputs.tag }}.7z" "ok-baijing"
           rm -r dist
+          rm -r ok-baijing
           pyinstaller main_debug.spec
           python -m ok.update.gen_md5 .\dist\bundle
           mv dist/bundle ok-baijing
