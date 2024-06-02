@@ -323,6 +323,7 @@ class ManXunTask(BJTask):
         zone = self.ocr(self.box_of_screen(1527 / 1920, 957 / 1080, to_x=1695 / 1920, to_y=1063 / 1080))
         if zone:
             self.info['当前区域'] = zone[0].name
+            self.log_info(f'当前区域 {self.info["当前区域"]}')
             return self.info['当前区域']
 
     def confirm_generate(self):
@@ -405,8 +406,10 @@ class ManXunTask(BJTask):
         for custom_route in self.custom_routes:
             target, zone, custom_choices, custom_index = custom_route
             target_match = target in self.info.get('追踪目标')
-            zone_match = zone == self.info.get('当前区域')
+            zone_match = (zone == self.info.get('当前区域'))
             size_custom = len(custom_choices)
+            self.log_debug(
+                f'check_custom_route {choices} 当前区域:{self.info.get("当前区域")} {zone_match} {target_match} {size_custom}')
             if target_match and zone_match:
                 if size_custom == len(choices):
                     all_match = True
@@ -610,7 +613,7 @@ class ManXunTask(BJTask):
 
     def is_black_text(self, box):
         black_percentage = calculate_color_percentage(self.frame, black_color, box)
-        return black_percentage >= 0.05
+        return black_percentage >= 0.02
 
 
 def find_priority_string(input_list, priority_list, start_index=-1):
@@ -672,9 +675,9 @@ green_color = {
 }
 
 black_color = {
-    'r': (0, 25),  # Red range
-    'g': (0, 25),  # Green range
-    'b': (0, 25)  # Blue range
+    'r': (0, 30),  # Red range
+    'g': (0, 30),  # Green range
+    'b': (0, 30)  # Blue range
 }
 
 gray_color = {

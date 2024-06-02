@@ -3,6 +3,7 @@ images*
 tesseract
 models
 fonts
+_internal/
 # Byte-compiled / optimized / DLL files
 .idea/
 __pycache__/
@@ -11,12 +12,16 @@ __pycache__/
 configs/
 ok/
 ok
+*.exe
+md5.txt
+update.bat
 click_screenshots/
 test_scripts/
 screenshots/
 thread_dumps.txt
 # C extensions
 *.so
+*.bat
 
 # Distribution / packaging
 .Python
