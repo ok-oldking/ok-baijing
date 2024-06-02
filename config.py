@@ -40,8 +40,11 @@ config = {
         'use_proxy': True
     },
     'about': """
-    <h1>OK白荆回廊自动漫巡辅助</h1>
-    <p>QQ群:594495691</p>
+    <h3>OK白荆回廊自动漫巡辅助</h3>
+    <p>免费开源软件 <a href="https://github.com/ok-oldking/ok-baijing">https://github.com/ok-oldking/ok-baijing</></p>
+    <p>报告问题BUG <a href="https://github.com/ok-oldking/ok-baijing/issues/new?assignees=ok-oldking&labels=bug&projects=&template=%E6%8A%A5%E5%91%8Abug-.md&title=%5BBUG%5D">https://github.com/ok-oldking/ok-baijing/issues/new?assignees=ok-oldking&labels=bug&projects=&template=%E6%8A%A5%E5%91%8Abug-.md&title=%5BBUG%5D</></p>
+    <p>视频演示 <a href="https://www.bilibili.com/video/BV1K7421f7KT/">https://www.bilibili.com/video/BV1K7421f7KT/</a></p>
+    <p>QQ群:<a href="https://qm.qq.com/q/aGO7eBJ2Uw">594495691</a></p>
 """,
     'supported_screen_ratio': '16:9',
     'screenshots_folder': "screenshots",

@@ -50,8 +50,8 @@ jobs:
           rm -r dist
           pyinstaller main_debug.spec
           python -m ok.update.gen_md5 .\dist\bundle
-          mv dist/bundle ok-baijing-debug
-          7z a -t7z -r "ok-baijing-debug-${{ steps.tagName.outputs.tag }}.7z" "ok-baijing-debug"
+          mv dist/bundle ok-baijing
+          7z a -t7z -r "ok-baijing-debug-${{ steps.tagName.outputs.tag }}.7z" "ok-baijing"
 
         shell: pwsh
 

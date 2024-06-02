@@ -95,7 +95,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='ok-baijing-debug',
+    name='ok-baijing',
     icon='icon.ico',
     debug=False,
     bootloader_ignore_signals=False,
