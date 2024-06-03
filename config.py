@@ -6,7 +6,7 @@ from ok.util.path import get_path_in_package
 from task.AoSkillManXunTask import AoSkillManXunTask
 from task.ManXunTask import ManXunTask
 
-version = "v0.0.1"
+version = "v1.2.11"
 
 
 def calculate_pc_exe_path(running_path):
@@ -32,6 +32,10 @@ config = {
     },
     'adb_capture': {
 
+    },
+    'firebase': {
+        'measurement_id': 'G-9W3F3EQ19G',
+        'api_secret': 'eAkNmhrERiGg8Q3Riuxerw'
     },
     'update': {
         'releases_url': 'https://api.github.com/repos/ok-oldking/ok-baijing/releases?per_page=15',
