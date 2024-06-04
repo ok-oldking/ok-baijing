@@ -1,17 +1,17 @@
 import os
 import re
-from pathlib import Path
 
 from ok.util.path import get_path_in_package
 from task.AoSkillManXunTask import AoSkillManXunTask
+from task.AutoStartCombatTask import AutoStartCombatTask
+from task.JoinGameTask import JoinGameTask
 from task.ManXunTask import ManXunTask
 
-version = "v1.2.11"
+version = "v1.3.11"
 
 
 def calculate_pc_exe_path(running_path):
-    install_top = Path(running_path).parents[5]
-    return str(install_top / "白荆回廊.lnk")
+    return None
 
 
 config = {
@@ -24,14 +24,14 @@ config = {
         'inference_num_threads': int(os.cpu_count() / 2)
     },
     'coco_feature_folder': os.path.join('assets', 'coco'),  # required if using feature detection
-    'windows_capture': {  # required  when supporting windows game
+    'windows': {  # required  when supporting windows game
         'title': re.compile(r'^白荆回廊'),
         'exe': 'GateMK-Win64-Shipping.exe',
         'calculate_pc_exe_path': calculate_pc_exe_path,
         'can_bit_blt': False  # default false, opengl games does not support bit_blt
     },
-    'adb_capture': {
-
+    'adb': {
+        'packages': ['com.tencent.gate']
     },
     'firebase': {
         'measurement_id': 'G-9W3F3EQ19G',
@@ -59,9 +59,13 @@ config = {
     'version': version,
     'locale': 'zh_CN',
     'onetime_tasks': [  # tasks to execute
-        ManXunTask(),
+        JoinGameTask(),
         AoSkillManXunTask(),
-    ], 'scenes': [  # scenes to detect
+        ManXunTask(),
+    ], 'trigger_tasks': [
+        AutoStartCombatTask()
+    ],
+    'scenes': [  # scenes to detect
 
     ]
 }
