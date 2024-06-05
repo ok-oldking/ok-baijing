@@ -116,10 +116,10 @@ class ManXunTask(BJTask):
 
     @property
     def battle_popup_zone(self):
-        return self.box_of_screen(0.25, 0.15, 0.5, 0.85, "战斗检测区域")
+        return self.box_of_screen(0.25, 0.15, width=0.5, height=0.85, name="战斗检测区域")
 
     def filter_gaowei_number_zone(self, boxes):
-        return self.box_of_screen(0.25, 0.5, 0.5, 0.5).in_boundary(boxes)
+        return self.box_of_screen(0.25, 0.5, width=0.5, height=0.5).in_boundary(boxes)
 
     @override
     def run(self):
