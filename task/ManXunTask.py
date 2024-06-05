@@ -100,19 +100,19 @@ class ManXunTask(BJTask):
 
     @property
     def choice_zone(self):
-        return self.box_of_screen(0.7, 0.25, 0.3, 0.5, "选项检测区域")
+        return self.box_of_screen(0.7, 0.25, width=0.3, height=0.5, name="选项检测区域")
 
     @property
     def current_zone(self):
-        return self.box_of_screen(0.6, 0.8, 0.3, 0.2, "当前区域")
+        return self.box_of_screen(0.6, 0.8, width=0.3, height=0.2, name="当前区域")
 
     @property
     def stats_zone(self):
-        return self.box_of_screen(0.3, 0.92, 0.4, 0.06, "当前属性区域")
+        return self.box_of_screen(0.3, 0.92, width=0.4, height=0.06, name="当前属性区域")
 
     @property
     def dialog_zone(self):
-        return self.box_of_screen(0.25, 0.15, 0.5, 0.75, "弹窗检测区域")
+        return self.box_of_screen(0.25, 0.15, width=0.5, height=0.75, name="弹窗检测区域")
 
     @property
     def battle_popup_zone(self):
@@ -146,7 +146,7 @@ class ManXunTask(BJTask):
         choices = self.do_find_choices()
         if not choices:
             self.logger.debug("找不到选项")
-            current = self.ocr(self.current_zone, match=re.compile(r"^自动"))
+            current = self.ocr(box=self.current_zone, match=re.compile(r"^自动"))
             if not current:
                 stats = self.ocr_stats()
                 if not stats:
@@ -221,7 +221,7 @@ class ManXunTask(BJTask):
             self.ocr_stats(frame)
 
     def ocr_stats(self, frame=None):
-        boxes = self.ocr(self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
+        boxes = self.ocr(box=self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
         if len(boxes) != 5:
             self.log_error(f"无法找到5个属性, {boxes}")
             return False
@@ -246,7 +246,7 @@ class ManXunTask(BJTask):
                     stats[i] += 10
 
     def do_handle_dialog(self, choice):
-        boxes = self.ocr(self.dialog_zone)
+        boxes = self.ocr(box=self.dialog_zone)
         if self.find_depth(boxes) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
             return
@@ -259,14 +259,16 @@ class ManXunTask(BJTask):
             self.to_update_stats = True
         elif confirm := find_box_by_name(boxes, "完成漫巡"):
             self.click_box(confirm)
-            self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="确认"))
-            self.wait_click_box(lambda: self.ocr(self.star_combat_zone, match="跳过漫巡回顾"))
-            self.wait_click_box(lambda: self.ocr(self.star_combat_zone, match="点击屏幕确认结算"))
+            self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match="确认"))
+            self.wait_click_box(lambda: self.ocr(box=self.star_combat_zone, match="跳过漫巡回顾"))
+            self.wait_click_box(lambda: self.ocr(box=self.star_combat_zone, match="点击屏幕确认结算"))
             if self.confirm_generate():
-                self.wait_click_box(lambda: self.ocr(self.box_of_screen(0.7, 0.6, 0.3, 0.4), match="确认生成"))
-                self.wait_click_box(lambda: self.ocr(self.dialog_zone, match="完成漫巡"))
-                self.wait_click_box(lambda: self.ocr(self.box_of_screen(0.5, 0.5, 0.4, 0.3), match="确定完成"))
-                self.wait_until(lambda: self.ocr(self.box_of_screen(0, 0, 0.2, 0.2)),
+                self.wait_click_box(
+                    lambda: self.ocr(box=self.box_of_screen(0.7, 0.6, width=0.3, height=0.4), match="确认生成"))
+                self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match="完成漫巡"))
+                self.wait_click_box(
+                    lambda: self.ocr(box=self.box_of_screen(0.5, 0.5, width=0.4, height=0.3), match="确定完成"))
+                self.wait_until(lambda: self.ocr(box=self.box_of_screen(0, 0, width=0.2, height=0.2)),
                                 pre_action=lambda: self.click_relative(0.5, 0.1), time_out=90)
             raise FinishedException()
         elif confirm := find_box_by_name(boxes, "解锁技能和区域"):
@@ -320,7 +322,7 @@ class ManXunTask(BJTask):
             raise Exception(f"未知弹窗 无法处理")
 
     def ocr_zone(self):
-        zone = self.ocr(self.box_of_screen(1527 / 1920, 957 / 1080, to_x=1695 / 1920, to_y=1063 / 1080))
+        zone = self.ocr(box=self.box_of_screen(1527 / 1920, 957 / 1080, to_x=1695 / 1920, to_y=1063 / 1080))
         if zone:
             self.info['当前区域'] = zone[0].name
             self.log_info(f'当前区域 {self.info["当前区域"]}')
@@ -348,15 +350,15 @@ class ManXunTask(BJTask):
         return find_boxes_by_name(boxes, self.stats_up_re)
 
     def auto_skip_combat(self):
-        start_combat = self.wait_until(lambda: self.ocr(self.star_combat_zone, "开始战斗"), time_out=180)
+        start_combat = self.wait_until(lambda: self.ocr(box=self.star_combat_zone, match="开始战斗"), time_out=180)
         if not start_combat:
             raise RuntimeError("无法找到开始战斗按钮")
         self.click_relative(0.04, 0.065)
-        self.wait_click_box(lambda: self.ocr(self.battle_popup_zone, "离开战斗"))
-        self.wait_click_box(lambda: self.ocr(self.battle_popup_zone, "离开战斗"))
-        self.wait_click_box(lambda: self.ocr(self.dialog_zone, "继续"), time_out=30)
-        self.wait_click_box(lambda: self.ocr(self.dialog_zone, match=re.compile(r"回避")))
-        self.wait_click_box(lambda: self.ocr(self.dialog_zone, match=re.compile(r"确\s?认")))
+        self.wait_click_box(lambda: self.ocr(box=self.battle_popup_zone, match="离开战斗"))
+        self.wait_click_box(lambda: self.ocr(box=self.battle_popup_zone, match="离开战斗"))
+        self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match="继续"), time_out=30)
+        self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match=re.compile(r"回避")))
+        self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match=re.compile(r"确\s?认")))
 
     def handle_stats_up(self, stats_up_choices):
         stats_up_parsed = self.parse_stats_choices(stats_up_choices)
@@ -479,7 +481,7 @@ class ManXunTask(BJTask):
                 return True, choices, i
             if choices[i].name == "烙痕唤醒":
                 self.click_box(choices[i])
-                self.wait_until(lambda: self.ocr(self.dialog_zone, match="烙痕唤醒"))
+                self.wait_until(lambda: self.ocr(box=self.dialog_zone, match="烙痕唤醒"))
                 boxes = self.ocr(match=black_list)
                 if boxes:
                     self.log_debug(f"烙痕唤醒在黑名单, 跳过 {boxes}")
@@ -491,7 +493,7 @@ class ManXunTask(BJTask):
                     return True, choices, i
 
     def do_find_choices(self):
-        boxes = self.ocr(self.choice_zone)
+        boxes = self.ocr(box=self.choice_zone)
         choices = find_boxes_by_name(boxes, re.compile(r"^通往"))
         if len(choices) == 1:
             self.info['追踪目标'] = choices[0].name
@@ -519,7 +521,7 @@ class ManXunTask(BJTask):
 
     def find_depth(self, boxes=None):
         if boxes is None:
-            boxes = self.ocr(self.dialog_zone)
+            boxes = self.ocr(box=self.dialog_zone)
         depth_box = None
         depth = 0
         numbers = find_boxes_by_name(boxes, re.compile(r"^[01D][0-9]$"))

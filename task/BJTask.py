@@ -1,3 +1,5 @@
+import re
+
 from ok.feature.Box import boxes_to_map_by_list_of_names, find_box_by_name
 from ok.feature.FindFeature import FindFeature
 from ok.ocr.OCR import OCR
@@ -23,11 +25,33 @@ class BJTask(OneTimeTask, OCR, FindFeature):
             self.log_info("进入主页成功", notify=True)
             return True
 
+    def click_to_continue_wait(self, time_out=0):
+        return self.wait_click_feature('click_to_continue', time_out=time_out)
+
+    def go_home_wait(self):
+        self.wait_click_feature('go_home')
+        return self.wait_main()
+
+    def wait_main(self):
+        return self.wait_until(lambda: self.ocr(box=self.main_menu_zone, match="任务"))
+
+    def go_home_now(self):
+        go_home = self.find_feature('go_home')
+        if go_home:
+            self.log_info("返回主页")
+            self.click_box(go_home)
+            self.sleep(4)
+            return True
+
+    def choose_main_menu(self, name):
+        self.wait_click_box(lambda: self.ocr(box=self.main_menu_zone, match=name), time_out=20)
+
     def check_until_main(self):
         self.info['检查主页次数'] = self.info.get("检查主页次数", 1) + 1
         self.log_debug(f'check check_until_main {self.info.get("检查主页次数")}')
+        if self.go_home_now():
+            return True
         main = self.find_one('main_screen_menu', threshold=0.4)
-        self.screenshot("main_screen_menu.png")
         if main:
             self.log_debug(f'found main menu {main}')
             click_to_continue = self.find_one('click_to_continue')
@@ -35,17 +59,17 @@ class BJTask(OneTimeTask, OCR, FindFeature):
                 self.click_box(click_to_continue)
                 self.sleep(2)
                 return False
-            qiandao_lingqu = self.ocr(self.get_box_by_name('box_qiandao'), match="可领取")
+            qiandao_lingqu = self.ocr(box=self.get_box_by_name('box_qiandao'), match="可领取")
             if qiandao_lingqu:
                 self.click_box(qiandao_lingqu)
                 self.sleep(2)
                 self.click_relative(0.4, 0.05)
                 self.sleep(2)
                 return False
-            task = self.ocr(self.box_of_screen(0.6, 0.3, to_y=0.9), match="任务")
+            task = self.ocr(box=self.box_of_screen(0.6, 0.3, to_y=0.9), match="任务")
             if task:
                 self.sleep(3)  # wait for animation
-                task = self.ocr(self.box_of_screen(0.6, 0.3, to_y=0.9), match="任务")
+                task = self.ocr(box=self.box_of_screen(0.6, 0.3, to_y=0.9), match="任务")
             if task:
                 return True
             else:
@@ -55,23 +79,32 @@ class BJTask(OneTimeTask, OCR, FindFeature):
                 return True
         start = self.find_one('start_screen_feature')
         if start:
-            boxes = self.ocr(self.box_of_screen(0.5, 0.5))
+            boxes = self.ocr(box=self.box_of_screen(0.5, 0.5))
             if find_box_by_name(boxes, "微信登陆"):
                 return "需要登陆账号"
             self.log_debug(f'found start_screen_feature {start}')
             self.click_relative(0.88, 0.5)
             self.sleep(2)
 
+    def go_into_menu(self, menu, confirm=False):
+        self.wait_click_ocr(0.9, 0.9, match="菜单")
+        self.wait_click_ocr(0.6, 0.1, to_y=0.8, match=menu)
+        if confirm:
+            self.wait_confirm()
+
+    def wait_confirm(self):
+        self.wait_click_ocr(0.5, 0.5, to_x=0.8, to_y=0.8, match=re.compile('^确'))
+
     @property
     def star_combat_zone(self):
-        return self.box_of_screen(0.8, 0.8, 0.2, 0.2, name="star_combat_zone")
+        return self.box_of_screen(0.8, 0.8, width=0.2, height=0.2, name="star_combat_zone")
 
     @property
     def main_menu_zone(self):
-        return self.box_of_screen(0.5, 0.4, 0.5, 0.5)
+        return self.box_of_screen(0.5, 0.4, width=0.5, height=0.5)
 
     def check_is_main(self):
-        boxes = self.ocr(self.main_menu_zone)
+        boxes = self.ocr(box=self.main_menu_zone)
         self.main_menu_buttons = boxes_to_map_by_list_of_names(boxes, self.menu_name_list)
         if self.main_menu_buttons:
             return True

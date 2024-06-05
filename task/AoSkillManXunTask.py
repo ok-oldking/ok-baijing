@@ -54,7 +54,8 @@ class AoSkillManXunTask(ManXunTask):
     def loop_manxun(self):
         is_main = self.check_is_main()
         if not is_main and not self.check_is_manxun_ui():
-            boxes = self.ocr(self.box_of_screen(0.2, 0.5, 0.8, 0.3, "漫巡路线检测区域"), match=self.config['路线'])
+            boxes = self.ocr(box=self.box_of_screen(0.2, 0.5, width=0.8, height=0.3, name="漫巡路线检测区域"),
+                             match=self.config['路线'])
             if boxes:
                 self.route = boxes[0]
                 self.log_debug(f'在漫巡路线选择界面 {self.route}')
@@ -77,11 +78,11 @@ class AoSkillManXunTask(ManXunTask):
                 self.pause()
 
     def start_manxun(self):
-        boxes = self.ocr(self.bottom_button_zone)
+        boxes = self.ocr(box=self.bottom_button_zone)
         manxun_start = find_box_by_name(boxes, "漫巡开始")
         if not manxun_start:
             self.select_char()
-            manxun_start = self.ocr(self.bottom_button_zone, "漫巡开始")
+            manxun_start = self.ocr(box=self.bottom_button_zone, match="漫巡开始")
         self.choose_assist_laohen()
         self.sleep(3)
         self.click_box(manxun_start)
@@ -118,28 +119,28 @@ class AoSkillManXunTask(ManXunTask):
 
     def select_char(self):
         char_name = self.wait_until(
-            lambda: self.ocr(self.box_of_screen(0.4, 0.4, 0.6, 0.5, "角色检测区域"),
-                             re.compile(f"{self.config['角色名']}$")),
+            lambda: self.ocr(box=self.box_of_screen(0.4, 0.4, width=0.6, height=0.5, name="角色检测区域"),
+                             match=re.compile(f"{self.config['角色名']}$")),
             time_out=60,
             post_action=lambda: self.swipe_relative(0.8, 0.5, 0.5, 0.5, 1))
         if not char_name:
             raise Exception(f'找不到角色 {self.config["角色名"]}')
         self.click_box(char_name)
-        next_step = self.wait_click_box(lambda: self.ocr(self.bottom_button_zone, "下一步"))
-        self.wait_click_box(lambda: self.ocr(self.top_right_button_zone, "上次编队"))
+        next_step = self.wait_click_box(lambda: self.ocr(box=self.bottom_button_zone, match="下一步"))
+        self.wait_click_box(lambda: self.ocr(box=self.top_right_button_zone, match="上次编队"))
         self.sleep(0.5)
         self.click_box(next_step)
-        self.wait_click_box(lambda: self.ocr(self.top_right_button_zone, "上次编组"))
+        self.wait_click_box(lambda: self.ocr(box=self.top_right_button_zone, match="上次编组"))
         self.sleep(3)
 
     def choose_assist_laohen(self):
-        boxes = self.ocr(self.box_of_screen(0.5, 0.5, 0.5, 0.5, "支援记忆烙痕检测区域"),
-                         re.compile("支援记忆烙痕"))
+        boxes = self.ocr(box=self.box_of_screen(0.5, 0.5, width=0.5, height=0.5, name="支援记忆烙痕检测区域"),
+                         match=re.compile("支援记忆烙痕"))
         zhiyuan = boxes[0]
         self.click_box(zhiyuan, relative_y=-0.5)
         self.sleep(2)
         if not self.refresh_laohen_button:
-            self.refresh_laohen_button = self.ocr(self.top_right_button_zone, "刷新列表")
+            self.refresh_laohen_button = self.ocr(box=self.top_right_button_zone, match="刷新列表")
         assist_laohen_type = self.config.get("支援烙痕类型")
         laohen_type_index = find_index(assist_laohen_type, self.stats_seq)
         gap = self.height_of_screen((1564 - 1209) / 4 / 1080)
@@ -153,8 +154,8 @@ class AoSkillManXunTask(ManXunTask):
                                  post_action=lambda: self.click_box(self.refresh_laohen_button))
         self.click_box(assist)
         self.sleep(2)
-        select = self.ocr(self.box_of_screen(0.5, 0.5, 0.5, 0.5, "支援记忆烙痕检测区域"),
-                          re.compile("选择支援记忆烙痕"))
+        select = self.ocr(box=self.box_of_screen(0.5, 0.5, width=0.5, height=0.5, name="支援记忆烙痕检测区域"),
+                          match=re.compile("选择支援记忆烙痕"))
         if select:
             self.log_info("选了上次选中的支援烙痕, 再选一遍")
             self.choose_assist_laohen()
@@ -162,7 +163,7 @@ class AoSkillManXunTask(ManXunTask):
     def choose_assist_laohen_check(self):
         manpos = self.find_feature('manpo_90', 1, 1, 0.90)
         if manpos:
-            boxes = self.ocr(self.box_of_screen(0.1, 0.3, 0.9, 0.6, "支援烙痕检测区域"))
+            boxes = self.ocr(box=self.box_of_screen(0.1, 0.3, width=0.9, height=0.6, name="支援烙痕检测区域"))
             for box_90 in manpos:
                 laohen = box_90.find_closest_box('all', boxes,
                                                  lambda box: self.config.get('支援烙痕') in box.name)
@@ -174,27 +175,29 @@ class AoSkillManXunTask(ManXunTask):
         if not self.route:
             self.main_go_to_manxun()
             self.wait_click_box(
-                lambda: self.ocr(self.box_of_screen(0.2, 0.5, 0.8, 0.3, "漫巡路线检测区域"), match=self.config['路线']))
+                lambda: self.ocr(box=self.box_of_screen(0.2, 0.5, width=0.8, height=0.3, name="漫巡路线检测区域"),
+                                 match=self.config['路线']))
         else:
             self.click_box(self.route)
         self.wait_click_box(
-            lambda: self.ocr(self.right_button_zone, match='前往回廊漫巡'))
+            lambda: self.ocr(box=self.right_button_zone, match='前往回廊漫巡'))
         self.sleep(1)
-        continue_manxun = self.ocr(self.dialog_zone, match='继续漫巡')
+        continue_manxun = self.ocr(box=self.dialog_zone, match='继续漫巡')
         if continue_manxun:
             self.click_box(continue_manxun)
             self.wait_click_box(
-                lambda: self.ocr(self.dialog_zone, match='确认'))
+                lambda: self.ocr(box=self.dialog_zone, match='确认'))
             return True
         else:
             start_manxun = self.wait_click_box(
-                lambda: self.ocr(self.star_combat_zone, '开始新漫巡'))
+                lambda: self.ocr(box=self.star_combat_zone, match='开始新漫巡'))
             self.sleep(1)
-            boxes = self.ocr(self.box_of_screen(0.2, 0.5, 0.3, 0.3, "精神改善剂检测区域"), re.compile(r'^可回复精神力'))
+            boxes = self.ocr(box=self.box_of_screen(0.2, 0.5, width=0.3, height=0.3, name="精神改善剂检测区域"),
+                             match=re.compile(r'^可回复精神力'))
             if len(boxes) == 1:
                 self.click_box(boxes[0], relative_y=-4)
                 self.wait_click_box(
-                    lambda: self.ocr(self.right_button_zone, match='确认使用'))
+                    lambda: self.ocr(box=self.right_button_zone, match='确认使用'))
                 self.sleep(0.5)
                 self.click_relative(0.95, 0.5)
                 self.sleep(3)
@@ -203,15 +206,15 @@ class AoSkillManXunTask(ManXunTask):
 
     @property
     def right_button_zone(self):
-        return self.box_of_screen(0.5, 0.6, 0.5, 0.3, "按钮检测区域")
+        return self.box_of_screen(0.5, 0.6, width=0.5, height=0.3, name="按钮检测区域")
 
     @property
     def top_right_button_zone(self):
-        return self.box_of_screen(0.5, 0, 0.5, 0.2, "右上按钮检测区域")
+        return self.box_of_screen(0.5, 0, width=0.5, height=0.2, name="右上按钮检测区域")
 
     @property
     def bottom_button_zone(self):
-        return self.box_of_screen(0.2, 0.8, 0.6, 0.2, "下面按钮检测区域")
+        return self.box_of_screen(0.2, 0.8, width=0.6, height=0.2, name="下面按钮检测区域")
 
 
 white_color = {

@@ -4,6 +4,7 @@ import re
 from ok.util.path import get_path_in_package
 from task.AoSkillManXunTask import AoSkillManXunTask
 from task.AutoStartCombatTask import AutoStartCombatTask
+from task.DailyTask import DailyTask
 from task.JoinGameTask import JoinGameTask
 from task.ManXunTask import ManXunTask
 
@@ -65,8 +66,9 @@ config = {
     'version': version,
     'locale': 'zh_CN',
     'onetime_tasks': [  # tasks to execute
-        JoinGameTask(),
+        DailyTask(),
         AoSkillManXunTask(),
+        JoinGameTask(),
         ManXunTask(),
     ], 'trigger_tasks': [
         AutoStartCombatTask()
