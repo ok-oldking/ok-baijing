@@ -6,7 +6,7 @@ class JoinGameTask(BJTask):
     def __init__(self):
         super().__init__()
         self.route = None
-        self.name = "启动游戏"
+        self.name = "启动游戏(PC版游戏不太兼容)"
         self.description = "打开模拟器，启动游戏，签到，进入主页"
 
     def run(self):

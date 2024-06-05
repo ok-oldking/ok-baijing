@@ -1,1 +1,201 @@
-{"info":{"year":"2024","version":"4","description":"Exported from roboflow.com","contributor":"","url":"https://public.roboflow.com/object-detection/undefined","date_created":"2024-06-04T15:58:03+00:00"},"licenses":[{"id":1,"url":"https://creativecommons.org/licenses/by/4.0/","name":"CC BY 4.0"}],"categories":[{"id":0,"name":"gameui","supercategory":"none"},{"id":1,"name":"assist_laohen_plus","supercategory":"gameui"},{"id":2,"name":"main_screen_feature","supercategory":"gameui"},{"id":3,"name":"manpo_90","supercategory":"gameui"},{"id":4,"name":"start_combat","supercategory":"gameui"},{"id":5,"name":"start_screen_feature","supercategory":"gameui"}],"images":[{"id":0,"license":1,"file_name":"MuMu12-20240604-200655_png.rf.f230bdff8ff1ccc56044ee050f88e1e7.jpg","height":1080,"width":1920,"date_captured":"2024-06-04T15:58:03+00:00"},{"id":1,"license":1,"file_name":"20_29_44_961363_click_png.rf.f080b1fafc48690b874951f9234147cb.jpg","height":1080,"width":1920,"date_captured":"2024-06-04T15:58:03+00:00"},{"id":2,"license":1,"file_name":"MuMu12-20240604-235605_png.rf.a7a3ec92b584df8d8ad783c47474e136.jpg","height":1080,"width":1920,"date_captured":"2024-06-04T15:58:03+00:00"},{"id":3,"license":1,"file_name":"MuMu12-20240604-200402_png.rf.113caa39c5e9989e68300fec76481bc6.jpg","height":1080,"width":1920,"date_captured":"2024-06-04T15:58:03+00:00"}],"annotations":[{"id":0,"image_id":0,"category_id":2,"bbox":[85,964,103.15,68.77],"area":7093.626,"segmentation":[],"iscrowd":0},{"id":1,"image_id":1,"category_id":3,"bbox":[903,424,66.88,24.44],"area":1634.547,"segmentation":[],"iscrowd":0},{"id":2,"image_id":1,"category_id":1,"bbox":[1208,509,119.36,126.01],"area":15040.554,"segmentation":[],"iscrowd":0},{"id":3,"image_id":2,"category_id":4,"bbox":[1668,957,158.15,49.03],"area":7754.095,"segmentation":[],"iscrowd":0},{"id":4,"image_id":3,"category_id":5,"bbox":[64,881,64.8,88.09],"area":5708.232,"segmentation":[],"iscrowd":0}]}
+{
+  "info": {
+    "year": "2024",
+    "version": "6",
+    "description": "Exported from roboflow.com",
+    "contributor": "",
+    "url": "https://public.roboflow.com/object-detection/undefined",
+    "date_created": "2024-06-05T02:21:08+00:00"
+  },
+  "licenses": [
+    {
+      "id": 1,
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "name": "CC BY 4.0"
+    }
+  ],
+  "categories": [
+    {
+      "id": 0,
+      "name": "gameui",
+      "supercategory": "none"
+    },
+    {
+      "id": 1,
+      "name": "assist_laohen_plus",
+      "supercategory": "gameui"
+    },
+    {
+      "id": 2,
+      "name": "box_qiandao",
+      "supercategory": "gameui"
+    },
+    {
+      "id": 3,
+      "name": "click_to_continue",
+      "supercategory": "gameui"
+    },
+    {
+      "id": 4,
+      "name": "main_screen_menu",
+      "supercategory": "gameui"
+    },
+    {
+      "id": 5,
+      "name": "manpo_90",
+      "supercategory": "gameui"
+    },
+    {
+      "id": 6,
+      "name": "start_combat",
+      "supercategory": "gameui"
+    },
+    {
+      "id": 7,
+      "name": "start_screen_feature",
+      "supercategory": "gameui"
+    }
+  ],
+  "images": [
+    {
+      "id": 0,
+      "license": 1,
+      "file_name": "MuMu12-20240604-235605_png.rf.a7a3ec92b584df8d8ad783c47474e136.jpg",
+      "height": 1080,
+      "width": 1920,
+      "date_captured": "2024-06-05T02:21:08+00:00"
+    },
+    {
+      "id": 1,
+      "license": 1,
+      "file_name": "MuMu12-20240605-003703_png.rf.2757000862fee0199f66ac2d42943c43.jpg",
+      "height": 1080,
+      "width": 1920,
+      "date_captured": "2024-06-05T02:21:08+00:00"
+    },
+    {
+      "id": 2,
+      "license": 1,
+      "file_name": "MuMu12-20240604-200655_png.rf.aba4a17d0cdf2717d9b8a6b259288be3.jpg",
+      "height": 1080,
+      "width": 1920,
+      "date_captured": "2024-06-05T02:21:08+00:00"
+    },
+    {
+      "id": 3,
+      "license": 1,
+      "file_name": "20_29_44_961363_click_png.rf.f080b1fafc48690b874951f9234147cb.jpg",
+      "height": 1080,
+      "width": 1920,
+      "date_captured": "2024-06-05T02:21:08+00:00"
+    },
+    {
+      "id": 4,
+      "license": 1,
+      "file_name": "MuMu12-20240604-200402_png.rf.113caa39c5e9989e68300fec76481bc6.jpg",
+      "height": 1080,
+      "width": 1920,
+      "date_captured": "2024-06-05T02:21:08+00:00"
+    }
+  ],
+  "annotations": [
+    {
+      "id": 0,
+      "image_id": 0,
+      "category_id": 6,
+      "bbox": [
+        1668,
+        957,
+        158.15,
+        49.03
+      ],
+      "area": 7754.095,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 3,
+      "bbox": [
+        879,
+        984,
+        163.57,
+        37.14
+      ],
+      "area": 6074.99,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 2,
+      "image_id": 2,
+      "category_id": 4,
+      "bbox": [
+        1692,
+        992,
+        143.84,
+        42.69
+      ],
+      "area": 6140.53,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 3,
+      "image_id": 2,
+      "category_id": 2,
+      "bbox": [
+        305,
+        197,
+        1322.53,
+        692.84
+      ],
+      "area": 916301.685,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 4,
+      "image_id": 3,
+      "category_id": 5,
+      "bbox": [
+        903,
+        424,
+        66.88,
+        24.44
+      ],
+      "area": 1634.547,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 5,
+      "image_id": 3,
+      "category_id": 1,
+      "bbox": [
+        1208,
+        509,
+        119.36,
+        126.01
+      ],
+      "area": 15040.554,
+      "segmentation": [],
+      "iscrowd": 0
+    },
+    {
+      "id": 6,
+      "image_id": 4,
+      "category_id": 7,
+      "bbox": [
+        64,
+        881,
+        64.8,
+        88.09
+      ],
+      "area": 5708.232,
+      "segmentation": [],
+      "iscrowd": 0
+    }
+  ]
+}

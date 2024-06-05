@@ -23,7 +23,13 @@ config = {
         'lib': 'RapidOCR',
         'inference_num_threads': int(os.cpu_count() / 2)
     },
-    'coco_feature_folder': os.path.join('assets', 'coco'),  # required if using feature detection
+    # required if using feature detection
+    'template_matching': {
+        'coco_feature_folder': os.path.join('assets', 'coco'),
+        'default_horizontal_variance': 0.003,
+        'default_vertical_variance': 0.005,
+        'default_threshold': 0.9,
+    },
     'windows': {  # required  when supporting windows game
         'title': re.compile(r'^白荆回廊'),
         'exe': 'GateMK-Win64-Shipping.exe',

@@ -1,4 +1,4 @@
-from ok.feature.Box import boxes_to_map_by_list_of_names
+from ok.feature.Box import boxes_to_map_by_list_of_names, find_box_by_name
 from ok.feature.FindFeature import FindFeature
 from ok.ocr.OCR import OCR
 from ok.task.OneTimeTask import OneTimeTask
@@ -12,8 +12,12 @@ class BJTask(OneTimeTask, OCR, FindFeature):
         self.auto_combat_timeout = 600
 
     def ensure_main_page(self):
-        if not self.wait_until(self.check_until_main, time_out=60):
+        result = self.wait_until(self.check_until_main, time_out=120)
+        if not result:
             self.log_error('无法进入到主页，请手动进入游戏主页！', notify=True)
+            return False
+        elif isinstance(result, str):
+            self.log_error(result, notify=True)
             return False
         else:
             self.log_info("进入主页成功", notify=True)
@@ -21,16 +25,41 @@ class BJTask(OneTimeTask, OCR, FindFeature):
 
     def check_until_main(self):
         self.info['检查主页次数'] = self.info.get("检查主页次数", 1) + 1
-        main = self.find_one('main_screen_feature', horizontal_variance=0.02, vertical_variance=0.02)
+        self.log_debug(f'check check_until_main {self.info.get("检查主页次数")}')
+        main = self.find_one('main_screen_menu', threshold=0.4)
+        self.screenshot("main_screen_menu.png")
         if main:
-            self.log_debug(f'found main_screen_feature {main}')
-            self.click_relative(0.4, 0.05)
-            self.sleep(2)
-            return True
-        start = self.find_one('start_screen_feature', horizontal_variance=0.02, vertical_variance=0.02)
+            self.log_debug(f'found main menu {main}')
+            click_to_continue = self.find_one('click_to_continue')
+            if click_to_continue:
+                self.click_box(click_to_continue)
+                self.sleep(2)
+                return False
+            qiandao_lingqu = self.ocr(self.get_box_by_name('box_qiandao'), match="可领取")
+            if qiandao_lingqu:
+                self.click_box(qiandao_lingqu)
+                self.sleep(2)
+                self.click_relative(0.4, 0.05)
+                self.sleep(2)
+                return False
+            task = self.ocr(self.box_of_screen(0.6, 0.3, to_y=0.9), match="任务")
+            if task:
+                self.sleep(3)  # wait for animation
+                task = self.ocr(self.box_of_screen(0.6, 0.3, to_y=0.9), match="任务")
+            if task:
+                return True
+            else:
+                self.log_debug(f'found main_screen_feature {main}')
+                self.click_relative(0.4, 0.05)
+                self.sleep(2)
+                return True
+        start = self.find_one('start_screen_feature')
         if start:
-            self.log_debug(self, f'found start_screen_feature {start}')
-            self.click_relative(0.95, 0.5)
+            boxes = self.ocr(self.box_of_screen(0.5, 0.5))
+            if find_box_by_name(boxes, "微信登陆"):
+                return "需要登陆账号"
+            self.log_debug(f'found start_screen_feature {start}')
+            self.click_relative(0.88, 0.5)
             self.sleep(2)
 
     @property
