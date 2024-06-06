@@ -35,7 +35,7 @@ class BJTask(OneTimeTask, OCR, FindFeature):
         return self.wait_main()
 
     def wait_main(self):
-        return self.wait_until(lambda: self.ocr(box=self.main_menu_zone, match=re.compile(r"^日常")))
+        return self.wait_until(lambda: self.ocr(box=self.main_menu_zone, match=re.compile(r"完成")))
 
     def go_home_now(self):
         go_home = self.find_feature('go_home', threshold=0.92)
@@ -55,7 +55,7 @@ class BJTask(OneTimeTask, OCR, FindFeature):
         self.log_debug(f'found main menu {main}')
         if main:
             while True:
-                task = self.ocr(box=self.main_menu_zone, match=re.compile(r"^日常"))
+                task = self.ocr(box=self.main_menu_zone, match=re.compile(r"完成"))
                 if task:
                     break
                 click_to_continue = self.find_one('click_to_continue')
@@ -75,7 +75,7 @@ class BJTask(OneTimeTask, OCR, FindFeature):
                     self.click_relative(0.4, 0.05)
                     self.sleep(2)
             self.sleep(3)  # wait for animation
-            self.wait_ocr(box=self.main_menu_zone, match=re.compile(r"^日常"))
+            self.wait_ocr(box=self.main_menu_zone, match=re.compile(r"完成"))
             return True
         start = self.find_one('start_screen_feature')
         if start:
@@ -101,7 +101,7 @@ class BJTask(OneTimeTask, OCR, FindFeature):
 
     @property
     def main_menu_zone(self):
-        return self.box_of_screen(0.5, 0.4, width=0.5, height=0.5)
+        return self.box_of_screen(0.62, 0.31, 0.97, 0.65)
 
     def check_is_main(self):
         boxes = self.ocr(box=self.main_menu_zone)

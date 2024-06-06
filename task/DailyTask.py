@@ -42,14 +42,28 @@ class DailyTask(BJTask):
         if self.config.get("升级烙痕"):
             self.laohen_up()
         if self.config.get("领任务奖励"):
+            self.claim_dayueka()
             self.claim_quest()
         self.log_info("收菜完成!", True)
 
+    def claim_dayueka(self):
+        self.choose_main_menu("活动中心")
+        self.wait_click_ocr(0.35, 0.80, 0.44, 0.85, match="任务总览")
+        if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
+            self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
+                            post_action=lambda: self.click_relative(0.5, 0.9))
+        self.wait_click_ocr(0.2, 0.4, 0.27, 0.44, match="本周任务")
+        if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
+            self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
+                            post_action=lambda: self.click_relative(0.5, 0.9))
+        self.go_home_wait()
+
     def claim_quest(self):
         while True:
-            self.choose_main_menu(re.compile(r"^日常"))
+            self.choose_main_menu(re.compile(r"完成"))
             claim = self.wait_ocr(0.8, 0.75, 0.93, 0.81, match=["一键领取"], time_out=4)
             if not claim:
+                self.click_relative(0.36, 0.05)
                 return
             else:
                 self.click_box(claim)
