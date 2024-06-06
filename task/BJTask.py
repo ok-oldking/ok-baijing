@@ -14,6 +14,8 @@ class BJTask(OneTimeTask, OCR, FindFeature):
         self.auto_combat_timeout = 600
 
     def ensure_main_page(self):
+        if self.go_home_now():
+            return True
         result = self.wait_until(self.check_until_main, time_out=120)
         if not result:
             self.log_error('无法进入到主页，请手动进入游戏主页！', notify=True)
@@ -33,10 +35,10 @@ class BJTask(OneTimeTask, OCR, FindFeature):
         return self.wait_main()
 
     def wait_main(self):
-        return self.wait_until(lambda: self.ocr(box=self.main_menu_zone, match="任务"))
+        return self.wait_until(lambda: self.ocr(box=self.main_menu_zone, match=re.compile(r"^日常")))
 
     def go_home_now(self):
-        go_home = self.find_feature('go_home')
+        go_home = self.find_feature('go_home', threshold=0.92)
         if go_home:
             self.log_info("返回主页")
             self.click_box(go_home)
@@ -49,34 +51,32 @@ class BJTask(OneTimeTask, OCR, FindFeature):
     def check_until_main(self):
         self.info['检查主页次数'] = self.info.get("检查主页次数", 1) + 1
         self.log_debug(f'check check_until_main {self.info.get("检查主页次数")}')
-        if self.go_home_now():
-            return True
         main = self.find_one('main_screen_menu', threshold=0.4)
+        self.log_debug(f'found main menu {main}')
         if main:
-            self.log_debug(f'found main menu {main}')
-            click_to_continue = self.find_one('click_to_continue')
-            if click_to_continue:
-                self.click_box(click_to_continue)
-                self.sleep(2)
-                return False
-            qiandao_lingqu = self.ocr(box=self.get_box_by_name('box_qiandao'), match="可领取")
-            if qiandao_lingqu:
-                self.click_box(qiandao_lingqu)
-                self.sleep(2)
-                self.click_relative(0.4, 0.05)
-                self.sleep(2)
-                return False
-            task = self.ocr(box=self.box_of_screen(0.6, 0.3, to_y=0.9), match="任务")
-            if task:
-                self.sleep(3)  # wait for animation
-                task = self.ocr(box=self.box_of_screen(0.6, 0.3, to_y=0.9), match="任务")
-            if task:
-                return True
-            else:
-                self.log_debug(f'found main_screen_feature {main}')
-                self.click_relative(0.4, 0.05)
-                self.sleep(2)
-                return True
+            while True:
+                task = self.ocr(box=self.main_menu_zone, match=re.compile(r"^日常"))
+                if task:
+                    break
+                click_to_continue = self.find_one('click_to_continue')
+                if click_to_continue:
+                    self.click_box(click_to_continue)
+                    self.sleep(2)
+                    return False
+                qiandao_lingqu = self.ocr(box=self.get_box_by_name('box_qiandao'), match="可领取")
+                if qiandao_lingqu:
+                    self.click_box(qiandao_lingqu)
+                    self.sleep(2)
+                    self.click_relative(0.4, 0.05)
+                    self.sleep(2)
+                    return False
+                else:
+                    self.log_debug(f'found main_screen_feature {main}')
+                    self.click_relative(0.4, 0.05)
+                    self.sleep(2)
+            self.sleep(3)  # wait for animation
+            self.wait_ocr(box=self.main_menu_zone, match=re.compile(r"^日常"))
+            return True
         start = self.find_one('start_screen_feature')
         if start:
             boxes = self.ocr(box=self.box_of_screen(0.5, 0.5))

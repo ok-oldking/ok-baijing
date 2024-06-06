@@ -10,11 +10,12 @@ class DailyTask(BJTask):
     def __init__(self):
         super().__init__()
         self.route = None
-        self.name = "一键收菜清日常"
-        self.description = "打开模拟器，启动游戏，签到，进入主页"
-        self.default_config = {"免费购物": True, "刷体力总开关": True, "免费召唤烙痕": True, "友情点": True,
-                               "随机刷材料次数": 3,
-                               "随机刷技能书次数": 3}
+        self.name = "一键收菜清日常(最好用模拟器)"
+        self.description = "打开模拟器，启动游戏，签到，进入主页, 刷日常"
+        self.default_config = {"免费购物": True, "刷体力总开关": True, "随机刷材料次数": 3,
+                               "随机刷技能书次数": 3, "喝茶3次": True, "友情点": True,
+                               "收菜": True, "免费召唤烙痕": True, "升级烙痕": True, "领任务奖励": True
+                               }
         self.config_description = {
             "随机刷技能书次数": "每次40体",
             "随机刷材料次数": "每次40体"
@@ -28,18 +29,25 @@ class DailyTask(BJTask):
             self.log_error("进入游戏主页失败！")
         if self.config.get("刷体力总开关"):
             self.combat()
-        self.hecha()
-        self.friends()
-        self.shoucai()
+        if self.config.get("喝茶3次"):
+            self.hecha()
+        if self.config.get("友情点"):
+            self.friends()
+        if self.config.get("收菜"):
+            self.shoucai()
         if self.config.get("免费购物"):
             self.go_shopping()
         if self.config.get("免费召唤烙痕"):
             self.free_summon()
-        self.claim_quest()
+        if self.config.get("升级烙痕"):
+            self.laohen_up()
+        if self.config.get("领任务奖励"):
+            self.claim_quest()
+        self.log_info("收菜完成!", True)
 
     def claim_quest(self):
         while True:
-            self.choose_main_menu("任务")
+            self.choose_main_menu(re.compile(r"^日常"))
             claim = self.wait_ocr(0.8, 0.75, 0.93, 0.81, match=["一键领取"], time_out=4)
             if not claim:
                 return
@@ -226,10 +234,10 @@ class DailyTask(BJTask):
     def free_summon(self):
         self.choose_main_menu("精神深潜")
         self.wait_until(self.click_last_summon)
-        if self.wait_until(lambda: self.ocr(box=self.box_of_screen(0.5, 0.8), match="无消耗"), time_out=3):
+        if self.wait_click_ocr(0.5, 0.8, match="无消耗", time_out=4):
             self.log_info("开始免费召唤")
             self.wait_click_ocr(0.9, 0, to_y=0.2, match="SKIP")
-            self.wait_click_ocr(0.4, 8, to_x=0.6, match="确认")
+            self.wait_click_ocr(0.4, 0.8, to_x=0.6, match="确认")
             self.click_to_continue_wait()
         else:
             self.log_info("免费召唤次数没了")
