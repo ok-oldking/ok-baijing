@@ -48,14 +48,14 @@ class DailyTask(BJTask):
 
     def claim_dayueka(self):
         self.choose_main_menu("活动中心")
-        self.wait_click_ocr(0.35, 0.80, 0.44, 0.85, match="任务总览")
-        if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
-            self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
-                            post_action=lambda: self.click_relative(0.5, 0.9))
-        self.wait_click_ocr(0.2, 0.4, 0.27, 0.44, match="本周任务")
-        if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
-            self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
-                            post_action=lambda: self.click_relative(0.5, 0.9))
+        if self.wait_click_ocr(0.35, 0.80, 0.44, 0.85, match="任务总览", time_out=4):
+            if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
+                self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
+                                post_action=lambda: self.click_relative(0.5, 0.9))
+            self.wait_click_ocr(0.2, 0.4, 0.27, 0.44, match="本周任务")
+            if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
+                self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
+                                post_action=lambda: self.click_relative(0.5, 0.9))
         self.go_home_wait()
 
     def claim_quest(self):
