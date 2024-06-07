@@ -26,8 +26,10 @@ class DailyTask(BJTask):
         if self.ensure_main_page():
             self.log_info("进入游戏主页成功！", True)
         else:
-            self.log_error("进入游戏主页失败！")
-        if self.config.get("刷体力总开关"):
+            self.log_error("进入游戏主页失败！", notify=True)
+            return
+        if self.config.get("刷体力总开关") and (
+                self.config.get('随机刷材料次数') > 0 or self.config.get('随机刷技能书次数') > 0):
             self.combat()
         if self.config.get("喝茶3次"):
             self.hecha()
@@ -42,8 +44,8 @@ class DailyTask(BJTask):
         if self.config.get("升级烙痕"):
             self.laohen_up()
         if self.config.get("领任务奖励"):
-            self.claim_dayueka()
             self.claim_quest()
+            self.claim_dayueka()
         self.log_info("收菜完成!", True)
 
     def claim_dayueka(self):
@@ -68,7 +70,7 @@ class DailyTask(BJTask):
             else:
                 self.click_box(claim)
             while self.click_to_continue_wait(time_out=4):
-                pass
+                self.sleep(2)
             self.click_relative(0.37, 0.05)
 
     def laohen_up(self):
@@ -98,7 +100,7 @@ class DailyTask(BJTask):
     def hecha(self):
         self.go_into_menu("午后茶憩", confirm=True)
         for i in range(3):
-            self.wait_ocr(0.84, 0.56, 0.95, 0.70, match="台球")
+            self.wait_ocr(0.84, 0.56, 0.95, 0.70, match="台球", time_out=30)
             self.click_relative(0.9, 0.84)
             moqi = self.wait_ocr(0.46, 0.26, 0.54, 0.31, match="默契值", time_out=4)
             if moqi:
@@ -110,24 +112,33 @@ class DailyTask(BJTask):
                 self.click_relative(0.4, 0.4)
                 self.sleep(1)
                 self.click_relative(0.82, 0.78)
-            elif not self.ocr(0.8, 0.7, 0.95, 0.83, match="开始点单"):
-                raise Exception('喝茶异常')
+
             self.heyici()
         self.go_back_confirm()
 
     def heyici(self):
-        diandan = self.wait_until(condition=lambda: self.ocr(0.8, 0.7, 0.95, 0.83, match="开始点单"),
-                                  post_action=lambda: self.click_relative(0.9, 0.5))
-        self.click_box(diandan)
-        while True:
-            next_step = self.wait_ocr(.76, .74, .9, .85, match=["下一步", "开始制作"], time_out=3)
-            if not next_step:
-                break
-            boxes = self.ocr(0.64, 0.23, .9, .74)
-            for box in boxes:
-                self.click_box(box)
-                self.sleep(0.2)
-            self.click_box(next_step)
+        diandan = self.wait_until(
+            condition=lambda: self.ocr(0.8, 0.7, 0.95, 0.83, match="开始点单") or
+                              self.find_feature("hecha_chat",
+                                                x=0.65, y=0.31,
+                                                to_x=0.93,
+                                                to_y=0.77,
+                                                threshold=0.8),
+            post_action=lambda: self.click_relative(0.5, 0.95), time_out=60)
+        if not diandan:
+            self.log_error("找不到开始点单")
+            raise Exception("找不到开始点单")
+        if diandan[0].name == '开始点单':  # 如果是喝完直接跳过
+            self.click_box(diandan)
+            while True:
+                next_step = self.wait_ocr(.76, .74, .9, .85, match=["下一步", "开始制作"], time_out=3)
+                if not next_step:
+                    break
+                boxes = self.ocr(0.64, 0.23, .9, .74)
+                for box in boxes:
+                    self.click_box(box)
+                    self.sleep(0.2)
+                self.click_box(next_step)
         self.wait_until(self.check_hewan, time_out=120)
 
     def check_hewan(self):
@@ -148,13 +159,15 @@ class DailyTask(BJTask):
         self.choose_main_menu("外勤作战")
         combats = self.wait_ocr(x=0.1, y=0.58, to_x=0.75, to_y=0.67, match=["定向保障", "光刻协议"])
 
-        self.click_box(combats[0])
-        self.dingxiang_combat()
-        self.click_box(combats[1])
-        self.guangke_combat()
+        if self.config.get('随机刷材料次数') > 0:
+            self.click_box(combats[0])
+            self.dingxiang_combat()
+        if self.config.get('随机刷技能书次数') > 0:
+            self.click_box(combats[1])
+            self.guangke_combat()
 
     def guangke_combat(self):
-        target_list = self.wait_ocr(x=0.6, y=0.25, to_x=0.9, to_y=0.8, match=re.compile(r"支援协议"))
+        target_list = self.wait_ocr(x=0.03, y=0.36, to_y=0.63, match=re.compile(r"协议"))
 
         self.click_box(random.choice(target_list))
         self.fast_combat(self.config.get("随机刷技能书次数"))
@@ -251,7 +264,7 @@ class DailyTask(BJTask):
         if self.wait_click_ocr(0.5, 0.8, match="无消耗", time_out=4):
             self.log_info("开始免费召唤")
             self.wait_click_ocr(0.9, 0, to_y=0.2, match="SKIP")
-            self.wait_click_ocr(0.4, 0.8, to_x=0.6, match="确认")
+            self.wait_click_ocr(0.4, 0.8, to_x=0.6, match=re.compile(r"^确"))
             self.click_to_continue_wait()
         else:
             self.log_info("免费召唤次数没了")
@@ -259,7 +272,7 @@ class DailyTask(BJTask):
 
     def shoucai(self):
         self.go_into_menu("白荆穹顶", True)
-        self.wait_click_ocr(0.9, 0.9, match="全部收取")
+        self.wait_click_ocr(0.9, 0.9, match="全部收取", time_out=40)
         self.click_to_continue_wait()
         self.go_back_confirm()
 

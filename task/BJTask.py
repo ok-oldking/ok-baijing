@@ -28,7 +28,7 @@ class BJTask(OneTimeTask, OCR, FindFeature):
             return True
 
     def click_to_continue_wait(self, time_out=0):
-        return self.wait_click_feature('click_to_continue', time_out=time_out)
+        return self.wait_click_ocr(0.44, 0.89, 0.56, 0.97, match="点击屏幕继续", time_out=time_out)
 
     def go_home_wait(self):
         self.wait_click_feature('go_home')
@@ -51,25 +51,25 @@ class BJTask(OneTimeTask, OCR, FindFeature):
     def check_until_main(self):
         self.info['检查主页次数'] = self.info.get("检查主页次数", 1) + 1
         self.log_debug(f'check check_until_main {self.info.get("检查主页次数")}')
-        main = self.find_one('main_screen_menu', threshold=0.4)
+        main = self.find_one('main_screen_feature', threshold=0.9, use_gray_scale=True)
         self.log_debug(f'found main menu {main}')
         if main:
             while True:
-                task = self.ocr(box=self.main_menu_zone, match=re.compile(r"完成"))
+                task = self.ocr(box=self.main_menu_zone, match="外勤作战")
                 if task:
                     break
-                click_to_continue = self.find_one('click_to_continue')
+                click_to_continue = self.ocr(0.44, 0.89, 0.56, 0.97, match="点击屏幕继续")
                 if click_to_continue:
                     self.click_box(click_to_continue)
                     self.sleep(2)
-                    return False
-                qiandao_lingqu = self.ocr(box=self.get_box_by_name('box_qiandao'), match="可领取")
+                    continue
+                qiandao_lingqu = self.ocr(0.2, 0.6, 0.8, match="可领取")
                 if qiandao_lingqu:
                     self.click_box(qiandao_lingqu)
                     self.sleep(2)
                     self.click_relative(0.4, 0.05)
                     self.sleep(2)
-                    return False
+                    continue
                 else:
                     self.log_debug(f'found main_screen_feature {main}')
                     self.click_relative(0.4, 0.05)
@@ -77,7 +77,9 @@ class BJTask(OneTimeTask, OCR, FindFeature):
             self.sleep(3)  # wait for animation
             self.wait_ocr(box=self.main_menu_zone, match=re.compile(r"完成"))
             return True
-        start = self.find_one('start_screen_feature')
+        start = self.find_one('start_screen_feature',
+                              threshold=0.9, use_gray_scale=True)
+        self.log_debug(f'found start feature {start}')
         if start:
             boxes = self.ocr(box=self.box_of_screen(0.5, 0.5))
             if find_box_by_name(boxes, "微信登陆"):
@@ -101,7 +103,7 @@ class BJTask(OneTimeTask, OCR, FindFeature):
 
     @property
     def main_menu_zone(self):
-        return self.box_of_screen(0.62, 0.31, 0.97, 0.65)
+        return self.box_of_screen(0.62, 0.31, 0.97, 0.65, name="主页菜单区域")
 
     def check_is_main(self):
         boxes = self.ocr(box=self.main_menu_zone)

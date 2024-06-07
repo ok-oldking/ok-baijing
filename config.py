@@ -8,7 +8,7 @@ from task.DailyTask import DailyTask
 from task.JoinGameTask import JoinGameTask
 from task.ManXunTask import ManXunTask
 
-version = "v1.3.11"
+version = "v1.1.11"
 
 
 def calculate_pc_exe_path(running_path):
@@ -26,9 +26,9 @@ config = {
     },
     # required if using feature detection
     'template_matching': {
-        'coco_feature_folder': os.path.join('assets', 'coco'),
-        'default_horizontal_variance': 0.003,
-        'default_vertical_variance': 0.005,
+        'coco_feature_json': os.path.join('assets', 'result.json'),
+        'default_horizontal_variance': 0.01,
+        'default_vertical_variance': 0.01,
         'default_threshold': 0.9,
     },
     'windows': {  # required  when supporting windows game
@@ -40,9 +40,8 @@ config = {
     'adb': {
         'packages': ['com.tencent.gate']
     },
-    'firebase': {
-        'measurement_id': 'G-9W3F3EQ19G',
-        'api_secret': 'eAkNmhrERiGg8Q3Riuxerw'
+    'analytics': {
+        'report_url': 'https://okreport.ok-script.com/report'
     },
     'update': {
         'releases_url': 'https://api.github.com/repos/ok-oldking/ok-baijing/releases?per_page=15',
