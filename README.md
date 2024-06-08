@@ -9,23 +9,20 @@ QQ群594495691 [OK白荆回廊自动漫巡辅助](https://qm.qq.com/q/aGO7eBJ2Uw
 
 ![img.png](readme/img.png)
 
-* 基于[ok-script](https://github.com/ok-oldking/ok-script)开发, 完全使用OCR文字识别开发
-* 支持PC版, 以及安卓模拟器或使用adb连接的安卓物理机
-* 可以指定角色凹指定技能个数, 循环n次, 直到刷到技能
-* 如果没有刷到技能就, 自动投降新开
+* 基于[ok-script](https://github.com/ok-oldking/ok-script)开发
+* 支持PC版(必须前台), 以及安卓模拟器或使用adb连接的安卓物理机(可以挂后台)
+* 自动日常收菜
+* 可以指定角色凹指定技能个数, 循环n次, 直到刷到技能, 如果没有刷到技能就, 自动投降新开
 
 ## 使用方法
 
 ### windows版本运行
 
-1. 从[Github Release](https://github.com/ok-oldking/ok_baijing/releases)下载最新版, 双击运行.exe, 杀毒软件可能会报警,
+1. 从[Github Release](https://github.com/ok-oldking/ok_baijing/releases)下载最新release版, 双击运行.exe, 杀毒软件可能会报警,
    添加安装目录到白名单
 2. 进入游戏漫巡界面, 设置全部为简化
    ![img_3.png](readme/img_3.png)
-3. 先选择窗口, 点击运行
-   ![img.png](img.png)
-4. 选择任务运行
-   ![img2.png](img2.png)
+3. 选择任务运行
 
 ### 注意事项
 
@@ -49,7 +46,7 @@ python main.py
 
 #### 1. 分辨率支持
 
-由于都是按窗口百分比计算的, 只支持16：9，1080p,2k,4k都行
+由于都是按窗口百分比计算的, 只支持16：9，720p,1080p, 2k, 4k都行
 
 #### 2. 发现Bug怎么办
 
