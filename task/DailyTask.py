@@ -157,6 +157,7 @@ class DailyTask(BJTask):
 
     def combat(self):
         self.choose_main_menu("外勤作战")
+        self.wait_click_ocr(.7, .9, .82, match="物资筹备")
         combats = self.wait_ocr(x=0.1, y=0.58, to_x=0.75, to_y=0.67, match=["定向保障", "光刻协议"])
 
         if self.config.get('随机刷材料次数') > 0:

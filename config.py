@@ -3,12 +3,14 @@ import re
 
 from ok.util.path import get_path_in_package
 from task.AoSkillManXunTask import AoSkillManXunTask
+from task.AoSkillManXunTask2 import AoSkillManXunTask2
+from task.AoSkillManXunTask3 import AoSkillManXunTask3
 from task.AutoStartCombatTask import AutoStartCombatTask
 from task.DailyTask import DailyTask
 from task.JoinGameTask import JoinGameTask
 from task.ManXunTask import ManXunTask
 
-version = "v1.1.11"
+version = "v1.4.11"
 
 
 def calculate_pc_exe_path(running_path):
@@ -68,6 +70,8 @@ config = {
         DailyTask(),
         AoSkillManXunTask(),
         JoinGameTask(),
+        AoSkillManXunTask2(),
+        AoSkillManXunTask3(),
         ManXunTask(),
     ], 'trigger_tasks': [
         AutoStartCombatTask()

@@ -28,7 +28,13 @@ class BJTask(OneTimeTask, OCR, FindFeature):
             return True
 
     def click_to_continue_wait(self, time_out=0):
-        return self.wait_click_ocr(0.44, 0.89, 0.56, 0.97, match="点击屏幕继续", time_out=time_out)
+        return self.wait_click_ocr(0.42, 0.74, 0.58, 0.97, match=re.compile(r"^点击"), time_out=time_out)
+
+    def click_to_continue(self):
+        click_to_continue = self.ocr(0.42, 0.74, 0.58, 0.97, match=re.compile(r"^点击"))
+        if click_to_continue:
+            self.click_box(click_to_continue)
+            return True
 
     def go_home_wait(self):
         self.wait_click_feature('go_home')
@@ -58,10 +64,7 @@ class BJTask(OneTimeTask, OCR, FindFeature):
                 task = self.ocr(box=self.main_menu_zone, match="外勤作战")
                 if task:
                     break
-                click_to_continue = self.ocr(0.44, 0.89, 0.56, 0.97, match="点击屏幕继续")
-                if click_to_continue:
-                    self.click_box(click_to_continue)
-                    self.sleep(2)
+                if self.click_to_continue():
                     continue
                 qiandao_lingqu = self.ocr(0.2, 0.6, 0.8, match="可领取")
                 if qiandao_lingqu:
@@ -87,6 +90,8 @@ class BJTask(OneTimeTask, OCR, FindFeature):
             self.log_debug(f'found start_screen_feature {start}')
             self.click_relative(0.88, 0.5)
             self.sleep(2)
+            return False
+        self.click_to_continue()
 
     def go_into_menu(self, menu, confirm=False):
         self.wait_click_ocr(0.9, 0.9, match="菜单")
