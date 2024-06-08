@@ -235,6 +235,7 @@ class DailyTask(BJTask):
 
     def friends(self):
         self.click_relative(225 / 1600, 43 / 900)
+        self.wait_click_ocr(0.08, 0.10, 0.20, 0.21, match="好友列表")
         self.wait_click_ocr(0.8, to_y=0.15, match=re.compile(".*赠送$"))
         self.click_to_continue_wait(time_out=3)
         self.go_home_wait()
