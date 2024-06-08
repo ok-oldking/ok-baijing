@@ -1,3 +1,5 @@
+import re
+
 from ok.ocr.OCR import OCR
 from ok.task.TriggerTask import TriggerTask
 
@@ -16,5 +18,10 @@ class AutoStartCombatTask(TriggerTask, OCR):
         if start_combat:
             self.click_box(start_combat)
             # self.log_info(start_combat)
-            self.notification("点击开始战斗")
+            self.log_info("点击开始战斗", True)
             self.sleep(2)
+            return True
+        click_to_continue = self.ocr(0.42, 0.74, 0.58, 0.97, match=re.compile(r"^点击"))
+        if click_to_continue:
+            self.click_box(click_to_continue)
+            return True

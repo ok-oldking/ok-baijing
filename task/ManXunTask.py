@@ -1,6 +1,4 @@
-import queue
 import re
-import threading
 
 from typing_extensions import override
 
@@ -70,10 +68,6 @@ class ManXunTask(BJTask):
 
     def on_create(self):
         self.log_debug('on_create')
-        self.update_stats_queue = queue.Queue()
-        self.update_stats_thread = threading.Thread(target=self.do_update_current_stats,
-                                                    name=f"{self.__class__.__name__}_update_stats")
-        self.update_stats_thread.start()
 
     def validate_config(self, key, value):
         self.custom_routes.clear()
@@ -90,9 +84,6 @@ class ManXunTask(BJTask):
                     self.log_error(f'自定义路径 配置错误：{v}', exception=e)
                     return f'自定义路径配置格式错误:{v}'
             self.log_info(f'加载自定义路径:{self.custom_routes}')
-
-    def on_destroy(self):
-        self.update_stats_queue.put(None)
 
     def end(self, message, result=False):
         self.log_info(f"执行结束:{message}")
@@ -206,29 +197,24 @@ class ManXunTask(BJTask):
 
     def update_current_stats(self):
         if self.to_update_stats:
-            if self.update_stats_queue.qsize() > 0:
-                self.log_error(f"update_stats_queue blocked {self.update_stats_queue.qsize()}")
-                return
-            self.to_update_stats = False
-            self.update_stats_queue.put(self.frame)
+            self.handler.post(lambda: self.do_update_current_stats(self.frame))
 
-    def do_update_current_stats(self):
-        while not self.exit_is_set():
-            frame = self.update_stats_queue.get()
-            if frame is None:
-                self.log_info("No frame in queue, destroyed")
-                return
-            self.ocr_stats(frame)
+    def do_update_current_stats(self, frame):
+        if frame is None:
+            self.log_info("No frame in queue, destroyed")
+            return
+        self.ocr_stats(frame)
 
     def ocr_stats(self, frame=None):
         boxes = self.ocr(box=self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
         if len(boxes) != 5:
-            self.log_error(f"无法找到5个属性, {boxes}")
+            # self.log_error(f"无法找到5个属性, {boxes}")
             return False
         else:
             stats = [int(box.name) for box in boxes]
             self.update_stats_for_anjiao(stats)
             self.info['当前属性'] = stats
+            self.log_debug(f"ocr_stats {stats}")
             return True
 
     def update_stats_for_anjiao(self, stats):
