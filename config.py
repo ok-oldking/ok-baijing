@@ -58,10 +58,13 @@ config = {
     <p>视频演示 <a href="https://www.bilibili.com/video/BV1K7421f7KT/">https://www.bilibili.com/video/BV1K7421f7KT/</a></p>
     <p>QQ群:<a href="https://qm.qq.com/q/aGO7eBJ2Uw">594495691</a></p>
 """,
+    'supported_resolution': {
+        'ratio': '16:9',
+        'min_size': (1280, 720)
+    },
     'supported_screen_ratio': '16:9',
     'screenshots_folder': "screenshots",
     'gui_title': 'OK白荆',  # Optional
-    # 'coco_feature_folder': get_path(__file__, 'assets/coco_feature'),  # required if using feature detection
     'log_file': 'logs/ok-script.log',  # Optional, auto rotating every day
     'error_log_file': 'logs/ok-script_error.log',
     'version': version,

@@ -28,7 +28,6 @@ class AoSkillManXunTask(ManXunTask):
         self.config_description["支援烙痕类型"] = '一定要匹配, 否则刷不到'
         self.config_type["支援烙痕类型"] = {'type': "drop_down", 'options': self.stats_seq}
         self.pause_combat_message = "成功刷到目标技能, 暂停"
-        self.refresh_laohen_button = None
 
     @override
     def run(self):
@@ -139,8 +138,6 @@ class AoSkillManXunTask(ManXunTask):
         zhiyuan = boxes[0]
         self.click_box(zhiyuan, relative_y=-0.5)
         self.sleep(2)
-        if not self.refresh_laohen_button:
-            self.refresh_laohen_button = self.ocr(box=self.top_right_button_zone, match="刷新列表")
         assist_laohen_type = self.config.get("支援烙痕类型")
         laohen_type_index = find_index(assist_laohen_type, self.stats_seq)
         gap = self.height_of_screen((1564 - 1209) / 4 / 1080)
@@ -151,7 +148,7 @@ class AoSkillManXunTask(ManXunTask):
         assist = self.wait_until(self.choose_assist_laohen_check,
                                  time_out=300,
                                  wait_until_before_delay=3,
-                                 post_action=lambda: self.click_box(self.refresh_laohen_button))
+                                 post_action=lambda: self.click_relative(0.91, 0.07))
         self.click_box(assist)
         self.sleep(2)
         select = self.ocr(box=self.box_of_screen(0.5, 0.5, width=0.5, height=0.5, name="支援记忆烙痕检测区域"),
