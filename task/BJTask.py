@@ -77,9 +77,10 @@ class BJTask(OneTimeTask, OCR, FindFeature):
                     self.log_debug(f'found main_screen_feature {main}')
                     self.click_relative(0.4, 0.05)
                     self.sleep(2)
+                self.click_to_continue()
             self.sleep(3)  # wait for animation
-            self.wait_ocr(box=self.main_menu_zone, match=re.compile(r"完成"))
-            return True
+            if self.ocr(box=self.main_menu_zone, match=re.compile(r"外勤作战")):
+                return True
         start = self.find_one('start_screen_feature',
                               threshold=0.9, use_gray_scale=True)
         self.log_debug(f'found start feature {start}')
