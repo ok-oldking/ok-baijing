@@ -164,6 +164,7 @@ class DailyTask(BJTask):
             self.click_box(combats[0])
             self.dingxiang_combat()
         if self.config.get('随机刷技能书次数') > 0:
+            combats = self.wait_ocr(x=0.1, y=0.58, to_x=0.75, to_y=0.67, match=["定向保障", "光刻协议"])
             self.click_box(combats[1])
             self.guangke_combat()
 

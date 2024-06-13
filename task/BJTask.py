@@ -41,7 +41,7 @@ class BJTask(OneTimeTask, OCR, FindFeature):
         return self.wait_main()
 
     def wait_main(self):
-        return self.wait_until(lambda: self.ocr(box=self.main_menu_zone, match=re.compile(r"完成")))
+        return self.wait_until(lambda: self.ocr(box=self.main_menu_zone, match=re.compile(r"外勤作战")))
 
     def go_home_now(self):
         go_home = self.find_feature('go_home', threshold=0.92)
