@@ -61,17 +61,15 @@ class DailyTask(BJTask):
         self.go_home_wait()
 
     def claim_quest(self):
-        while True:
-            self.choose_main_menu(re.compile(r"(完成|任务)"))
-            claim = self.wait_ocr(0.8, 0.75, 0.93, 0.81, match=re.compile(r"领取"), time_out=4)
-            if not claim:
-                self.click_relative(0.36, 0.05)
-                return
-            else:
-                self.click_box(claim)
-            while self.click_to_continue_wait(time_out=4):
-                self.sleep(2)
-            self.click_relative(0.37, 0.05)
+        self.choose_main_menu(re.compile(r"(完成|任务)"))
+        self.wait_click_ocr(0.03, 0.2, 0.16, 0.83, match="日常")
+        if self.wait_click_ocr(0.8, 0.75, 0.93, 0.81, match=re.compile(r"领取"), time_out=4):
+            self.click_to_continue_wait(time_out=4)
+        self.wait_click_ocr(0.03, 0.2, 0.16, 0.83, match="周常")
+        if self.wait_click_ocr(0.8, 0.75, 0.93, 0.81, match=re.compile(r"领取"), time_out=4):
+            self.click_to_continue_wait(time_out=4)
+        self.sleep(2)
+        self.click_relative(0.37, 0.05)
 
     def laohen_up(self):
         self.choose_main_menu("记忆烙痕")
