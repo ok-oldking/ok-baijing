@@ -64,11 +64,13 @@ class DailyTask(BJTask):
         self.choose_main_menu(re.compile(r"(完成|任务)"))
         self.wait_click_ocr(0.03, 0.2, 0.16, 0.83, match="日常")
         if self.wait_click_ocr(0.8, 0.75, 0.93, 0.81, match=re.compile(r"领取"), time_out=4):
-            self.click_to_continue_wait(time_out=4)
+            self.click_to_continue_wait(time_out=6)
         self.wait_click_ocr(0.03, 0.2, 0.16, 0.83, match="周常")
         if self.wait_click_ocr(0.8, 0.75, 0.93, 0.81, match=re.compile(r"领取"), time_out=4):
-            self.click_to_continue_wait(time_out=4)
-        self.sleep(2)
+            self.click_to_continue_wait(time_out=6)
+        self.sleep(1)
+        self.click_relative(0.37, 0.05)
+        self.sleep(1)
         self.click_relative(0.37, 0.05)
 
     def laohen_up(self):
