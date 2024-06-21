@@ -1,6 +1,6 @@
 import re
 
-from ok.feature.Box import boxes_to_map_by_list_of_names, find_box_by_name
+from ok.feature.Box import boxes_to_map_by_list_of_names
 from ok.feature.FindFeature import FindFeature
 from ok.ocr.OCR import OCR
 from ok.task.BaseTask import BaseTask
@@ -85,8 +85,10 @@ class BJTask(BaseTask, OCR, FindFeature):
                               threshold=0.9, use_gray_scale=True)
         self.log_debug(f'found start feature {start}')
         if start:
-            boxes = self.ocr(box=self.box_of_screen(0.5, 0.5))
-            if find_box_by_name(boxes, "微信登陆"):
+            boxes = self.ocr(0.5, 0.5, match='微信登录')
+            if boxes:
+                self.log_info('需要登陆账号', notify=True)
+                self.disable()
                 return "需要登陆账号"
             self.log_debug(f'found start_screen_feature {start}')
             self.click_relative(0.88, 0.5)

@@ -167,13 +167,13 @@ class DailyTask(BJTask):
             combats = self.wait_ocr(x=0.1, y=0.58, to_x=0.75, to_y=0.67, match=["定向保障", "光刻协议"])
             self.click_box(combats[1])
             self.guangke_combat()
+        self.go_home_wait()
 
     def guangke_combat(self):
         target_list = self.wait_ocr(x=0.03, y=0.36, to_y=0.63, match=re.compile(r"协议"))
 
         self.click_box(random.choice(target_list))
         self.fast_combat(self.config.get("随机刷技能书次数"))
-        self.go_home_wait()
 
     def dingxiang_combat(self):
         sub_list = self.wait_until(lambda: self.ocr(x=0.1, y=0.25, to_x=0.9, to_y=0.4, match="百炼成钢"))
@@ -256,8 +256,8 @@ class DailyTask(BJTask):
         self.go_home_wait()
 
     def click_last_summon(self):
-        laohens = self.ocr(box=self.box_of_screen(0, 0.1, to_x=0.3), match="记忆烙痕")
-        if len(laohens) > 2:
+        laohens = self.ocr(box=self.box_of_screen(0, 0.47, to_x=0.3), match="记忆烙痕")
+        if len(laohens) > 0:
             self.click_box(laohens[-1])
             return True
 
