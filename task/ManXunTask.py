@@ -41,6 +41,7 @@ class ManXunTask(BJTask):
             "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
             "高深度选项优先级": ["风险区", "烙痕唤醒", "高维同调", "记忆强化", "研习区", "休整区"],
             "高低深度分界": 6,
+            "终端900上限": True,
             "烙痕唤醒黑名单": ["幕影重重", "谎言之下", "馆中遗影"],
             "跳过战斗": ["鱼叉将军-日光浅滩E"],
             "烙痕属性提升不选技能点": True,
@@ -68,6 +69,10 @@ class ManXunTask(BJTask):
 
     def on_create(self):
         self.log_debug('on_create')
+
+    @property
+    def zhongduan_max(self):
+        return 900 if self.config.get("终端900上限") else 1250
 
     def validate_config(self, key, value):
         self.custom_routes.clear()
@@ -185,7 +190,7 @@ class ManXunTask(BJTask):
         to_remove = []
         to_demote = []
         for i, value in enumerate(current):
-            if value >= 1250 or (value >= 900 and i == 4):
+            if value >= 1250 or (value >= self.zhongduan_max and i == 4):
                 to_remove.append(self.stats_seq[i])
             elif value >= 950:
                 to_demote.append(self.stats_seq[i])
@@ -562,7 +567,7 @@ class ManXunTask(BJTask):
             stats_priority_index = find_index(tisheng_boxes[i].name.replace('提升', ''), stats_priority)
             if stats_priority_index != -1:
                 priority += 10 - stats_priority_index
-            if current_stats[i] >= 1280 or (i == 4 and current_stats[i] >= 900):  ##超过上限或者终端超过900不点
+            if current_stats[i] >= 1280 or (i == 4 and current_stats[i] >= self.zhongduan_max):  ##超过上限或者终端超过900不点
                 priority = -1
             if priority > highest_priority:
                 highest_index = i
