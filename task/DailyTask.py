@@ -50,14 +50,15 @@ class DailyTask(BJTask):
 
     def claim_dayueka(self):
         self.choose_main_menu("活动中心")
-        if self.wait_click_ocr(0.35, 0.80, 0.44, 0.85, match="任务总览", time_out=4):
-            if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
-                self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
-                                post_action=lambda: self.click_relative(0.5, 0.9))
-            self.wait_click_ocr(0.2, 0.4, 0.27, 0.44, match="本周任务")
-            if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
-                self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
-                                post_action=lambda: self.click_relative(0.5, 0.9))
+        if self.wait_click_ocr(0.02, 0.09, 0.16, 0.91, match='叶脉联结'):
+            if self.wait_click_ocr(0.35, 0.80, 0.44, 0.85, match="任务总览", time_out=4):
+                if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
+                    self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
+                                    post_action=lambda: self.click_relative(0.5, 0.9))
+                self.wait_click_ocr(0.2, 0.4, 0.27, 0.44, match="本周任务")
+                if self.wait_click_ocr(0.68, 0.80, 0.77, 0.85, match="全部领取", time_out=3):
+                    self.wait_until(lambda: self.ocr(0.35, 0.80, 0.44, 0.85, match="任务总览"),
+                                    post_action=lambda: self.click_relative(0.5, 0.9))
         self.go_home_wait()
 
     def claim_quest(self):
@@ -68,10 +69,7 @@ class DailyTask(BJTask):
         self.wait_click_ocr(0.03, 0.2, 0.16, 0.83, match="周常")
         if self.wait_click_ocr(0.8, 0.75, 0.93, 0.81, match=re.compile(r"领取"), time_out=4):
             self.click_to_continue_wait(time_out=6)
-        self.sleep(1)
-        self.click_relative(0.37, 0.05)
-        self.sleep(1)
-        self.click_relative(0.37, 0.05)
+        self.wait_until(self.check_is_main, post_action=lambda: self.click_relative(0.37, 0.05), time_out=10)
 
     def laohen_up(self):
         self.choose_main_menu("记忆烙痕")

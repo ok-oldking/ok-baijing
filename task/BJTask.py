@@ -28,7 +28,8 @@ class BJTask(BaseTask, OCR, FindFeature):
             return True
 
     def click_to_continue_wait(self, time_out=0):
-        return self.wait_click_ocr(0.42, 0.74, 0.58, 0.97, match=re.compile(r"^点击"), time_out=time_out)
+        while self.wait_click_ocr(0.42, 0.74, 0.58, 0.97, match=re.compile(r"^点击"), time_out=time_out):
+            pass
 
     def click_to_continue(self):
         click_to_continue = self.ocr(0.42, 0.74, 0.58, 0.97, match=re.compile(r"^点击"))
