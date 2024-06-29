@@ -119,7 +119,7 @@ class AoSkillManXunTask(ManXunTask):
     def select_char(self):
         char_name = self.wait_until(
             lambda: self.ocr(box=self.box_of_screen(0.4, 0.4, width=0.6, height=0.5, name="角色检测区域"),
-                             match=re.compile(f"{self.config['角色名']}$")),
+                             match=re.compile(f"{self.config['角色名']}")),
             time_out=60,
             post_action=lambda: self.swipe_relative(0.8, 0.5, 0.5, 0.5, 1))
         if not char_name:
