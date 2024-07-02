@@ -37,7 +37,9 @@ config = {
         'title': re.compile(r'^白荆回廊'),
         'exe': 'GateMK-Win64-Shipping.exe',
         'calculate_pc_exe_path': calculate_pc_exe_path,
-        'can_bit_blt': False  # default false, opengl games does not support bit_blt
+        # 'interaction': 'PostMessage',
+        'can_bit_blt': True,  # default false, opengl games does not support bit_blt
+        'bit_blt_render_full': True
     },
     'adb': {
         'packages': ['com.tencent.gate']
