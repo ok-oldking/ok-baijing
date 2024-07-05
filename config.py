@@ -2,13 +2,13 @@ import os
 import re
 
 from ok.util.path import get_path_in_package
-from task.AoSkillManXunTask import AoSkillManXunTask
-from task.AoSkillManXunTask2 import AoSkillManXunTask2
-from task.AoSkillManXunTask3 import AoSkillManXunTask3
 from task.AutoStartCombatTask import AutoStartCombatTask
 from task.DailyTask import DailyTask
 from task.JoinGameTask import JoinGameTask
-from task.ManXunTask import ManXunTask
+from task.NewAoSkillManXunTask import NewAoSkillManXunTask
+from task.NewAoSkillManXunTask2 import NewAoSkillManXunTask2
+from task.NewAoSkillManXunTask3 import NewAoSkillManXunTask3
+from task.NewManXunTask import NewManXunTask
 
 version = "v1.4.11"
 
@@ -73,11 +73,11 @@ config = {
     'locale': 'zh_CN',
     'onetime_tasks': [  # tasks to execute
         DailyTask(),
-        AoSkillManXunTask(),
+        NewAoSkillManXunTask(),
         JoinGameTask(),
-        AoSkillManXunTask2(),
-        AoSkillManXunTask3(),
-        ManXunTask(),
+        NewAoSkillManXunTask2(),
+        NewAoSkillManXunTask3(),
+        NewManXunTask(),
     ], 'trigger_tasks': [
         AutoStartCombatTask()
     ],

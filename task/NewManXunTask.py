@@ -22,7 +22,7 @@ def get_current_stats(s):
         return None
 
 
-class ManXunTask(BJTask):
+class NewManXunTask(BJTask):
 
     def __init__(self):
         super().__init__()
@@ -30,22 +30,20 @@ class ManXunTask(BJTask):
         self.name = "执行一次自动漫巡"
         self.description = """自动漫巡, 必须进入漫巡后开始, 并开启追踪
     """
-        self.click_no_brainer = ["直接胜利", "属性提升", "前进", "通过", "继续", "收下", "跳过", "开始强化",
+        self.click_no_brainer = ["直接胜利", "属性提升", re.compile(r"^前进"), "通过", "继续", "收下", "跳过",
+                                 "开始强化",
                                  re.compile(r"^解锁技能："), re.compile(r"^精神负荷降低"), "漫巡推进"]
         self.default_config = {
-            "投降跳过战斗": False,
-            "1000以下属性优先级": ["专精", "攻击", "终端", "防御", "体质"],
-            "1000以上属性优先级": ["专精", "攻击", "防御", "体质", "终端"],
-            "烙痕唤醒属性优先级": ["终端", "攻击", "专精", "体质", "防御"],
             "深度等级最多提升到": 12,
-            "低深度选项优先级": ["风险区", "烙痕唤醒", "记忆强化", "高维同调", "研习区", "休整区"],
-            "高深度选项优先级": ["风险区", "烙痕唤醒", "高维同调", "记忆强化", "研习区", "休整区"],
+            "低深度选项优先级": ["属性平台", "技能平台"],
+            "高深度选项优先级": ["技能平台", "属性平台"],
             "高低深度分界": 6,
-            "终端900上限": False,
+            "属性优先级": ["专精", "攻击", "终端", "防御", "体质", "技能点"],
+            # "终端900上限": False,
             "烙痕唤醒黑名单": ["幕影重重", "谎言之下", "馆中遗影"],
-            "跳过战斗": ["鱼叉将军-日光浅滩E"],
-            "烙痕属性提升不选技能点": True,
-            "自定义路径": ["空想王国|2-10|[世界倒影,世界倒影]|1", "空想王国|2-10|[高维同调,烙痕唤醒]|1"]
+            # "跳过战斗": ["鱼叉将军-日光浅滩E"],
+            # "烙痕属性提升不选技能点": True,
+            "自定义路径": ["3-01|[技能平台,属性平台]|2", "3-02|[技能平台,属性平台]|2", "3-04|[技能平台,属性平台]|1"]
         }
         self.config_description = {
             "投降跳过战斗": "如果无法直接胜利, 自动投降跳过",
@@ -53,10 +51,8 @@ class ManXunTask(BJTask):
             "高低深度分界": "比如可以配置低深度优先记忆强化, 高深度优先高维同调",
             "烙痕唤醒黑名单": "可以使用烙痕名称或者核心技能名称, 部分匹配即可",
             "跳过战斗": "不打的战斗, 比如鱼叉将军",
-            "1000以下属性优先级": "1000以下最好优先点满破5星烙痕, 用暗礁和烙痕唤醒加其他属性",
-            "1000以上属性优先级": "1000以上优先攻击,专精属性",
             "烙痕唤醒属性优先级": "比如用烙痕凑900终端",
-            "自定义路径": "使用半角符号，格式为 路线|区域|[选项1名称,选项2名称]|选第几个。\n默认配置海底图多拿30终端少30攻击"
+            "自定义路径": "使用半角符号，格式为 区域|[选项1名称,选项2名称]|选第几个。"
         }
         self.stats_up_re = re.compile(r"([\u4e00-\u9fff]+)\+(\d+)(?:~(\d+))?")
         self.pause_combat_message = "未开启自动战斗, 无法继续漫巡, 暂停中, 请手动完成战斗或开启自动跳过后继续"
@@ -79,10 +75,10 @@ class ManXunTask(BJTask):
         if key == '自定义路径':
             for v in value:
                 try:
-                    route, zone, choices, to_choose = v.split('|')
+                    zone, choices, to_choose = v.split('|')
                     list_of_choices = choices[1:-1].split(',')
-                    config_list = [route, zone, list_of_choices, int(to_choose)]
-                    if len(config_list) != 4:
+                    config_list = [zone, list_of_choices, int(to_choose)]
+                    if len(config_list) != 3:
                         return f'自定义路径配置格式错误:{v}'
                     self.custom_routes.append(config_list)
                 except Exception as e:
@@ -96,7 +92,7 @@ class ManXunTask(BJTask):
 
     @property
     def choice_zone(self):
-        return self.box_of_screen(0.7, 0.25, width=0.3, height=0.5, name="选项检测区域")
+        return self.box_of_screen(0.76, 0.50, 0.91, 0.83, name="选项检测区域")
 
     @property
     def current_zone(self):
@@ -104,11 +100,11 @@ class ManXunTask(BJTask):
 
     @property
     def stats_zone(self):
-        return self.box_of_screen(0.3, 0.92, width=0.4, height=0.06, name="当前属性区域")
+        return self.box_of_screen(0.28, 0.92, 0.73, 0.98, name="当前属性区域")
 
     @property
     def dialog_zone(self):
-        return self.box_of_screen(0.25, 0.15, width=0.5, height=0.75, name="弹窗检测区域")
+        return self.box_of_screen(0.05, 0.24, 0.92, 0.87, name="弹窗检测区域")
 
     @property
     def battle_popup_zone(self):
@@ -139,25 +135,12 @@ class ManXunTask(BJTask):
                 self.pause()
 
     def check_is_manxun_ui(self):
-        choices = self.do_find_choices()
-        if not choices:
-            self.logger.debug("找不到选项")
-            current = self.ocr(box=self.current_zone, match=re.compile(r"^自动"))
-            if not current:
-                stats = self.ocr_stats()
-                if not stats:
-                    return False
-            self.click_relative(0.9, 0.5)
-            self.sleep(2)
-            return self.check_is_manxun_ui()
-        if self.find_depth() == 0:
-            self.logger.debug("找不到深度")
-            self.click_relative(0.9, 0.5)
-            self.sleep(2)
-            return self.check_is_manxun_ui()
-
-        self.next_frame()
-        return choices
+        if self.ocr_zone():
+            return True
+        try:
+            return self.do_handle_dialog(-1)
+        except Exception as e:
+            self.log_error(f'check_is_manxun_ui handle dialog failed', e)
 
     def loop(self, choice=-1):
         choices, choice_clicked = self.click_choice(choice)
@@ -171,6 +154,7 @@ class ManXunTask(BJTask):
         for i in range(2):
             try:
                 self.do_handle_dialog(choice)
+                self.sleep(0.5)
                 return True
             except FinishedException as e:
                 raise e
@@ -178,37 +162,24 @@ class ManXunTask(BJTask):
                 if i == 0:
                     self.screenshot("处理对话框异常重试一次")
                     self.log_error("处理对话框异常 重试一次", e)
-                    self.sleep(3)
+                    self.sleep(5)
                     continue
                 else:
                     raise e
 
     def stats_priority(self, gaowei):
-        priority = self.config['1000以下属性优先级'] if gaowei else self.config['1000以下属性优先级']
-        priority_1000 = self.config['1000以上属性优先级']
-        current = self.info.get('当前属性', [0, 0, 0, 0, 0])
-        to_remove = []
-        to_demote = []
-        for i, value in enumerate(current):
-            if value >= 1250 or (value >= self.zhongduan_max and i == 4):
-                to_remove.append(self.stats_seq[i])
-            elif value >= 950:
-                to_demote.append(self.stats_seq[i])
-        priority = remove_item(priority, to_remove)
-        if to_demote:
-            not_demote = [item for item in priority if item not in to_demote]
-            priority = not_demote + [item for item in priority_1000 if item in to_demote] + to_remove
-        return priority
+        return self.config['属性优先级']
 
     def update_current_stats(self):
         if self.to_update_stats:
             self.handler.post(lambda: self.do_update_current_stats(self.frame))
 
     def do_update_current_stats(self, frame):
-        if frame is None:
-            self.log_info("No frame in queue, destroyed")
-            return
-        self.ocr_stats(frame)
+        # if frame is None:
+        #     self.log_info("No frame in queue, destroyed")
+        #     return
+        # self.ocr_stats(frame)
+        pass
 
     def ocr_stats(self, frame=None):
         boxes = self.ocr(box=self.stats_zone, match=re.compile(r'^[1-9]\d*$'), frame=frame)
@@ -238,16 +209,27 @@ class ManXunTask(BJTask):
 
     def do_handle_dialog(self, choice):
         boxes = self.ocr(box=self.dialog_zone)
-        if self.find_depth(boxes) > 0:
+        choices = self.do_find_choices()
+        if choices is not True and len(choices) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
-            return
+            return False
         self.logger.debug(f"检测对话框区域 {boxes}")
-        gaowei = find_box_by_name(boxes, "高维同调")
-        if self.box_in_horizontal_center(gaowei, off_percent=0.1):
-            box = self.find_highest_gaowei_number(boxes)
-            self.click_box(box)
-            self.log_info(f"高位同调 点击最高 {box}")
-            self.to_update_stats = True
+        ups = find_boxes_by_name(boxes, "提升")
+        if huanxing := find_boxes_by_name(boxes, '烙痕唤醒'):
+            self.try_handle_laohen_choices(huanxing, boxes)
+        elif depth_ups := find_boxes_by_name(boxes, ["维持当前深度", "提升深度到", "降低深度到"]):
+            levels = []
+            for depth in depth_ups:
+                levels.append(int(depth.find_closest_box('right', boxes).name))
+            self.log_debug(f'depth levels {levels}')
+            for reverse_index, value in enumerate(reversed(levels)):
+                original_index = len(levels) - 1 - reverse_index
+                if value <= self.config.get('深度等级最多提升到', 12):
+                    self.click_box(depth_ups[original_index])
+                    self.log_info(f'点击等级提升 {value} {depth_ups[original_index]}')
+                    self.info['漫巡深度'] = value
+                    break
+            self.click_box(depth_ups[0])
         elif confirm := find_box_by_name(boxes, "完成漫巡"):
             self.click_box(confirm)
             self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match="确认"))
@@ -262,7 +244,28 @@ class ManXunTask(BJTask):
                 self.wait_until(lambda: self.ocr(box=self.box_of_screen(0, 0, width=0.2, height=0.2)),
                                 pre_action=lambda: self.click_relative(0.5, 0.1), time_out=90)
             raise FinishedException()
-        elif confirm := find_box_by_name(boxes, "解锁技能和区域"):
+        elif len(ups) > 2:
+            stats = []
+            for up in ups:
+                stats.append(remove_non_digits_and_convert(up.find_closest_box('up', boxes).name))
+            self.log_info(f'高位同调选项: {stats}')
+            max_value = max(stats)
+            max_index = stats.index(max_value)
+            self.click_box(ups[max_index])
+            self.log_info(f"高位同调 点击最高 {ups[max_index]} {stats[max_index]}")
+            self.to_update_stats = True
+        elif weichi_huibi := find_box_by_name(boxes, re.compile('^维持深度回避')):
+            self.log_info('维持深度回避')
+            self.click_box(weichi_huibi)
+        elif kaizhan := find_box_by_name(boxes, re.compile('^开战')):
+            if avoid := find_box_by_name('维持当前深度回避', boxes):
+                self.click_box(avoid)
+                self.log_info('wait 维持当前深度 ocr done')
+            else:
+                self.log_info('点击开战')
+                self.click_box(kaizhan)
+            self.do_handle_dialog(choice)
+        elif confirm := find_boxes_by_name(boxes, "技能获取"):
             self.handle_skill_dialog(boxes, confirm)
         elif find_box_by_name(boxes, "获得了一些技能点"):
             self.log_info(f"获取技能点成功")
@@ -275,28 +278,14 @@ class ManXunTask(BJTask):
             self.click_box(keyin)
             self.sleep(0.5)
             self.click_box(keyin)
-        elif stat_combat := find_box_by_name(boxes, "开始战斗"):
-            skip_battle = find_box_by_name(boxes, self.config.get("跳过战斗"))
+        elif start_combat := find_box_by_name(boxes, "开始战斗"):
+            self.click_box(start_combat)
             self.logger.debug(
-                f"开始战斗 跳过战斗查询结果:{skip_battle} abs(choice):{abs(choice)}")
-            if find_box_by_name(boxes, re.compile(r"全新挑战无法直接胜利")):
-                self.log_info("发现全新挑战, 暂停", True)
-                self.pause()
-            elif find_box_by_name(boxes, re.compile(r"历史通过深度")):
-                self.log_info("历史通过深度不足, 暂停", True)
-                self.pause()
-            elif skip_battle:
-                self.log_info(f"回避配置列表里的战斗 {skip_battle}")
-                self.click_cancel()
-                return self.loop(choice=choice - 1)
-            elif self.if_skip_battle():
-                self.log_info(f"开始自动跳过战斗")
-                self.click_box(stat_combat)
-                self.auto_skip_combat()
-            else:
-                self.log_info(self.pause_combat_message, True)
-                self.pause()
-        elif no_brain_box := self.click_box_if_name_match(boxes, self.click_no_brainer):
+                f"开始战斗 自动战斗")
+            self.auto_combat()
+        elif no_brain_boxes := find_boxes_by_name(boxes, self.click_no_brainer):
+            no_brain_box = no_brain_boxes[-1]
+            self.click_box(no_brain_box)
             if no_brain_box.name == '属性提升':
                 self.log_info('暗礁属性提升')
                 self.info_add('暗礁次数')
@@ -311,19 +300,20 @@ class ManXunTask(BJTask):
             self.to_update_stats = True
         else:
             raise Exception(f"未知弹窗 无法处理")
+        return True
 
     def ocr_zone(self):
-        zone = self.ocr(box=self.box_of_screen(1527 / 1920, 957 / 1080, to_x=1695 / 1920, to_y=1063 / 1080))
+        zone = self.ocr(box=self.box_of_screen(0.09, 0.11, 0.18, 0.15))
+        self.log_debug(f'ocr zone {zone}')
         if zone:
+            if '浮世' not in zone[0].name:
+                return False
             self.info['当前区域'] = zone[0].name
             self.log_info(f'当前区域 {self.info["当前区域"]}')
             return self.info['当前区域']
 
     def confirm_generate(self):
         return False
-
-    def if_skip_battle(self):
-        return self.config.get("投降跳过战斗")
 
     def find_stats_up(self, boxes):
         for box in boxes:
@@ -340,16 +330,21 @@ class ManXunTask(BJTask):
 
         return find_boxes_by_name(boxes, self.stats_up_re)
 
-    def auto_skip_combat(self):
-        start_combat = self.wait_until(lambda: self.ocr(box=self.star_combat_zone, match="开始战斗"), time_out=180)
-        if not start_combat:
-            raise RuntimeError("无法找到开始战斗按钮")
-        self.click_relative(0.04, 0.065)
-        self.wait_click_box(lambda: self.ocr(box=self.battle_popup_zone, match="离开战斗"))
-        self.wait_click_box(lambda: self.ocr(box=self.battle_popup_zone, match="离开战斗"))
-        self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match="继续"), time_out=30)
-        self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match=re.compile(r"回避")))
-        self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match=re.compile(r"确\s?认")))
+    def auto_combat(self):
+        self.log_info('开始查找开始战斗')
+        start_combat = self.wait_ocr(box=self.star_combat_zone, match="开始战斗", time_out=180, raise_if_not_found=True)
+        self.sleep(2)
+        self.log_info('点击开始战斗')
+        self.click_box(start_combat)
+        self.wait_until(self.ocr_zone, time_out=300)
+        # self.wait_click_ocr(box=self.star_combat_zone, match="开始战斗", time_out=300, raise_if_not_found=True)
+        # self.click_relative(0.04, 0.065)
+        # self.sleep(100)
+        # self.wait_click_box(lambda: self.ocr(box=self.battle_popup_zone, match="离开战斗"))
+        # self.wait_click_box(lambda: self.ocr(box=self.battle_popup_zone, match="离开战斗"))
+        # self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match="继续"), time_out=30)
+        # self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match=re.compile(r"回避")))
+        # self.wait_click_box(lambda: self.ocr(box=self.dialog_zone, match=re.compile(r"确\s?认")))
 
     def handle_stats_up(self, stats_up_choices):
         stats_up_parsed = self.parse_stats_choices(stats_up_choices)
@@ -361,15 +356,8 @@ class ManXunTask(BJTask):
                 break
             for box_stat, _, box in stats_up_parsed:
                 if box_stat == stat:
-                    closet = box.find_closest_box("all", stats_up_choices)
-                    if closet and self.config.get(
-                            '烙痕属性提升不选技能点') and '技能点' in closet.name and box.closest_distance(
-                        closet) < box.height:
-                        skilled_list.append(box)
-                        continue
-                    else:
-                        target = box
-                        break
+                    target = box
+                    break
         if target is None:
             if skilled_list:
                 target = skilled_list[0]
@@ -377,9 +365,12 @@ class ManXunTask(BJTask):
                 target = stats_up_parsed[0][2]
         self.log_info(
             f"选择升级属性 {stats_up_choices} stats_up_parsed:{stats_up_parsed} target:{target} priority:{priority} skilled_list:{skilled_list}")
-        self.click_box(target)
+        if target:
+            self.click_box(target)
+            return True
 
     def handle_skill_dialog(self, boxes, confirm):
+        confirm = confirm[-1]
         search_skill_name_box = confirm.copy(-confirm.width / 2, -confirm.height * 2, confirm.width,
                                              confirm.height * 0.7)
         self.draw_boxes("skill_search_area", search_skill_name_box)
@@ -397,28 +388,30 @@ class ManXunTask(BJTask):
 
     def check_custom_route(self, choices):
         for custom_route in self.custom_routes:
-            target, zone, custom_choices, custom_index = custom_route
-            target_match = target in self.info.get('追踪目标')
-            zone_match = (zone == self.info.get('当前区域'))
+            zone, custom_choices, custom_index = custom_route
+            zone_match = (zone in self.info.get('当前区域', []))
             size_custom = len(custom_choices)
             self.log_debug(
-                f'check_custom_route {choices} 当前区域:{self.info.get("当前区域")} {zone_match} {target_match} {size_custom}')
-            if target_match and zone_match:
+                f'check_custom_route {choices} 当前区域:{self.info.get("当前区域")} {zone_match} {size_custom}')
+            if zone_match:
                 if size_custom == len(choices):
                     all_match = True
                     for i in range(size_custom):
-                        if custom_choices[i] != choices[i].name:
+                        if custom_choices[i] not in choices[i].name:
                             all_match = False
                             break
                     if all_match:
-                        self.log_info(f"自定义路径找到，{custom_route} 点击第{custom_index}个")
                         index = custom_index - 1
+                        self.log_info(f"自定义路径找到，{custom_route} 点击第{custom_index}个 {choices[index]}")
                         self.click_box(choices[index])
                         return True, choices[index]
         return False, None
 
     def click_choice(self, index=-1):
         choices = self.find_choices()
+        if choices is True:
+            self.log_debug(f'choices in bg try handle dialog again')
+            return None, None
         if choices is None:
             return None, None
         if abs(index) > len(choices):
@@ -427,23 +420,11 @@ class ManXunTask(BJTask):
             handled, clicked = self.check_custom_route(choices)
             if handled:
                 return choices, clicked
-            priority = self.config['低深度选项优先级'] if self.info.get('漫巡深度', 0) < self.config[
-                '高低深度分界'] else \
-                self.config[
-                    '高深度选项优先级']
-            clicked, c, i = self.try_handle_laohen_choices(choices, index, priority)
-            if clicked:
-                return c, c[i]
-            if choices[index].name == "深度等级提升":
-                depth = self.find_depth()
-                self.log_info(f"提升深度, {depth} 目前是第{abs(index)}个选项, 共有{len(choices)}选项")
-                if depth < self.config['深度等级最多提升到'] or abs(index) == len(choices):
-                    self.log_info(f"提升深度,当前深度{depth}")
-                else:
-                    self.log_info(f"不提升深度,当前深度{depth}")
-                    index -= 1
-                    index = find_priority_string(choices, priority, index)
             else:
+                priority = self.config['低深度选项优先级'] if self.info.get('漫巡深度', 0) < self.config[
+                    '高低深度分界'] else \
+                    self.config[
+                        '高深度选项优先级']
                 index = find_priority_string(choices, priority, index)
             self.update_current_stats()
             self.click_box(choices[index])
@@ -451,59 +432,55 @@ class ManXunTask(BJTask):
                 f"点击选项:{choices[index]}, 使用优先级 {priority}, index {index}, {choices}")
         return choices, choices[index]
 
-    def try_handle_laohen_choices(self, choices, index, priority):
-        laohen_count = 0
-        laohen_priority = find_index("烙痕唤醒", priority)
-        last_laohen_index = index
-        for i in range(index, -len(choices) - 1, -1):
-            if choices[i].name == "烙痕唤醒":
-                laohen_count += 1
-                last_laohen_index = i
-            elif choice_index := find_index(choices[i].name, priority):
-                if choice_index <= laohen_priority:  # 有比烙痕唤醒高优先级的, 不点击
-                    return False, choices, index
-        if laohen_count < 2:
-            return False, choices, index
-        black_list = [re.compile(s) for s in self.config["烙痕唤醒黑名单"]] + [re.compile("核心技能已解锁满级")]
-        for i in range(index, last_laohen_index - 1, -1):
-            if i == last_laohen_index:
-                self.click_box(choices[i])
-                self.log_debug("最后一个烙痕唤醒选项, 点击")
-                return True, choices, i
-            if choices[i].name == "烙痕唤醒":
-                self.click_box(choices[i])
-                self.wait_until(lambda: self.ocr(box=self.dialog_zone, match="烙痕唤醒"))
-                boxes = self.ocr(match=black_list)
-                if boxes:
-                    self.log_debug(f"烙痕唤醒在黑名单, 跳过 {boxes}")
-                    self.click_relative(0.5, 0.1)
-                    self.sleep(3)
-                    continue
+    def try_handle_laohen_choices(self, huanxing, boxes):
+        stats_up_choices = self.find_stats_up(boxes)
+        if stats_up_choices and self.handle_stats_up(stats_up_choices):
+            return
+        target = huanxing[0]
+        if len(huanxing) == 2:
+            black_list = [re.compile(s) for s in self.config["烙痕唤醒黑名单"]] + [re.compile("核心技能已解锁满级")]
+            blacks = find_boxes_by_name(boxes, black_list)
+            for black in blacks:
+                if black.x < self.width_of_screen(0.5):
+                    target = huanxing[1]
+                    self.log_debug(f'烙痕唤醒 黑名单 {black}')
                 else:
-                    self.log_debug("烙痕不在黑名单, 点击")
-                    return True, choices, i
+                    target = huanxing[0]
+            if target.x < self.width_of_screen(0.5):
+                self.log_info('点击右边唤醒')
+                self.click_relative(0.27, 0.71)
+            else:
+                self.click_relative(0.75, 0.71)
+                self.log_info('点击左边唤醒')
+        else:
+            self.click_relative(0.5, 0.71)
 
     def do_find_choices(self):
-        boxes = self.ocr(box=self.choice_zone)
-        choices = find_boxes_by_name(boxes, re.compile(r"^通往"))
-        if len(choices) == 1:
-            self.info['追踪目标'] = choices[0].name
-        if len(choices) > 0:
-            for i in range(len(choices)):
-                if self.info.get('追踪目标') is None:
-                    self.logger.debug(f"检测到追踪目标: {choices[i].name}")
-                    self.info['追踪目标'] = choices[i].name
-                choices[i].height *= 3
-                if self.info.get('追踪目标') != choices[i].name:
-                    self.log_info("排除错误追踪目标")
-                    del choices[i]
-                    continue
-                right_text_box = next((x for x in boxes if self.is_black_text(x)), None)
-                if right_text_box is not None:
-                    choices[i].name = right_text_box.name
-                    boxes.remove(right_text_box)
-        else:
-            choices = find_boxes_by_name(boxes, "风险区")
+        choices = self.ocr(box=self.choice_zone)
+        for i in range(len(choices) - 1, -1, -1):
+            percent = calculate_color_percentage(self.frame, text_white_color, box=choices[i])
+            if percent < 0.02 or percent > 0.3:
+                self.log_debug(f'choice is not in foreground {percent}, remove  {choices[i]}')
+                del choices[i]
+                return True
+        # if len(choices) == 1:
+        #     self.info['追踪目标'] = choices[0].name
+        # if len(choices) > 0:
+        #     for i in range(len(choices)):
+        #         if self.info.get('追踪目标') is None:
+        #             self.logger.debug(f"检测到追踪目标: {choices[i].name}")
+        #             self.info['追踪目标'] = choices[i].name
+        #         choices[i].height *= 3
+        #         if self.info.get('追踪目标') != choices[i].name:
+        #             self.log_info("排除错误追踪目标")
+        #             del choices[i]
+        #             continue
+        #         right_text_box = next((x for x in boxes if self.is_black_text(x)), None)
+        #         if right_text_box is not None:
+        #             choices[i].name = right_text_box.name
+        #             boxes.remove(right_text_box)
+        # else:
+        #     choices = find_boxes_by_name(boxes, "风险区")
         self.logger.debug(f"检测选项区域结果: {choices}")
         return choices
 
@@ -612,12 +589,16 @@ class ManXunTask(BJTask):
 def find_priority_string(input_list, priority_list, start_index=-1):
     # 不在priority_list 为最高优先级
     for i in range(start_index, -len(input_list) - 1, -1):
-        if input_list[i].name not in priority_list:
+        in_list = False
+        for priority in priority_list:
+            if priority in input_list[i].name:
+                in_list = True
+        if not in_list:
             return i
     for priority in priority_list:
         for i in range(start_index, -len(input_list) - 1, -1):
             # If the current string is in the priority list
-            if priority == input_list[i].name:
+            if priority in input_list[i].name:
                 # Return the negative index of the string in the input list
                 return i
     return start_index
@@ -658,6 +639,13 @@ def target_index_array(lst):
     return target_indices
 
 
+def remove_non_digits_and_convert(s):
+    # Use regular expression to remove non-digit characters
+    clean_string = re.sub(r'\D', '', s)
+    # Convert the cleaned string to an integer
+    return int(clean_string)
+
+
 gray_percent_per_line = 0.03660270078 * 100
 yellow_percent_per_line = 0.02821869488 * 100
 
@@ -683,4 +671,9 @@ yellow_color = {
     'r': (220, 250),  # Red range
     'g': (180, 210),  # Green range
     'b': (90, 110)  # Blue range
+}
+text_white_color = {
+    'r': (240, 255),  # Red range
+    'g': (240, 255),  # Green range
+    'b': (240, 255)  # Blue range
 }

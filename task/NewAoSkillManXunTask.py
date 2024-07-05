@@ -4,19 +4,18 @@ from typing_extensions import override
 
 from ok.feature.Box import find_box_by_name
 from ok.task.TaskExecutor import FinishedException, TaskDisabledException
-from task.ManXunTask import ManXunTask, find_index
+from task.NewManXunTask import NewManXunTask, find_index
 
 
-class AoSkillManXunTask(ManXunTask):
+class NewAoSkillManXunTask(NewManXunTask):
 
     def __init__(self):
         super().__init__()
         self.route = None
         self.name = "循环漫巡凹技能"
-        self.description = "烙痕使用上次编组, 凹指定角色指定技能, 刷不到指定技能就自动跳过战斗结束"
+        self.description = "烙痕使用上次编组, 只支持福利院"
         self.super_config = self.default_config
-        del self.super_config['投降跳过战斗']
-        self.default_config = {'角色名': '岑缨', '路线': '空想王国', '支援烙痕': '于火光中', '支援烙痕类型': '专精',
+        self.default_config = {'角色名': '岑缨', '路线': '福利院', '支援烙痕': '于火光中', '支援烙痕类型': '专精',
                                '漫巡次数': 5,
                                '目标技能': ['职业联动', '针对打击', '奉献'], '目标技能个数': 3}
         self.default_config = {**self.default_config, **self.super_config}
@@ -25,6 +24,7 @@ class AoSkillManXunTask(ManXunTask):
         self.config_description["漫巡次数"] = "刷多少次, 直到技能满足要求"
         self.config_description["支援烙痕"] = '部分匹配, 如"于火光中[蛋生]" 可以填"于火光中"'
         self.config_description["角色名"] = '部分匹配即可'
+        self.config_description["路线"] = '只支持福利院'
         self.config_description["支援烙痕类型"] = '一定要匹配, 否则刷不到'
         self.config_type["支援烙痕类型"] = {'type': "drop_down", 'options': self.stats_seq}
         self.pause_combat_message = "成功刷到目标技能, 暂停"
@@ -65,7 +65,7 @@ class AoSkillManXunTask(ManXunTask):
         if is_main or self.route:
             if not self.enter_manxun():
                 self.start_manxun()
-            self.wait_until(self.check_is_manxun_ui, time_out=60)
+            self.wait_click_ocr(0.42, 0.63, 0.62, 0.79, match='漫巡开始', time_out=60)
         while True:
             try:
                 self.loop()
@@ -176,7 +176,7 @@ class AoSkillManXunTask(ManXunTask):
                                  match=self.config['路线']))
         else:
             self.click_box(self.route)
-        self.wait_click_box(
+        go_manxun = self.wait_click_box(
             lambda: self.ocr(box=self.right_button_zone, match='前往回廊漫巡'))
         self.sleep(1)
         continue_manxun = self.ocr(box=self.dialog_zone, match='继续漫巡')
@@ -186,9 +186,10 @@ class AoSkillManXunTask(ManXunTask):
                 lambda: self.ocr(box=self.dialog_zone, match='确认'))
             return True
         else:
-            start_manxun = self.wait_click_box(
-                lambda: self.ocr(box=self.star_combat_zone, match='开始新漫巡'))
-            self.sleep(1)
+            self.log_debug('start_manxun')
+            # start_manxun = self.wait_click_box(
+            #     lambda: self.ocr(box=self.star_combat_zone, match='开始新漫巡'), time_out=4)
+            # self.sleep(1)
             boxes = self.ocr(box=self.box_of_screen(0.2, 0.5, width=0.3, height=0.3, name="精神改善剂检测区域"),
                              match=re.compile(r'^可回复精神力'))
             if len(boxes) == 1:
@@ -198,7 +199,7 @@ class AoSkillManXunTask(ManXunTask):
                 self.sleep(0.5)
                 self.click_relative(0.95, 0.5)
                 self.sleep(3)
-                self.click_box(start_manxun)
+                self.click_box(go_manxun)
             return False
 
     @property
@@ -212,10 +213,3 @@ class AoSkillManXunTask(ManXunTask):
     @property
     def bottom_button_zone(self):
         return self.box_of_screen(0.2, 0.8, width=0.6, height=0.2, name="下面按钮检测区域")
-
-
-white_color = {
-    'r': (240, 255),  # Red range
-    'g': (240, 255),  # Green range
-    'b': (240, 255)  # Blue range
-}

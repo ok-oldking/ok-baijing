@@ -1,7 +1,7 @@
-from task.AoSkillManXunTask import AoSkillManXunTask
+from task.NewManXunTask import NewManXunTask
 
 
-class AoSkillManXunTask2(AoSkillManXunTask):
+class NewAoSkillManXunTask2(NewManXunTask):
 
     def __init__(self):
         super().__init__()
