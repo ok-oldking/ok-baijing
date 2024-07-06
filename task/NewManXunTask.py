@@ -446,14 +446,12 @@ class NewManXunTask(BJTask):
                     self.log_debug(f'烙痕唤醒 黑名单 {black}')
                 else:
                     target = huanxing[0]
-            if target.x < self.width_of_screen(0.5):
-                self.log_info('点击右边唤醒')
-                self.click_relative(0.27, 0.71)
-            else:
-                self.click_relative(0.75, 0.71)
-                self.log_info('点击左边唤醒')
+        if target.x < self.width_of_screen(0.5):
+            self.log_info('点击右边唤醒')
+            self.click_relative(0.27, 0.71)
         else:
-            self.click_relative(0.5, 0.71)
+            self.click_relative(0.75, 0.71)
+            self.log_info('点击左边唤醒')
 
     def do_find_choices(self):
         choices = self.ocr(box=self.choice_zone)
