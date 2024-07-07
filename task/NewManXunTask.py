@@ -244,7 +244,7 @@ class NewManXunTask(BJTask):
                 self.wait_until(lambda: self.ocr(box=self.box_of_screen(0, 0, width=0.2, height=0.2)),
                                 pre_action=lambda: self.click_relative(0.5, 0.1), time_out=90)
             raise FinishedException()
-        elif len(ups) > 2:
+        elif len(ups) > 1:
             stats = []
             for up in ups:
                 stats.append(remove_non_digits_and_convert(up.find_closest_box('up', boxes).name))
@@ -264,6 +264,7 @@ class NewManXunTask(BJTask):
             else:
                 self.log_info('点击开战')
                 self.click_box(kaizhan)
+                self.wait_ocr(box=self.dialog_zone, match=re.compile("深度"), time_out=60)
             self.do_handle_dialog(choice)
         elif confirm := find_boxes_by_name(boxes, "技能获取"):
             self.handle_skill_dialog(boxes, confirm)
