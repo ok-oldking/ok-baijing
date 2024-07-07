@@ -639,10 +639,10 @@ def target_index_array(lst):
 
 
 def remove_non_digits_and_convert(s):
-    # Use regular expression to remove non-digit characters
-    clean_string = re.sub(r'\D', '', s)
-    # Convert the cleaned string to an integer
-    return int(clean_string)
+    # Use regular expression to keep only digits and '+' characters
+    clean_string = re.sub(r'[^0-9+]', '', s)
+    # Evaluate the cleaned string as a mathematical expression
+    return eval(clean_string)
 
 
 gray_percent_per_line = 0.03660270078 * 100
