@@ -38,6 +38,7 @@ class BJTask(BaseTask, OCR, FindFeature):
             return True
 
     def go_home_wait(self):
+
         self.wait_click_feature('go_home')
         return self.wait_main()
 
@@ -91,7 +92,7 @@ class BJTask(BaseTask, OCR, FindFeature):
                 self.log_info('需要登陆账号', notify=True)
                 self.disable()
                 return "需要登陆账号"
-            if box := find_box_by_name(boxes, "账号已授权"):
+            if box := find_box_by_name(boxes, "点击进入游戏"):
                 self.click_box(box)
                 return False
 

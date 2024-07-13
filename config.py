@@ -20,7 +20,6 @@ def calculate_pc_exe_path(running_path):
 config = {
     'debug': False,  # Optional, default: False
     'use_gui': True,
-    'config_folder': 'configs',
     'gui_icon': get_path_in_package(__file__, 'icon.ico'),
     'ocr': {
         'lib': 'RapidOCR',
@@ -72,16 +71,13 @@ config = {
     'version': version,
     'locale': 'zh_CN',
     'onetime_tasks': [  # tasks to execute
-        DailyTask(),
-        NewAoSkillManXunTask(),
-        JoinGameTask(),
-        NewAoSkillManXunTask2(),
-        NewAoSkillManXunTask3(),
-        NewManXunTask(),
+        DailyTask,
+        NewAoSkillManXunTask,
+        JoinGameTask,
+        NewAoSkillManXunTask2,
+        NewAoSkillManXunTask3,
+        NewManXunTask,
     ], 'trigger_tasks': [
-        AutoStartCombatTask()
-    ],
-    'scenes': [  # scenes to detect
-
+        AutoStartCombatTask
     ]
 }
