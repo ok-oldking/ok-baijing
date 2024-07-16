@@ -641,8 +641,12 @@ def target_index_array(lst):
 def remove_non_digits_and_convert(s):
     # Use regular expression to keep only digits and '+' characters
     clean_string = re.sub(r'[^0-9+]', '', s)
+    clean_string = clean_string.strip('+')
     # Evaluate the cleaned string as a mathematical expression
-    return eval(clean_string)
+    try:
+        return eval(clean_string)
+    except Exception as e:
+        return 0
 
 
 gray_percent_per_line = 0.03660270078 * 100
