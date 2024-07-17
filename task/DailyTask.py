@@ -116,9 +116,9 @@ class DailyTask(BJTask):
 
     def heyici(self):
         diandan = self.wait_until(
-            condition = lambda: self.ocr(0.8, 0.83, 0.95, 0.95, match="再来一杯") or
-                                self.ocr(0.8, 0.7, 0.95, 0.83, match="开始点单") or
-                                self.find_feature("hecha_chat",
+            condition=lambda: self.ocr(0.8, 0.83, 0.95, 0.95, match="再来一杯") or
+                              self.ocr(0.8, 0.7, 0.95, 0.83, match="开始点单") or
+                              self.find_feature("hecha_chat",
                                                 x=0.65, y=0.31,
                                                 to_x=0.93,
                                                 to_y=0.77,
@@ -127,7 +127,7 @@ class DailyTask(BJTask):
         if not diandan:
             self.log_error("找不到开始点单")
             raise Exception("找不到开始点单")
-        
+
         if diandan[0].name == '再来一杯':  # 如果是喝完直接跳过
             self.click_box(diandan)
         elif diandan[0].name == '开始点单':  # 如果是喝完直接跳过
@@ -237,6 +237,7 @@ class DailyTask(BJTask):
     #     complete = self.ocr
 
     def friends(self):
+        self.sleep(2)
         self.click_relative(225 / 1600, 43 / 900)
         self.wait_click_ocr(0.08, 0.10, 0.20, 0.21, match="好友列表")
         self.wait_click_ocr(0.8, to_y=0.15, match=re.compile(".*赠送$"))
