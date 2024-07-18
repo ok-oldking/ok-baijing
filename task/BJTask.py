@@ -43,7 +43,7 @@ class BJTask(BaseTask, OCR, FindFeature):
         return self.wait_main()
 
     def wait_main(self):
-        return self.wait_until(lambda: self.ocr(box=self.main_menu_zone, match=re.compile(r"外勤作战")))
+        return self.wait_until(self.find_world())
 
     def go_home_now(self):
         go_home = self.find_feature('go_home', threshold=0.92)
@@ -54,16 +54,16 @@ class BJTask(BaseTask, OCR, FindFeature):
             return True
 
     def choose_main_menu(self, name):
-        self.wait_click_box(lambda: self.ocr(box=self.main_menu_zone, match=name), time_out=20)
+        self.go_into_menu(name)
 
     def check_until_main(self):
         self.info['检查主页次数'] = self.info.get("检查主页次数", 1) + 1
         self.log_debug(f'check check_until_main {self.info.get("检查主页次数")}')
-        main = self.find_one('main_screen_feature', threshold=0.9, use_gray_scale=True)
+        main = self.ocr(.91, 0.91, 0.96, 0.96, match="功能菜单")
         self.log_debug(f'found main menu {main}')
         if main:
             while True:
-                task = self.ocr(box=self.main_menu_zone, match="外勤作战")
+                task = self.find_world()
                 if task:
                     break
                 if self.click_to_continue():
@@ -81,7 +81,7 @@ class BJTask(BaseTask, OCR, FindFeature):
                     self.sleep(2)
                 self.click_to_continue()
             self.sleep(3)  # wait for animation
-            if self.ocr(box=self.main_menu_zone, match=re.compile(r"外勤作战")):
+            if self.find_world():
                 return True
         start = self.find_one('start_screen_feature',
                               threshold=0.9, use_gray_scale=True)
@@ -102,8 +102,11 @@ class BJTask(BaseTask, OCR, FindFeature):
             return False
         self.click_to_continue()
 
+    def find_world(self):
+        return self.ocr(box=self.main_menu_zone, match=re.compile(r"世界"), log=True)
+
     def go_into_menu(self, menu, confirm=False):
-        self.wait_click_ocr(0.9, 0.9, match="菜单")
+        self.wait_click_ocr(0.9, 0.9, match="功能菜单")
         self.wait_click_ocr(0.6, 0.1, to_y=0.8, match=menu)
         if confirm:
             self.wait_confirm()
@@ -117,7 +120,8 @@ class BJTask(BaseTask, OCR, FindFeature):
 
     @property
     def main_menu_zone(self):
-        return self.box_of_screen(0.62, 0.31, 0.97, 0.65, name="主页菜单区域")
+        return self.box_of_screen(0.62, 0.60, 0.97, 0.87, name="主页菜单区域")
+        # return self.box_of_screen(0, 0, 1, 1, name="主页菜单区域")
 
     def check_is_main(self):
         boxes = self.ocr(box=self.main_menu_zone)

@@ -434,9 +434,6 @@ class NewManXunTask(BJTask):
         return choices, choices[index]
 
     def try_handle_laohen_choices(self, huanxing, boxes):
-        stats_up_choices = self.find_stats_up(boxes)
-        if stats_up_choices and self.handle_stats_up(stats_up_choices):
-            return
         target = huanxing[0]
         if len(huanxing) == 2:
             black_list = [re.compile(s) for s in self.config["烙痕唤醒黑名单"]] + [re.compile("核心技能已解锁满级")]

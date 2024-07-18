@@ -62,7 +62,7 @@ class DailyTask(BJTask):
         self.go_home_wait()
 
     def claim_quest(self):
-        self.choose_main_menu(re.compile(r"(完成|任务)"))
+        self.wait_click_ocr(box=self.main_menu_zone, match=re.compile(r"任务"))
         self.wait_click_ocr(0.03, 0.2, 0.16, 0.83, match="日常")
         if self.wait_click_ocr(0.8, 0.75, 0.93, 0.81, match=re.compile(r"领取"), time_out=4):
             self.click_to_continue_wait(time_out=6)
@@ -159,17 +159,20 @@ class DailyTask(BJTask):
 
     def combat(self):
         self.choose_main_menu("外勤作战")
-        self.wait_click_ocr(.7, .9, .82, match="物资筹备")
-        combats = self.wait_ocr(x=0.1, y=0.58, to_x=0.75, to_y=0.67, match=["定向保障", "光刻协议"])
+        # self.wait_click_ocr(.07, .9, .82, match="物资筹备")
+        combats = self.find_combats()
 
         if self.config.get('随机刷材料次数') > 0:
             self.click_box(combats[0])
             self.dingxiang_combat()
         if self.config.get('随机刷技能书次数') > 0:
-            combats = self.wait_ocr(x=0.1, y=0.58, to_x=0.75, to_y=0.67, match=["定向保障", "光刻协议"])
+            combats = self.find_combats()
             self.click_box(combats[1])
             self.guangke_combat()
         self.go_home_wait()
+
+    def find_combats(self):
+        return self.wait_ocr(x=0.07, y=0.8, to_x=0.96, to_y=0.94, match=["定向物资保障", "光刻协议"])
 
     def guangke_combat(self):
         target_list = self.wait_ocr(x=0.03, y=0.36, to_y=0.63, match=re.compile(r"协议"))
