@@ -43,7 +43,7 @@ class BJTask(BaseTask, OCR, FindFeature):
         return self.wait_main()
 
     def wait_main(self):
-        return self.wait_until(self.find_world())
+        return self.wait_until(self.find_world)
 
     def go_home_now(self):
         go_home = self.find_feature('go_home', threshold=0.92)
