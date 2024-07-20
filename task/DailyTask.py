@@ -205,7 +205,6 @@ class DailyTask(BJTask):
             boxes = self.wait_ocr(0.5, 0.2, 0.7, 0.45, match=["补充", "+"])
             plus = self.box_of_screen(923 / 1600, 325 / 900, 977 / 1600, 358 / 900)
             add_stam = boxes[0]
-            # plus = boxes[1]
             black_percent = calculate_color_percentage(self.frame, plus_button_black_color, plus)
             self.log_debug(f'检查体力药加号 black_percent: {black_percent} {count}')
             if black_percent > 0.1:

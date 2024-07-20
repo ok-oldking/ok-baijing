@@ -434,6 +434,9 @@ class NewManXunTask(BJTask):
         return choices, choices[index]
 
     def try_handle_laohen_choices(self, huanxing, boxes):
+        stats_up_choices = self.find_stats_up(boxes)
+        if stats_up_choices and self.handle_stats_up(stats_up_choices):
+            return
         target = huanxing[0]
         if len(huanxing) == 2:
             black_list = [re.compile(s) for s in self.config["烙痕唤醒黑名单"]] + [re.compile("核心技能已解锁满级")]
@@ -444,12 +447,20 @@ class NewManXunTask(BJTask):
                     self.log_debug(f'烙痕唤醒 黑名单 {black}')
                 else:
                     target = huanxing[0]
-        if target.x < self.width_of_screen(0.5):
-            self.log_info('点击右边唤醒')
-            self.click_relative(0.27, 0.71)
-        else:
-            self.click_relative(0.75, 0.71)
+        if target.x < self.width_of_screen(0.4):
             self.log_info('点击左边唤醒')
+            boxes = find_boxes_within_boundary(boxes, self.box_of_screen(0, 0, 0.5, 1))
+            self.click_relative(0.27, 0.71)
+        elif target.x > self.width_of_screen(0.55):
+            self.log_info('点击右边唤醒')
+            boxes = find_boxes_within_boundary(boxes, self.box_of_screen(0.5, 0, 1, 1))
+        else:
+            boxes = find_boxes_within_boundary(boxes, self.box_of_screen(0.25, 0, 0.73, 1))
+            self.log_info('点击中间唤醒')
+
+        stats_up_choices = self.find_stats_up(boxes)
+        if stats_up_choices and self.handle_stats_up(stats_up_choices):
+            return
 
     def do_find_choices(self):
         choices = self.ocr(box=self.choice_zone)
