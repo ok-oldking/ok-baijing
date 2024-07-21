@@ -1,6 +1,7 @@
 import re
 
-from ok.feature.Box import boxes_to_map_by_list_of_names, find_box_by_name
+from ok.color.Color import white_color
+from ok.feature.Box import find_box_by_name
 from ok.feature.FindFeature import FindFeature
 from ok.ocr.OCR import OCR
 from ok.task.BaseTask import BaseTask
@@ -103,7 +104,11 @@ class BJTask(BaseTask, OCR, FindFeature):
         self.click_to_continue()
 
     def find_world(self):
-        return self.ocr(box=self.main_menu_zone, match=re.compile(r"世界"), log=True)
+        world = self.ocr(box=self.main_menu_zone, match=re.compile(r"世界"), log=True)
+        if world:
+            white_color_percent = self.calculate_color_percentage(white_color, world[0])
+            self.log_debug(f'world white percent {white_color_percent}')
+            return white_color_percent > 0.05
 
     def go_into_menu(self, menu, confirm=False):
         self.wait_click_ocr(0.9, 0.9, match="功能菜单")
@@ -124,10 +129,7 @@ class BJTask(BaseTask, OCR, FindFeature):
         # return self.box_of_screen(0, 0, 1, 1, name="主页菜单区域")
 
     def check_is_main(self):
-        boxes = self.ocr(box=self.main_menu_zone)
-        self.main_menu_buttons = boxes_to_map_by_list_of_names(boxes, self.menu_name_list)
-        if self.main_menu_buttons:
-            return True
+        return self.find_world()
 
     def main_go_to_manxun(self):
-        self.click_box(self.main_menu_buttons['回廊漫巡'])
+        self.go_into_menu('回廊漫巡')
