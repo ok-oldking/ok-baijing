@@ -39,7 +39,6 @@ class BJTask(BaseTask, OCR, FindFeature):
             return True
 
     def go_home_wait(self):
-
         self.wait_click_feature('go_home')
         return self.wait_main()
 
@@ -71,7 +70,7 @@ class BJTask(BaseTask, OCR, FindFeature):
                     continue
                 qiandao_lingqu = self.ocr(0.2, 0.6, 0.8, match="可领取")
                 if qiandao_lingqu:
-                    self.click_box(qiandao_lingqu)
+                    self.click_box(qiandao_lingqu, relative_y=-2)
                     self.sleep(2)
                     self.click_relative(0.4, 0.05)
                     self.sleep(2)
@@ -103,12 +102,17 @@ class BJTask(BaseTask, OCR, FindFeature):
             return False
         self.click_to_continue()
 
-    def find_world(self):
+    def do_find_world(self):
         world = self.ocr(box=self.main_menu_zone, match=re.compile(r"世界"), log=True)
         if world:
             white_color_percent = self.calculate_color_percentage(white_color, world[0])
             self.log_debug(f'world white percent {white_color_percent}')
             return white_color_percent > 0.05
+
+    def find_world(self):
+        if self.do_find_world():
+            self.sleep(2)
+            return self.do_find_world()
 
     def go_into_menu(self, menu, confirm=False):
         self.wait_click_ocr(0.9, 0.9, match="功能菜单")

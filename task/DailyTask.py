@@ -46,7 +46,22 @@ class DailyTask(BJTask):
         if self.config.get("领任务奖励"):
             self.claim_quest()
             self.claim_dayueka()
+            self.claim_guild()
         self.log_info("收菜完成!", True)
+
+    def claim_guild(self):
+        self.click_relative(0.19, 0.06)
+        self.click_to_continue_wait(time_out=3)
+        self.click_relative(0.5, 0.06)
+        self.sleep(1)
+        self.click_relative(0.56, 0.37)
+        self.wait_click_ocr(0.70, 0.28, 0.81, 0.36, match="领取奖励", time_out=3)
+        self.sleep(1)
+        self.click_to_continue_wait(time_out=3)
+        self.sleep(1)
+        self.click_relative(0.56, 0.06)
+        self.sleep(1)
+        self.go_home_wait()
 
     def claim_dayueka(self):
         self.choose_main_menu("活动中心")
@@ -169,6 +184,7 @@ class DailyTask(BJTask):
             combats = self.find_combats()
             self.click_box(combats[1])
             self.guangke_combat()
+        self.sleep(1)
         self.go_home_wait()
 
     def find_combats(self):

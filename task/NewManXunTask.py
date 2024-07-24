@@ -92,7 +92,7 @@ class NewManXunTask(BJTask):
 
     @property
     def choice_zone(self):
-        return self.box_of_screen(0.76, 0.50, 0.91, 0.83, name="选项检测区域")
+        return self.box_of_screen(0.74, 0.50, 0.91, 0.83, name="选项检测区域")
 
     @property
     def current_zone(self):
@@ -212,7 +212,7 @@ class NewManXunTask(BJTask):
         choices = self.do_find_choices()
         if choices is not True and len(choices) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
-            return False
+            return True
         self.logger.debug(f"检测对话框区域 {boxes}")
         ups = find_boxes_by_name(boxes, "提升")
         if huanxing := find_boxes_by_name(boxes, '烙痕唤醒'):
@@ -469,24 +469,6 @@ class NewManXunTask(BJTask):
                 self.log_debug(f'choice is not in foreground {percent}, remove  {choices[i]}')
                 del choices[i]
                 return True
-        # if len(choices) == 1:
-        #     self.info['追踪目标'] = choices[0].name
-        # if len(choices) > 0:
-        #     for i in range(len(choices)):
-        #         if self.info.get('追踪目标') is None:
-        #             self.logger.debug(f"检测到追踪目标: {choices[i].name}")
-        #             self.info['追踪目标'] = choices[i].name
-        #         choices[i].height *= 3
-        #         if self.info.get('追踪目标') != choices[i].name:
-        #             self.log_info("排除错误追踪目标")
-        #             del choices[i]
-        #             continue
-        #         right_text_box = next((x for x in boxes if self.is_black_text(x)), None)
-        #         if right_text_box is not None:
-        #             choices[i].name = right_text_box.name
-        #             boxes.remove(right_text_box)
-        # else:
-        #     choices = find_boxes_by_name(boxes, "风险区")
         self.logger.debug(f"检测选项区域结果: {choices}")
         return choices
 
