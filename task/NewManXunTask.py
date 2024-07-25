@@ -332,12 +332,12 @@ class NewManXunTask(BJTask):
         return find_boxes_by_name(boxes, self.stats_up_re)
 
     def auto_combat(self):
-        if not self.wait_click_ocr(0.73, 0.85, 1, 1, match="作战开始", time_out=5, raise_if_not_found=False):
-            self.wait_click_ocr(0.7, 0, 0.82, 0.1, match="上次编队", time_out=5, raise_if_not_found=False)
-            self.sleep(1)
-            self.log_info('开始查找上次编队')
-            self.wait_click_ocr(0.73, 0.85, 1, 1, match="保存更改", time_out=10, raise_if_not_found=False)
-            self.sleep(1)
+        # if not self.wait_click_ocr(0.73, 0.85, 1, 1, match="作战开始", time_out=5, raise_if_not_found=False):
+        self.wait_click_ocr(0.7, 0, 0.82, 0.1, match="上次编队", time_out=5, raise_if_not_found=False)
+        self.sleep(1)
+        self.log_info('开始查找上次编队')
+        self.wait_click_ocr(0.73, 0.85, 1, 1, match="保存更改", time_out=10, raise_if_not_found=False)
+        self.sleep(1)
         self.wait_click_ocr(0.73, 0.85, 1, 1, match="作战开始", time_out=10, raise_if_not_found=False)
         self.log_info('开始查找开始战斗')
         start_combat = self.wait_ocr(box=self.star_combat_zone, match="开始战斗", time_out=180, raise_if_not_found=True)
