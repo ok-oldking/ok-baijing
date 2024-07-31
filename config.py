@@ -10,7 +10,7 @@ from task.NewAoSkillManXunTask2 import NewAoSkillManXunTask2
 from task.NewAoSkillManXunTask3 import NewAoSkillManXunTask3
 from task.NewManXunTask import NewManXunTask
 
-version = "v1.4.11"
+version = "v5.4.11"
 
 
 def calculate_pc_exe_path(running_path):
@@ -36,7 +36,7 @@ config = {
         'title': re.compile(r'^白荆回廊'),
         'exe': 'GateMK-Win64-Shipping.exe',
         'calculate_pc_exe_path': calculate_pc_exe_path,
-        # 'interaction': 'PostMessage',
+        'interaction': 'PostMessage',
         'can_bit_blt': True,  # default false, opengl games does not support bit_blt
         'bit_blt_render_full': True
     },

@@ -1,4 +1,5 @@
 import re
+import time
 
 from typing_extensions import override
 
@@ -62,6 +63,8 @@ class NewManXunTask(BJTask):
         self.total_anjiao_count = 3  # 预测暗礁属性
         self.custom_routes = []
         self.to_update_stats = True
+        self.ocr_count = 0
+        self.ocr_time = 0
 
     def on_create(self):
         self.log_debug('on_create')
@@ -208,7 +211,12 @@ class NewManXunTask(BJTask):
                     stats[i] += 10
 
     def do_handle_dialog(self, choice):
+        start = time.time()
         boxes = self.ocr(box=self.dialog_zone)
+        cost = time.time() - start
+        self.ocr_time += cost
+        self.ocr_count += 1
+        self.info['OCR Time'] = f'{(self.ocr_time / self.ocr_count):.3f}'
         choices = self.do_find_choices()
         if choices is not True and len(choices) > 0:
             self.log_info(f"没有弹窗, 进行下一步")
