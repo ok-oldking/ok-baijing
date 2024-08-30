@@ -50,7 +50,7 @@ class DailyTask(BJTask):
         self.log_info("收菜完成!", True)
 
     def claim_guild(self):
-        self.click_relative(0.19, 0.06)
+        self.click_relative(0.19, 0.04)
         self.click_to_continue_wait(time_out=3)
         self.click_relative(0.5, 0.06)
         self.sleep(1)
@@ -77,7 +77,7 @@ class DailyTask(BJTask):
         self.go_home_wait()
 
     def claim_quest(self):
-        self.wait_click_ocr(box=self.main_menu_zone, match=re.compile(r"任务"))
+        self.wait_click_ocr(box=self.main_menu_zone, match=re.compile(r"任务|完成"))
         self.wait_click_ocr(0.03, 0.2, 0.16, 0.83, match="日常")
         if self.wait_click_ocr(0.8, 0.75, 0.93, 0.81, match=re.compile(r"领取"), time_out=4):
             self.click_to_continue_wait(time_out=6)
@@ -266,6 +266,7 @@ class DailyTask(BJTask):
         self.choose_main_menu("有猫零售")
         self.wait_click_box(lambda: self.ocr(box=self.box_of_screen(0, 0.1, to_x=0.3), match="精选礼包"))
         self.sleep(1)
+        self.wait_click_ocr(0.20, 0.13, 0.61, 0.24, match='有猫精选')
         free = self.ocr(box=self.box_of_screen(0.1, 0.5, to_x=0.5), match="免费")
         if free:
             self.click_box(free)
