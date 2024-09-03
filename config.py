@@ -18,8 +18,8 @@ config = {
     'use_gui': True,
     'gui_icon': get_path_in_package(__file__, 'icon.ico'),
     'ocr': {
-        'lib': 'RapidOCR',
-        'inference_num_threads': int(os.cpu_count() / 2)
+        'lib': 'rapidocr_openvino'
+        # 'lib': 'rapidocr_openvino'
     },
     # required if using feature detection
     'template_matching': {
@@ -42,12 +42,15 @@ config = {
     'analytics': {
         'report_url': 'https://okreport.ok-script.com/report'
     },
-    'update': {
-        'releases_url': 'https://api.github.com/repos/ok-oldking/ok-baijing/releases?per_page=15',
-        'proxy_url': 'https://gh.ok-script.com/',
-        'exe_name': 'ok-baijing.exe',
-        'use_proxy': True
-    },
+    'git_update': {'sources': [{
+        'name': 'Global',
+        'git_url': 'https://github.com/ok-oldking/ok-baijing',
+        'pip_url': 'https://pypi.org/simple/'
+    }, {
+        'name': 'China',
+        'git_url': 'https://github.com/ok-oldking/ok-baijing',
+        'pip_url': 'https://pypi.org/simple/'
+    }]},
     'about': """
     <h3>OK白荆</h3>
     <p>免费开源软件 <a href="https://github.com/ok-oldking/ok-baijing">https://github.com/ok-oldking/ok-baijing</></p>

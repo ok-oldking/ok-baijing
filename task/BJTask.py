@@ -59,7 +59,7 @@ class BJTask(BaseTask, OCR, FindFeature):
     def check_until_main(self):
         self.info['检查主页次数'] = self.info.get("检查主页次数", 1) + 1
         self.log_debug(f'check check_until_main {self.info.get("检查主页次数")}')
-        main = self.ocr(.91, 0.91, 0.96, 0.96, match="功能菜单")
+        main = self.ocr(.90, 0.91, 0.97, 0.96, match="功能菜单", log=True)
         self.log_debug(f'found main menu {main}')
         if main:
             while True:
@@ -68,7 +68,7 @@ class BJTask(BaseTask, OCR, FindFeature):
                     break
                 if self.click_to_continue():
                     continue
-                qiandao_lingqu = self.ocr(0.2, 0.6, 0.8, match="可领取")
+                qiandao_lingqu = self.ocr(0.2, 0.6, 0.8, match="可领取", log=True)
                 if qiandao_lingqu:
                     self.click_box(qiandao_lingqu, relative_y=-2)
                     self.sleep(2)
