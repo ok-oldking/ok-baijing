@@ -10,6 +10,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 configs/
+python/
+python-launcher-lib/
+python-app-lib/
 ok/
 ok
 *.exe

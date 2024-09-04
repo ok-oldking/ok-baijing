@@ -7,6 +7,5 @@ opencv-python
 PySide6
 PySide6-Fluent-Widgets
 psutil
-py7zr
 
 rapidocr_openvino

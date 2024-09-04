@@ -2,9 +2,6 @@ import os
 import re
 
 from ok.util.path import get_path_in_package
-from task.AutoStartCombatTask import AutoStartCombatTask
-from task.DailyTask import DailyTask
-from task.JoinGameTask import JoinGameTask
 
 version = "v5.4.11"
 
@@ -48,8 +45,8 @@ config = {
         'pip_url': 'https://pypi.org/simple/'
     }, {
         'name': 'China',
-        'git_url': 'https://github.com/ok-oldking/ok-baijing',
-        'pip_url': 'https://pypi.org/simple/'
+        'git_url': 'https://gitee.com/ok-olding/ok_baijing',
+        'pip_url': 'https://mirrors.cloud.tencent.com/pypi/simple'
     }]},
     'about': """
     <h3>OK白荆</h3>
@@ -70,9 +67,9 @@ config = {
     'version': version,
     'locale': 'zh_CN',
     'onetime_tasks': [  # tasks to execute
-        DailyTask,
-        JoinGameTask
+        ['task.DailyTask', 'DailyTask'],
+        ['task.JoinGameTask', 'JoinGameTask'],
     ], 'trigger_tasks': [
-        AutoStartCombatTask
+        ['task.AutoStartCombatTask', 'AutoStartCombatTask'],
     ]
 }

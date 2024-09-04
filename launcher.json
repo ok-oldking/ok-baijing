@@ -3,8 +3,8 @@
     "name": "CPU",
     "entry": "main.py",
     "install_dependencies": [
-      "-r requirements.txt",
-      "rapidocr_openvino"
+      "PySide6-Fluent-Widgets>=1.5.5 --no-deps",
+      "rapidocr-openvino ok-script=0.0.190 PySideSix-Frameless-Window>=0.3.12 darkdetect>=0.8.0 typing-extensions>=4.11.0 numpy>=1.26.4 opencv-python>=4.9.0.80"
     ],
     "uninstall_dependencies": [
     ]
