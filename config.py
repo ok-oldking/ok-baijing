@@ -1,9 +1,7 @@
 import os
 import re
 
-from ok.util.path import get_path_in_package
-
-version = "v5.4.11"
+version = "v0.0.113"
 
 
 def calculate_pc_exe_path(running_path):
@@ -13,7 +11,7 @@ def calculate_pc_exe_path(running_path):
 config = {
     'debug': False,  # Optional, default: False
     'use_gui': True,
-    'gui_icon': get_path_in_package(__file__, 'icon.ico'),
+    'gui_icon': 'icon.ico',
     'ocr': {
         'lib': 'rapidocr_openvino'
         # 'lib': 'rapidocr_openvino'
@@ -62,8 +60,6 @@ config = {
     'supported_screen_ratio': '16:9',
     'screenshots_folder': "screenshots",
     'gui_title': 'OK白荆',  # Optional
-    'log_file': 'logs/ok-script.log',  # Optional, auto rotating every day
-    'error_log_file': 'logs/ok-script_error.log',
     'version': version,
     'locale': 'zh_CN',
     'onetime_tasks': [  # tasks to execute
