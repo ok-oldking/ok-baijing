@@ -4,4 +4,3 @@ from config import config
 from ok.gui.launcher.Launcher import Launcher
 
 Launcher(config).start()
-# lenv\Scripts\python.exe
