@@ -1,7 +1,7 @@
 import os
 import re
 
-version = "v1.5.14"
+version = "v1.5.15"
 
 
 def calculate_pc_exe_path(running_path):
