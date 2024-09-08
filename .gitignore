@@ -15,7 +15,6 @@ python-launcher-lib/
 python-app-lib/
 ok/
 ok
-*.exe
 md5.txt
 update.bat
 click_screenshots/

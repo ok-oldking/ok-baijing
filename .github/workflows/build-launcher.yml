@@ -1,10 +1,10 @@
 name: Build Windows Executable
 
-#on:
-#  push:
-#    # Sequence of patterns matched against refs/tags
-#    tags:
-#      - 'v*'
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -34,7 +34,6 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller  # Add other dependencies if needed
           pip install -r requirements.txt
 
       - name: Build Executable
