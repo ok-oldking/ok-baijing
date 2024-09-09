@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build exe with PyInstaller
+    name: Build exe with launcher
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -40,7 +40,6 @@ jobs:
         run: |
           echo "tag: ${{ steps.changes.outputs.tag }}"
           echo "changes: ${{ steps.changes.outputs.changes }}"
-          (Get-Content config.py) -replace 'version = "v\d+\.\d+\.\d+"', 'version = "${{ steps.tagName.outputs.tag }}"' | Set-Content config.py
           python -m ok.update.package_launcher ${{ steps.tagName.outputs.tag }} CPU
           mv dist ok-baijing
           7z a -t7z -r "ok-baijing-release-${{ steps.tagName.outputs.tag }}.7z" "ok-baijing"
