@@ -40,9 +40,9 @@ jobs:
         run: |
           echo "tag: ${{ steps.changes.outputs.tag }}"
           echo "changes: ${{ steps.changes.outputs.changes }}"
-          python -m ok.update.package_launcher ${{ steps.tagName.outputs.tag }} CPU -ErrorAction Stop
-          mv dist ok-baijing -ErrorAction Stop
-          7z a -t7z -r "ok-baijing-release-${{ steps.tagName.outputs.tag }}.7z" "ok-baijing" -ErrorAction Stop
+          python -m ok.update.package_launcher ${{ steps.tagName.outputs.tag }} CPU
+          mv dist ok-baijing
+          7z a -t7z -r "ok-baijing-release-${{ steps.tagName.outputs.tag }}.7z" "ok-baijing"
 
         shell: pwsh
 
