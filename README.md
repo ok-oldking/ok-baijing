@@ -1,11 +1,12 @@
 # ![icon](icon.ico) ok_baijing
 
+已经退坑, 不再更新, 鸣潮还在维护可以看我仓库
+
 白荆自动漫巡辅助脚本
 视频演示 [https://www.bilibili.com/video/BV1K7421f7KT/](https://www.bilibili.com/video/BV1K7421f7KT/)
 
 [报告BUG](https://github.com/ok-oldking/ok-baijing/issues/new?assignees=ok-oldking&labels=bug&projects=&template=%E6%8A%A5%E5%91%8Abug-.md&title=%5BBUG%5D)
 
-QQ群594495691 [OK白荆回廊自动漫巡辅助](https://qm.qq.com/q/aGO7eBJ2Uw)
 
 ![img.png](readme/img.png)
 
